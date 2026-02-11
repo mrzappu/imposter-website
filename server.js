@@ -1027,4 +1027,13 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('========================================');
   console.log(`📡 Server running on port: ${PORT}`);
   console.log(`🔗 Login: http://localhost:${PORT}/login`);
-  console.log
+  console.log(`🔗 Register: http://localhost:${PORT}/register`);
+  console.log(`🔗 Store: http://localhost:${PORT}/`);
+  console.log(`🔗 Cart: http://localhost:${PORT}/cart`);
+  console.log(`🔗 Admin: http://localhost:${PORT}/admin`);
+  console.log(`🔗 Profile: http://localhost:${PORT}/profile`);
+  console.log('========================================');
+  console.log('📝 Default Admin: admin / admin123');
+  console.log('✅ Cart System + Order Logs + Discord Payments Active');
+  console.log('========================================\n');
+});
