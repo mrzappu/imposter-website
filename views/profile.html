@@ -3,196 +3,992 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IMP0STER · EDIT PROFILE</title>
+  <title>IMP0STER · PROFILE</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #0a0c0f;
-      background-image: radial-gradient(circle at 20% 30%, rgba(255, 70, 70, 0.08) 0%, transparent 25%);
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255, 70, 70, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 80% 70%, rgba(255, 200, 50, 0.05) 0%, transparent 30%);
       font-family: 'Inter', sans-serif;
       color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 1rem;
+      line-height: 1.6;
+      padding: 2rem;
     }
-    .profile-container {
-      max-width: 500px;
-      width: 100%;
-      background: rgba(7, 10, 15, 0.95);
-      backdrop-filter: blur(10px);
-      border: 2px solid #ff8e4d;
-      border-radius: 40px;
-      padding: 2.5rem;
-      box-shadow: 0 20px 40px rgba(255, 100, 50, 0.3);
+    .container { 
+      max-width: 1400px; 
+      margin: 0 auto; 
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 70, 70, 0.3);
+      flex-wrap: wrap;
+      gap: 1rem;
     }
     .glitch-title {
       font-family: 'Orbitron', sans-serif;
       font-size: 2rem;
       font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      text-shadow: 0.05em 0 0 rgba(255,0,0,0.7), -0.05em -0.025em 0 rgba(0,255,255,0.5);
+      animation: glitch 4s infinite alternate;
+    }
+    @keyframes glitch {
+      0% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.5); }
+      100% { text-shadow: -0.05em 0.025em 0 rgba(255,0,0,0.6), 0.025em 0.05em 0 rgba(0,255,255,0.5); }
+    }
+    .ff-badge {
+      background: #1e1e1e;
+      padding: 0.2rem 0.9rem;
+      border-radius: 30px;
+      color: #ff5e5e;
+      border: 1px solid #ff3838;
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-left: 1rem;
+    }
+    .back-btn {
+      color: #ffbe4d;
+      text-decoration: none;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid #ff6a4d;
+      border-radius: 30px;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .back-btn:hover {
+      background: #ff6a4d;
+      color: black;
+    }
+    
+    /* Profile Layout */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 2rem;
+    }
+    
+    /* Sidebar Profile Card */
+    .profile-sidebar {
+      background: rgba(7, 10, 15, 0.9);
+      backdrop-filter: blur(10px);
+      border: 2px solid #ff3838;
+      border-radius: 30px;
+      padding: 2rem;
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+    }
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(145deg, #ff5e4d, #d93a2b);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      border: 4px solid #ffbe4d;
+      box-shadow: 0 0 30px rgba(255, 94, 77, 0.5);
+    }
+    .profile-avatar i {
+      font-size: 4rem;
+      color: #fff;
+    }
+    .profile-name {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #ffbe4d;
+      font-family: 'Orbitron', sans-serif;
       text-align: center;
       margin-bottom: 0.5rem;
-      text-shadow: 0.05em 0 0 rgba(255,100,0,0.7), -0.05em -0.025em 0 rgba(0,200,255,0.5);
     }
-    .input-group {
+    .profile-role {
+      display: inline-block;
+      background: #ff3a3a;
+      padding: 0.3rem 1.2rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: black;
+      font-weight: 800;
+      margin: 0 auto 1.5rem;
+      text-align: center;
+      width: fit-content;
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .stat-card {
+      background: rgba(20, 25, 30, 0.9);
+      border: 1px solid #ff6a4d;
+      border-radius: 20px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #ffd966;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #aaa;
+      text-transform: uppercase;
+    }
+    
+    /* Info Sections */
+    .info-section {
+      background: rgba(20, 25, 30, 0.9);
+      border: 1px solid #ff6a4d;
+      border-radius: 20px;
+      padding: 1.5rem;
       margin-bottom: 1.5rem;
-      position: relative;
     }
-    .input-group i {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #ffa36b;
+    .info-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffbe4d;
+      margin-bottom: 1rem;
       font-size: 1.1rem;
     }
-    .input-group input {
-      width: 100%;
-      padding: 1.2rem 1rem 1.2rem 3rem;
-      background: rgba(20, 25, 30, 0.9);
-      border: 2px solid #3a2c2c;
-      border-radius: 50px;
-      font-size: 1rem;
-      color: white;
-    }
-    .input-group input:focus {
-      border-color: #ff9f4b;
-      outline: none;
-      box-shadow: 0 0 15px #ff8e4d;
-    }
-    .save-btn {
-      background: linear-gradient(145deg, #ff8e4d, #c5481f);
-      border: none;
-      padding: 1.2rem;
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: 3px;
-      border-radius: 50px;
-      color: white;
-      text-transform: uppercase;
+    .info-row {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid rgba(255, 100, 100, 0.2);
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: #aaa;
+    }
+    .info-value {
+      color: #ffbe4d;
+      font-weight: 600;
+    }
+    
+    /* Edit Button */
+    .edit-profile-btn {
+      background: transparent;
+      border: 2px solid #ff6a4d;
+      color: #ffb347;
+      padding: 1rem;
+      border-radius: 50px;
+      font-weight: 700;
+      display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      gap: 10px;
       cursor: pointer;
       width: 100%;
       margin-top: 1rem;
-      border-bottom: 4px solid #8a2f0e;
       transition: 0.2s;
-    }
-    .save-btn:hover {
-      background: #ff6a2b;
-      transform: translateY(2px);
-      box-shadow: 0 10px 20px rgba(255, 142, 77, 0.4);
-    }
-    .back-btn {
-      display: block;
-      text-align: center;
-      margin-top: 1.5rem;
-      color: #ffbe4d;
       text-decoration: none;
     }
+    .edit-profile-btn:hover {
+      background: #ff6a4d;
+      color: black;
+    }
+    
+    /* Main Content */
+    .profile-main {
+      background: rgba(7, 10, 15, 0.9);
+      backdrop-filter: blur(10px);
+      border: 2px solid #ff8e4d;
+      border-radius: 30px;
+      padding: 2rem;
+    }
+    
+    /* Tabs */
+    .profile-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255, 70, 70, 0.3);
+      padding-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .profile-tab {
+      background: transparent;
+      border: 2px solid #ff6a4d;
+      color: #ffb347;
+      padding: 0.8rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-tab.active {
+      background: #ff6a4d;
+      color: black;
+    }
+    .profile-tab:hover {
+      background: #ff6a4d;
+      color: black;
+    }
+    
+    /* Orders Table */
+    .orders-table {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      text-align: left;
+      padding: 1rem;
+      color: #ffbe4d;
+      border-bottom: 2px solid #ff3838;
+    }
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 100, 100, 0.2);
+    }
+    
+    /* Status Badges */
+    .status-badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .status-pending { background: #f39c12; color: black; }
+    .status-processing { background: #3498db; color: white; }
+    .status-completed { background: #00b894; color: white; }
+    .status-failed { background: #ff3838; color: white; }
+    .status-cancelled { background: #7f8c8d; color: white; }
+    .status-waiting { background: #f39c12; color: black; }
+    
+    /* Cart Items */
+    .cart-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      background: rgba(20, 25, 30, 0.9);
+      border-radius: 16px;
+      margin-bottom: 1rem;
+    }
+    .cart-item-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .cart-item-icon {
+      font-size: 1.5rem;
+      color: #ff984f;
+    }
+    .cart-item-details h4 {
+      color: #ffbe4d;
+      margin-bottom: 0.3rem;
+    }
+    .cart-item-price {
+      color: #ffd966;
+    }
+    
+    /* Activity Log */
+    .activity-log {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem;
+      border-bottom: 1px solid rgba(255, 100, 100, 0.2);
+    }
+    .log-icon {
+      width: 30px;
+      color: #ffbe4d;
+    }
+    .log-details {
+      flex: 1;
+    }
+    .log-action {
+      font-weight: 700;
+      color: #ffbe4d;
+    }
+    .log-time {
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+    
+    /* Hidden Details Button */
+    .hidden-details-btn {
+      background: transparent;
+      border: 1px dashed #ff6a4d;
+      color: #ffb347;
+      padding: 0.8rem;
+      border-radius: 40px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.5rem;
+      transition: 0.2s;
+    }
+    .hidden-details-btn:hover {
+      background: rgba(255, 106, 77, 0.1);
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #1a1e24;
+      padding: 2rem;
+      border-radius: 24px;
+      border: 2px solid #ff3838;
+      max-width: 400px;
+      width: 90%;
+    }
+    .modal-content h3 {
+      color: #ffbe4d;
+      margin-bottom: 1.5rem;
+      font-family: 'Orbitron', sans-serif;
+    }
+    
+    /* Alert */
     .alert {
       padding: 1rem;
-      border-radius: 50px;
-      margin-bottom: 1.5rem;
-      text-align: center;
+      border-radius: 10px;
+      margin-bottom: 1rem;
       display: none;
     }
-    .alert-success {
-      background: rgba(0, 255, 0, 0.2);
-      border: 1px solid #00ff00;
-      color: #00ff00;
-    }
-    .alert-error {
-      background: rgba(255, 0, 0, 0.2);
-      border: 1px solid #ff0000;
-      color: #ff0000;
+    .alert-success { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #00ff00; }
+    .alert-error { background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000; color: #ff0000; }
+    
+    @media (max-width: 1024px) {
+      .profile-grid { grid-template-columns: 1fr; }
+      .profile-sidebar { position: static; }
     }
   </style>
 </head>
 <body>
-  <div class="profile-container">
-    <div class="glitch-title">EDIT PROFILE</div>
-    <div style="text-align: center; margin-bottom: 2rem; color: #ffbe4d;">
-      <i class="fas fa-user-edit"></i> Update your information
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div style="display: flex; align-items: center;">
+        <h1 class="glitch-title">IMP0STER</h1>
+        <span class="ff-badge"><i class="fas fa-user-secret"></i> PROFILE</span>
+      </div>
+      <div>
+        <a href="/" class="back-btn"><i class="fas fa-store"></i> BACK TO STORE</a>
+        <a href="/cart" class="back-btn" style="margin-left: 1rem;"><i class="fas fa-shopping-cart"></i> VIEW CART</a>
+      </div>
     </div>
 
+    <!-- Alert Message -->
     <div id="alertMessage" class="alert">
       <i class="fas fa-info-circle"></i> <span id="alertText"></span>
     </div>
-    
-    <form id="profileForm">
-      <div class="input-group">
-        <i class="fas fa-gamepad"></i>
-        <input type="text" id="ff_uid" name="ff_uid" placeholder="Free Fire UID">
+
+    <!-- Profile Grid -->
+    <div class="profile-grid">
+      <!-- Left Sidebar - Profile Card -->
+      <div class="profile-sidebar">
+        <div class="profile-avatar">
+          <i class="fas fa-user-secret"></i>
+        </div>
+        <div class="profile-name" id="profileUsername">LOADING...</div>
+        <div class="profile-role" id="profileRole">USER</div>
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="totalOrders">0</div>
+            <div class="stat-label">ORDERS</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="pendingOrders">0</div>
+            <div class="stat-label">PENDING</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="completedOrders">0</div>
+            <div class="stat-label">COMPLETED</div>
+          </div>
+        </div>
+        
+        <!-- Public Information -->
+        <div class="info-section">
+          <div class="info-title">
+            <i class="fas fa-info-circle"></i>
+            <span>PUBLIC PROFILE</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-envelope"></i> Email</span>
+            <span class="info-value" id="profileEmail">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-gamepad"></i> FF UID</span>
+            <span class="info-value" id="profileFFUID">Not set</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fab fa-discord"></i> Discord</span>
+            <span class="info-value" id="profileDiscord">Not linked</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-calendar"></i> Member Since</span>
+            <span class="info-value" id="profileJoined">-</span>
+          </div>
+        </div>
+        
+        <!-- Hidden Details Button (Bottom of Sidebar) -->
+        <button class="hidden-details-btn" onclick="toggleHiddenDetails()">
+          <i class="fas fa-eye-slash"></i> <span id="hiddenBtnText">SHOW HIDDEN DETAILS</span>
+        </button>
+        
+        <!-- Hidden Details Section (Initially Hidden) -->
+        <div id="hiddenDetailsSection" style="display: none;" class="info-section">
+          <div class="info-title">
+            <i class="fas fa-mask"></i>
+            <span>PRIVATE DETAILS</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-id-card"></i> User ID</span>
+            <span class="info-value" id="hiddenUserId">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-tag"></i> IP Address</span>
+            <span class="info-value" id="hiddenIP">Hidden</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-clock"></i> Last Login</span>
+            <span class="info-value" id="hiddenLastLogin">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-shield-alt"></i> Account Status</span>
+            <span class="info-value" id="hiddenStatus">Active</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label"><i class="fas fa-key"></i> API Key</span>
+            <span class="info-value">••••••••••••</span>
+          </div>
+        </div>
+        
+        <a href="/edit-profile" class="edit-profile-btn">
+          <i class="fas fa-user-edit"></i> EDIT PROFILE
+        </a>
       </div>
       
-      <div class="input-group">
-        <i class="fab fa-discord"></i>
-        <input type="text" id="discord_id" name="discord_id" placeholder="Discord ID (e.g., username#0000)">
+      <!-- Right Main Content -->
+      <div class="profile-main">
+        <!-- Profile Tabs -->
+        <div class="profile-tabs">
+          <button class="profile-tab active" onclick="switchProfileTab('orders')">
+            <i class="fas fa-shopping-cart"></i> MY ORDERS
+          </button>
+          <button class="profile-tab" onclick="switchProfileTab('cart')">
+            <i class="fas fa-shopping-basket"></i> CART HISTORY
+          </button>
+          <button class="profile-tab" onclick="switchProfileTab('activity')">
+            <i class="fas fa-history"></i> ACTIVITY LOG
+          </button>
+          <button class="profile-tab" onclick="switchProfileTab('pending')">
+            <i class="fas fa-clock"></i> PENDING/REJECTED
+          </button>
+        </div>
+        
+        <!-- Tab Content -->
+        <div id="orders-tab" class="profile-tab-content" style="display: block;">
+          <h2 style="color: #ffbe4d; margin-bottom: 1.5rem;">
+            <i class="fas fa-shopping-cart"></i> MY ORDERS
+          </h2>
+          <div class="orders-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>ORDER ID</th>
+                  <th>PRODUCT</th>
+                  <th>AMOUNT</th>
+                  <th>DATE</th>
+                  <th>STATUS</th>
+                  <th>PAYMENT</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading orders...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div id="cart-tab" class="profile-tab-content" style="display: none;">
+          <h2 style="color: #ffbe4d; margin-bottom: 1.5rem;">
+            <i class="fas fa-shopping-basket"></i> CART HISTORY
+          </h2>
+          <div id="cartHistoryContainer">
+            <!-- Cart history will be loaded here -->
+          </div>
+        </div>
+        
+        <div id="activity-tab" class="profile-tab-content" style="display: none;">
+          <h2 style="color: #ffbe4d; margin-bottom: 1.5rem;">
+            <i class="fas fa-history"></i> ACTIVITY LOG
+          </h2>
+          <div class="activity-log" id="activityLogContainer">
+            <!-- Activity log will be loaded here -->
+          </div>
+        </div>
+        
+        <div id="pending-tab" class="profile-tab-content" style="display: none;">
+          <h2 style="color: #ffbe4d; margin-bottom: 1.5rem;">
+            <i class="fas fa-clock"></i> PENDING & REJECTED ORDERS
+          </h2>
+          <div class="orders-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>ORDER ID</th>
+                  <th>PRODUCT</th>
+                  <th>AMOUNT</th>
+                  <th>DATE</th>
+                  <th>STATUS</th>
+                  <th>REASON</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="pendingOrdersBody">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading orders...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      
-      <div class="input-group">
-        <i class="fas fa-tag"></i>
-        <input type="text" id="discord_username" name="discord_username" placeholder="Discord Username">
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="orderDetailsModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-shopping-cart"></i> ORDER DETAILS</h3>
+      <div id="orderDetailsContent">
+        <!-- Order details will be inserted here -->
       </div>
-      
-      <button type="submit" class="save-btn">
-        <i class="fas fa-save"></i> SAVE CHANGES
-      </button>
-    </form>
-    
-    <a href="/" class="back-btn">
-      <i class="fas fa-arrow-left"></i> BACK TO STORE
-    </a>
+      <button class="close-btn" onclick="closeModal()" style="background: transparent; border: 1px solid #ff3838; color: white; padding: 0.8rem; border-radius: 20px; width: 100%; margin-top: 1rem; cursor: pointer;">CLOSE</button>
+    </div>
   </div>
 
   <script>
+    // ============ GLOBAL VARIABLES ============
+    let userData = null;
+    let userOrders = [];
+    let cartLogs = [];
+    let hiddenDetailsVisible = false;
+
+    // ============ LOAD USER DATA ============
     document.addEventListener('DOMContentLoaded', function() {
-      fetch('/api/user')
-        .then(res => res.json())
-        .then(user => {
-          document.getElementById('ff_uid').value = user.ff_uid || '';
-          document.getElementById('discord_id').value = user.discord_id || '';
-          document.getElementById('discord_username').value = user.discord_username || '';
-        });
+      loadUserData();
+      loadUserOrders();
+      loadCartLogs();
     });
 
-    document.getElementById('profileForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const data = {
-        ff_uid: document.getElementById('ff_uid').value,
-        discord_id: document.getElementById('discord_id').value,
-        discord_username: document.getElementById('discord_username').value
-      };
-
-      fetch('/api/user/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('Profile updated successfully!', 'success');
-          setTimeout(() => window.location.href = '/', 1500);
+    async function loadUserData() {
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) throw new Error('Not logged in');
+        const data = await response.json();
+        userData = data;
+        
+        // Update profile information
+        document.getElementById('profileUsername').textContent = data.username || 'IMPOSTER';
+        document.getElementById('profileRole').textContent = data.role?.toUpperCase() || 'USER';
+        document.getElementById('profileEmail').textContent = data.email || '-';
+        document.getElementById('profileFFUID').textContent = data.ff_uid || 'Not set';
+        document.getElementById('profileDiscord').textContent = data.discord_username || data.discord_id || 'Not linked';
+        
+        // Hidden details
+        document.getElementById('hiddenUserId').textContent = `#${data.id || '0000'}`;
+        
+        if (data.created_at) {
+          const date = new Date(data.created_at);
+          document.getElementById('profileJoined').textContent = date.toLocaleDateString('en-US', { 
+            month: 'long', 
+            year: 'numeric' 
+          });
         }
-      })
-      .catch(error => {
-        showAlert('Error updating profile', 'error');
-      });
-    });
+        
+        // Get last login from session
+        document.getElementById('hiddenLastLogin').textContent = new Date().toLocaleString();
+        
+      } catch (error) {
+        console.error('Error:', error);
+        window.location.href = '/login';
+      }
+    }
 
-    function showAlert(message, type) {
-      const alert = document.getElementById('alertMessage');
-      alert.className = `alert alert-${type}`;
-      document.getElementById('alertText').textContent = message;
-      alert.style.display = 'block';
+    // ============ TOGGLE HIDDEN DETAILS ============
+    function toggleHiddenDetails() {
+      const hiddenSection = document.getElementById('hiddenDetailsSection');
+      const btnText = document.getElementById('hiddenBtnText');
+      
+      if (hiddenDetailsVisible) {
+        hiddenSection.style.display = 'none';
+        btnText.innerHTML = '<i class="fas fa-eye-slash"></i> SHOW HIDDEN DETAILS';
+        hiddenDetailsVisible = false;
+      } else {
+        hiddenSection.style.display = 'block';
+        btnText.innerHTML = '<i class="fas fa-eye"></i> HIDE HIDDEN DETAILS';
+        hiddenDetailsVisible = true;
+      }
+    }
+
+    // ============ TAB SWITCHING ============
+    function switchProfileTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.profile-tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      document.querySelectorAll('.profile-tab').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      document.getElementById(`${tabName}-tab`).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    // ============ LOAD USER ORDERS ============
+    async function loadUserOrders() {
+      try {
+        const response = await fetch('/api/user/orders');
+        if (!response.ok) throw new Error('Failed to load orders');
+        const orders = await response.json();
+        userOrders = orders;
+        
+        // Update stats
+        const totalOrders = orders.length;
+        const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
+        const completedOrders = orders.filter(o => o.status === 'completed').length;
+        
+        document.getElementById('totalOrders').textContent = totalOrders;
+        document.getElementById('pendingOrders').textContent = pendingOrders;
+        document.getElementById('completedOrders').textContent = completedOrders;
+        
+        displayAllOrders(orders);
+        displayPendingOrders(orders);
+        
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function displayAllOrders(orders) {
+      const tbody = document.getElementById('ordersTableBody');
+      
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No orders found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.map(order => {
+        const statusClass = {
+          'pending': 'status-pending',
+          'processing': 'status-processing',
+          'completed': 'status-completed',
+          'failed': 'status-failed',
+          'cancelled': 'status-cancelled'
+        }[order.status] || 'status-pending';
+        
+        const paymentClass = {
+          'waiting': 'status-pending',
+          'processing': 'status-processing',
+          'completed': 'status-completed',
+          'failed': 'status-failed'
+        }[order.payment_status] || 'status-pending';
+        
+        return `
+          <tr>
+            <td style="color: #ffbe4d;">#${order.id}</td>
+            <td>${escapeHtml(order.product_name || 'Unknown')}</td>
+            <td>$${parseFloat(order.total_price || order.price || 0).toFixed(2)}</td>
+            <td>${formatDate(order.created_at)}</td>
+            <td>
+              <span class="status-badge ${statusClass}">
+                ${order.status?.toUpperCase() || 'PENDING'}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge ${paymentClass}">
+                ${order.payment_status?.toUpperCase() || 'WAITING'}
+              </span>
+            </td>
+            <td>
+              <button class="view-btn" onclick="viewOrderDetails(${order.id})" style="background: #6c5ce7; color: white; border: none; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer;">
+                <i class="fas fa-eye"></i> VIEW
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function displayPendingOrders(orders) {
+      const pendingFailed = orders.filter(o => 
+        o.status === 'pending' || 
+        o.status === 'processing' || 
+        o.status === 'failed' || 
+        o.status === 'cancelled'
+      );
+      
+      const tbody = document.getElementById('pendingOrdersBody');
+      
+      if (pendingFailed.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No pending or rejected orders</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = pendingFailed.map(order => {
+        const statusClass = {
+          'pending': 'status-pending',
+          'processing': 'status-processing',
+          'failed': 'status-failed',
+          'cancelled': 'status-cancelled'
+        }[order.status] || 'status-pending';
+        
+        let reason = '';
+        if (order.status === 'failed') reason = 'Payment failed';
+        else if (order.status === 'cancelled') reason = 'Order cancelled';
+        else if (order.status === 'pending') reason = 'Waiting for payment';
+        else if (order.status === 'processing') reason = 'Processing payment';
+        
+        return `
+          <tr>
+            <td style="color: #ffbe4d;">#${order.id}</td>
+            <td>${escapeHtml(order.product_name || 'Unknown')}</td>
+            <td>$${parseFloat(order.total_price || order.price || 0).toFixed(2)}</td>
+            <td>${formatDate(order.created_at)}</td>
+            <td>
+              <span class="status-badge ${statusClass}">
+                ${order.status?.toUpperCase() || 'PENDING'}
+              </span>
+            </td>
+            <td>${reason}</td>
+            <td>
+              <button class="view-btn" onclick="viewOrderDetails(${order.id})" style="background: #6c5ce7; color: white; border: none; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer;">
+                <i class="fas fa-eye"></i> VIEW
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ============ LOAD CART LOGS ============
+    async function loadCartLogs() {
+      try {
+        const response = await fetch('/api/cart/logs');
+        if (!response.ok) throw new Error('Failed to load cart logs');
+        const logs = await response.json();
+        cartLogs = logs;
+        
+        displayCartHistory(logs);
+        
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function displayCartHistory(logs) {
+      const container = document.getElementById('cartHistoryContainer');
+      
+      if (logs.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #aaa;">No cart activity found</div>';
+        return;
+      }
+
+      container.innerHTML = logs.map(log => `
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <div class="cart-item-icon">
+              <i class="fas ${log.action === 'add' ? 'fa-cart-plus' : log.action === 'remove' ? 'fa-cart-arrow-down' : 'fa-shopping-cart'}"></i>
+            </div>
+            <div class="cart-item-details">
+              <h4>${log.action?.toUpperCase()} - ${escapeHtml(log.product_name || 'Product')}</h4>
+              <div class="cart-item-price">${escapeHtml(log.details || '')}</div>
+            </div>
+          </div>
+          <div style="color: #aaa; font-size: 0.8rem;">
+            ${new Date(log.created_at).toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============ LOAD ACTIVITY LOGS ============
+    async function loadActivityLogs() {
+      try {
+        const response = await fetch('/api/user/order-logs');
+        if (!response.ok) throw new Error('Failed to load activity logs');
+        const logs = await response.json();
+        
+        displayActivityLogs(logs);
+        
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function displayActivityLogs(logs) {
+      const container = document.getElementById('activityLogContainer');
+      
+      if (logs.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #aaa;">No activity found</div>';
+        return;
+      }
+
+      container.innerHTML = logs.map(log => `
+        <div class="log-entry">
+          <div class="log-icon">
+            <i class="fas ${log.action === 'create' ? 'fa-plus-circle' : log.action === 'status_update' ? 'fa-sync' : 'fa-info-circle'}"></i>
+          </div>
+          <div class="log-details">
+            <div class="log-action">${log.action?.toUpperCase()}</div>
+            <div style="color: #fff;">${escapeHtml(log.details || '')}</div>
+          </div>
+          <div class="log-time">${new Date(log.created_at).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+
+    // ============ ORDER DETAILS ============
+    function viewOrderDetails(orderId) {
+      const order = userOrders.find(o => o.id === orderId);
+      if (!order) return;
+      
+      const detailsHtml = `
+        <div style="margin-bottom: 1rem;">
+          <span class="status-badge ${order.status === 'pending' ? 'status-pending' : order.status === 'completed' ? 'status-completed' : 'status-failed'}" 
+                style="font-size: 0.9rem; padding: 0.4rem 1rem;">
+            ${order.status?.toUpperCase() || 'PENDING'}
+          </span>
+        </div>
+        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dotted rgba(255,255,255,0.1);">
+          <span style="color: #aaa;">Order ID:</span>
+          <span style="color: #ffbe4d; font-weight: 700;">#${order.id}</span>
+        </div>
+        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dotted rgba(255,255,255,0.1);">
+          <span style="color: #aaa;">Product:</span>
+          <span style="color: #ffbe4d; font-weight: 700;">${escapeHtml(order.product_name || 'Unknown')}</span>
+        </div>
+        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dotted rgba(255,255,255,0.1);">
+          <span style="color: #aaa;">Quantity:</span>
+          <span style="color: #ffbe4d; font-weight: 700;">${order.quantity || 1}</span>
+        </div>
+        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dotted rgba(255,255,255,0.1);">
+          <span style="color: #aaa;">Total Price:</span>
+          <span style="color: #ffbe4d; font-weight: 700;">$${parseFloat(order.total_price || order.price || 0).toFixed(2)}</span>
+        </div>
+        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dotted rgba(255,255,255,0.1);">
+          <span style="color: #aaa;">Order Date:</span>
+          <span style="color: #ffbe4d; font-weight: 700;">${new Date(order.created_at).toLocaleString()}</span>
+        </div>
+        <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px dotted rgba(255,255,255,0.1);">
+          <span style="color: #aaa;">Payment Status:</span>
+          <span style="color: #ffbe4d; font-weight: 700;">${order.payment_status?.toUpperCase() || 'WAITING'}</span>
+        </div>
+        <div class="detail-row" style="display: flex; justify-content: space-between;">
+          <span style="color: #aaa;">Notes:</span>
+          <span style="color: #ffbe4d; font-weight: 700; text-align: right;">${escapeHtml(order.notes || 'No notes')}</span>
+        </div>
+      `;
+      
+      document.getElementById('orderDetailsContent').innerHTML = detailsHtml;
+      document.getElementById('orderDetailsModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('orderDetailsModal').style.display = 'none';
+    }
+
+    // ============ LOAD ACTIVITY WHEN TAB CLICKED ============
+    function switchProfileTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.profile-tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      document.querySelectorAll('.profile-tab').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      document.getElementById(`${tabName}-tab`).style.display = 'block';
+      event.target.classList.add('active');
+      
+      // Load data if needed
+      if (tabName === 'activity') {
+        loadActivityLogs();
+      }
+    }
+
+    // ============ UTILITY FUNCTIONS ============
+    function formatDate(dateString) {
+      if (!dateString) return '—';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('orderDetailsModal');
+      if (event.target === modal) {
+        closeModal();
+      }
     }
   </script>
 </body>
