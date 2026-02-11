@@ -10,6 +10,9 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #0a0c0f;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255, 70, 70, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 80% 70%, rgba(255, 200, 50, 0.05) 0%, transparent 30%);
       font-family: 'Inter', sans-serif;
       color: #fff;
       padding: 2rem;
@@ -23,6 +26,8 @@
       margin-bottom: 2rem;
       padding-bottom: 1rem;
       border-bottom: 1px solid rgba(255, 70, 70, 0.3);
+      flex-wrap: wrap;
+      gap: 1rem;
     }
     .glitch-title {
       font-family: 'Orbitron', sans-serif;
@@ -31,6 +36,7 @@
       text-transform: uppercase;
       letter-spacing: 3px;
       text-shadow: 0.05em 0 0 rgba(255,0,0,0.7), -0.05em -0.025em 0 rgba(0,255,255,0.5);
+      animation: glitch 4s infinite alternate;
     }
     .admin-badge {
       background: #ff3a3a;
@@ -38,18 +44,33 @@
       border-radius: 30px;
       color: black;
       font-weight: 800;
+      margin-left: 1rem;
+    }
+    .back-btn, .discord-btn {
+      padding: 0.5rem 1.5rem;
+      border-radius: 30px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
     }
     .back-btn {
       color: #ffbe4d;
-      text-decoration: none;
-      padding: 0.5rem 1.5rem;
       border: 1px solid #ff6a4d;
-      border-radius: 30px;
-      transition: 0.2s;
     }
     .back-btn:hover {
       background: #ff6a4d;
       color: black;
+    }
+    .discord-btn {
+      background: #5865F2;
+      color: white;
+      margin-left: 1rem;
+    }
+    .discord-btn:hover {
+      background: #4752c4;
+      transform: translateY(-2px);
     }
     
     .stats-grid {
@@ -63,16 +84,24 @@
       border: 1px solid #ff3838;
       border-radius: 20px;
       padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
-    .stat-card i {
-      font-size: 2rem;
+    .stat-icon {
+      font-size: 2.5rem;
       color: #ffbe4d;
-      margin-bottom: 0.5rem;
+    }
+    .stat-info h3 {
+      font-size: 0.9rem;
+      color: #aaa;
+      text-transform: uppercase;
     }
     .stat-number {
       font-size: 2rem;
       font-weight: 800;
       color: #ffd966;
+      font-family: 'Orbitron', sans-serif;
     }
     
     .users-table {
@@ -81,6 +110,13 @@
       border-radius: 24px;
       padding: 1.5rem;
       overflow-x: auto;
+    }
+    .users-table h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+      color: #ffbe4d;
     }
     table {
       width: 100%;
@@ -101,6 +137,7 @@
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 700;
+      display: inline-block;
     }
     .role-admin { background: #ff3a3a; color: black; }
     .role-user { background: #2a2a2a; color: white; }
@@ -112,10 +149,13 @@
       cursor: pointer;
       font-weight: 600;
       margin: 0 0.2rem;
+      transition: 0.2s;
     }
     .edit-btn { background: #ffbe4d; color: black; }
+    .edit-btn:hover { background: #ffd966; transform: translateY(-2px); }
     .delete-btn { background: #ff3838; color: white; }
-    .delete-btn:hover { background: #ff0000; }
+    .delete-btn:hover { background: #ff0000; transform: translateY(-2px); }
+    .delete-btn:disabled { background: #666; cursor: not-allowed; }
     
     .modal {
       display: none;
@@ -127,6 +167,7 @@
       background: rgba(0,0,0,0.8);
       align-items: center;
       justify-content: center;
+      z-index: 1000;
     }
     .modal-content {
       background: #1a1e24;
@@ -136,17 +177,286 @@
       max-width: 400px;
       width: 90%;
     }
-    .modal select {
+    .modal-content h3 {
+      color: #ffbe4d;
+      margin-bottom: 1rem;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .modal-content select {
       width: 100%;
-      padding: 0.8rem;
+      padding: 1rem;
       margin: 1rem 0;
       background: #2a2e34;
       border: 1px solid #ff6a4d;
       border-radius: 10px;
       color: white;
+      font-size: 1rem;
     }
     .save-btn {
       background: #ff6a4d;
       color: black;
       border: none;
-      padding: 0
+      padding: 1rem;
+      border-radius: 50px;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+    }
+    .close-btn {
+      background: transparent;
+      border: 1px solid #ff3838;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 1rem;
+      width: 100%;
+    }
+    
+    .alert {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .alert-success { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #00ff00; }
+    .alert-error { background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000; color: #ff0000; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <h1 class="glitch-title">IMP0STER</h1>
+        <span class="admin-badge"><i class="fas fa-shield-alt"></i> ADMIN PANEL</span>
+        <a href="https://discord.gg/EYT8NmaMph" target="_blank" class="discord-btn">
+          <i class="fab fa-discord"></i> SUPPORT
+        </a>
+      </div>
+      <div>
+        <a href="/" class="back-btn"><i class="fas fa-store"></i> BACK TO STORE</a>
+      </div>
+    </div>
+
+    <div id="alertMessage" class="alert">
+      <i class="fas fa-info-circle"></i> <span id="alertText"></span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+          <h3>TOTAL USERS</h3>
+          <div class="stat-number" id="totalUsers">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="stat-info">
+          <h3>ADMINS</h3>
+          <div class="stat-number" id="totalAdmins">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-user"></i></div>
+        <div class="stat-info">
+          <h3>USERS</h3>
+          <div class="stat-number" id="totalRegular">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-calendar"></i></div>
+        <div class="stat-info">
+          <h3>TODAY</h3>
+          <div class="stat-number" id="todayDate"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="users-table">
+      <h2><i class="fas fa-database"></i> USER MANAGEMENT</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>USERNAME</th>
+            <th>EMAIL</th>
+            <th>FF UID</th>
+            <th>DISCORD</th>
+            <th>ROLE</th>
+            <th>JOINED</th>
+            <th>LAST LOGIN</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 2rem;">
+              <i class="fas fa-spinner fa-spin"></i> Loading users...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-user-edit"></i> EDIT USER ROLE</h3>
+      <p style="color: #ccc; margin-bottom: 1rem;" id="editUsername"></p>
+      <select id="roleSelect">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button class="save-btn" onclick="saveRole()">
+        <i class="fas fa-save"></i> UPDATE ROLE
+      </button>
+      <button class="close-btn" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <script>
+    let currentEditUserId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUsers();
+      document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+    });
+
+    function loadUsers() {
+      fetch('/api/admin/users')
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to load users');
+          return response.json();
+        })
+        .then(users => {
+          updateStats(users);
+          displayUsers(users);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showAlert('Failed to load users. Make sure you are admin.', 'error');
+        });
+    }
+
+    function updateStats(users) {
+      document.getElementById('totalUsers').textContent = users.length;
+      document.getElementById('totalAdmins').textContent = users.filter(u => u.role === 'admin').length;
+      document.getElementById('totalRegular').textContent = users.filter(u => u.role !== 'admin').length;
+    }
+
+    function displayUsers(users) {
+      const tbody = document.getElementById('usersTableBody');
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No users found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(user => `
+        <tr>
+          <td style="color: #ffbe4d;">#${user.id}</td>
+          <td><strong>${escapeHtml(user.username)}</strong></td>
+          <td>${escapeHtml(user.email)}</td>
+          <td>${user.ff_uid || '—'}</td>
+          <td>${user.discord_username || user.discord_id || '—'}</td>
+          <td>
+            <span class="role-badge ${user.role === 'admin' ? 'role-admin' : 'role-user'}">
+              ${user.role?.toUpperCase() || 'USER'}
+            </span>
+          </td>
+          <td>${formatDate(user.created_at)}</td>
+          <td>${user.last_login ? formatDate(user.last_login) : 'Never'}</td>
+          <td>
+            <button class="edit-btn" onclick="openEditModal('${user.id}', '${escapeHtml(user.username)}', '${user.role}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="delete-btn" onclick="deleteUser('${user.id}')" ${user.role === 'admin' ? 'disabled' : ''}>
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openEditModal(userId, username, currentRole) {
+      currentEditUserId = userId;
+      document.getElementById('editUsername').innerHTML = 
+        `<i class="fas fa-user"></i> Editing: <strong style="color: #ffbe4d;">${username}</strong>`;
+      document.getElementById('roleSelect').value = currentRole || 'user';
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').style.display = 'none';
+      currentEditUserId = null;
+    }
+
+    function saveRole() {
+      if (!currentEditUserId) return;
+      
+      fetch('/api/admin/update-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: currentEditUserId, 
+          role: document.getElementById('roleSelect').value 
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('User role updated successfully!', 'success');
+          closeModal();
+          loadUsers();
+        }
+      });
+    }
+
+    function deleteUser(userId) {
+      if (!confirm('⚠️ Delete this user? This cannot be undone!')) return;
+      
+      fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('User deleted successfully!', 'success');
+          loadUsers();
+        }
+      });
+    }
+
+    function showAlert(message, type) {
+      const alert = document.getElementById('alertMessage');
+      alert.className = `alert alert-${type}`;
+      document.getElementById('alertText').textContent = message;
+      alert.style.display = 'block';
+      setTimeout(() => alert.style.display = 'none', 3000);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '—';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('editModal');
+      if (event.target === modal) closeModal();
+    }
+  </script>
+</body>
+</html>
