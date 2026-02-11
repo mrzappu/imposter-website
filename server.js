@@ -1,13 +1,9 @@
-// server.js - Complete Fixed Version for Render
+// server.js - Complete Working Version for Render
 const express = require('express');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
-const fs = require('fs');
-
-// Suppress deprecation warnings
-process.noDeprecation = true;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,28 +13,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-// Set up SQLite session store
-const SQLiteStore = require('connect-sqlite3')(session);
-
-// Session configuration with SQLite store (production ready)
+// Session configuration
 app.use(session({
-  store: new SQLiteStore({ 
-    db: 'sessions.db',
-    dir: './'
-  }),
   secret: process.env.SESSION_SECRET || 'imposter-ff-panel-secret-key-2025',
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (Render HTTPS)
+    secure: false, // Set to false for Render HTTP
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true,
-    sameSite: 'strict'
+    sameSite: 'lax'
   }
 }));
 
-// Set EJS as view engine
-app.set('view engine', 'ejs');
+// Set views directory for HTML files
 app.set('views', path.join(__dirname, 'views'));
 
 // Database setup - impostor.db
@@ -68,43 +56,62 @@ const requireLogin = (req, res, next) => {
 
 // ============ ROUTES ============
 
-// Home/Store page (protected)
+// Serve HTML files
 app.get('/', requireLogin, (req, res) => {
-  res.render('index', { 
-    username: req.session.username,
-    email: req.session.email
-  });
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
-// ============ LOGIN ROUTES ============
 app.get('/login', (req, res) => {
   if (req.session.userId) {
     return res.redirect('/');
   }
-  res.render('login', { error: null });
+  res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
+app.get('/register', (req, res) => {
+  if (req.session.userId) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, 'views', 'register.html'));
+});
+
+// ============ API ENDPOINTS ============
+
+// Get current user info
+app.get('/api/user', requireLogin, (req, res) => {
+  db.get('SELECT id, username, email, ff_uid, created_at FROM users WHERE id = ?', 
+    [req.session.userId], 
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json(row);
+  });
+});
+
+// ============ LOGIN HANDLER ============
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   
   if (!username || !password) {
-    return res.render('login', { error: 'Username and password required' });
+    return res.redirect('/login?error=Username and password required');
   }
   
   db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, username], async (err, user) => {
     if (err) {
       console.error(err);
-      return res.render('login', { error: 'Database error' });
+      return res.redirect('/login?error=Database error');
     }
     
     if (!user) {
-      return res.render('login', { error: 'User not found' });
+      return res.redirect('/login?error=User not found');
     }
     
     try {
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
-        return res.render('login', { error: 'Invalid password' });
+        return res.redirect('/login?error=Invalid password');
       }
       
       // Update last login
@@ -118,42 +125,35 @@ app.post('/login', (req, res) => {
       res.redirect('/');
     } catch (error) {
       console.error(error);
-      res.render('login', { error: 'Login failed' });
+      res.redirect('/login?error=Login failed');
     }
   });
 });
 
-// ============ REGISTER ROUTES ============
-app.get('/register', (req, res) => {
-  if (req.session.userId) {
-    return res.redirect('/');
-  }
-  res.render('register', { error: null });
-});
-
+// ============ REGISTER HANDLER ============
 app.post('/register', async (req, res) => {
   const { username, email, password, ff_uid } = req.body;
   
   // Validation
   if (!username || !email || !password) {
-    return res.render('register', { error: 'All fields are required' });
+    return res.redirect('/register?error=All fields are required');
   }
   
   if (username.length < 3) {
-    return res.render('register', { error: 'Username must be at least 3 characters' });
+    return res.redirect('/register?error=Username must be at least 3 characters');
   }
   
   if (password.length < 6) {
-    return res.render('register', { error: 'Password must be at least 6 characters' });
+    return res.redirect('/register?error=Password must be at least 6 characters');
   }
   
   if (!email.includes('@') || !email.includes('.')) {
-    return res.render('register', { error: 'Please enter a valid email' });
+    return res.redirect('/register?error=Please enter a valid email');
   }
   
   try {
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
     
     // Insert user
     db.run(
@@ -163,13 +163,13 @@ app.post('/register', async (req, res) => {
         if (err) {
           if (err.message.includes('UNIQUE constraint failed')) {
             if (err.message.includes('username')) {
-              return res.render('register', { error: 'Username already taken' });
+              return res.redirect('/register?error=Username already taken');
             } else {
-              return res.render('register', { error: 'Email already registered' });
+              return res.redirect('/register?error=Email already registered');
             }
           }
           console.error(err);
-          return res.render('register', { error: 'Registration failed. Please try again.' });
+          return res.redirect('/register?error=Registration failed');
         }
         
         // Auto login after registration
@@ -182,7 +182,7 @@ app.post('/register', async (req, res) => {
     );
   } catch (error) {
     console.error(error);
-    res.render('register', { error: 'Server error. Please try again.' });
+    res.redirect('/register?error=Server error');
   }
 });
 
@@ -196,47 +196,12 @@ app.get('/logout', (req, res) => {
   });
 });
 
-// ============ API ENDPOINTS (Protected) ============
-app.get('/api/users', requireLogin, (req, res) => {
-  db.all('SELECT id, username, email, ff_uid, created_at, last_login FROM users', [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
-});
-
-app.get('/api/user', requireLogin, (req, res) => {
-  db.get('SELECT id, username, email, ff_uid, created_at, last_login FROM users WHERE id = ?', 
-    [req.session.userId], 
-    (err, row) => {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json(row);
-  });
-});
-
-// ============ HEALTH CHECK (for Render) ============
+// ============ HEALTH CHECK ============
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    timestamp: new Date().toISOString()
   });
-});
-
-// ============ 404 HANDLER ============
-app.use((req, res) => {
-  res.status(404).render('login', { error: 'Page not found. Please login.' });
-});
-
-// ============ ERROR HANDLER ============
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('login', { error: 'Something went wrong! Please try again.' });
 });
 
 // ============ START SERVER ============
