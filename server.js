@@ -1,4 +1,4 @@
-// server.js - Complete with Store Management, Announcements, Product Editor
+// server.js - COMPLETE FIXED VERSION with proper table creation
 const express = require('express');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
@@ -29,139 +29,173 @@ app.use(session({
 // Set views directory
 app.set('views', path.join(__dirname, 'views'));
 
-// Database setup
+// Database setup - WRAPPED IN SERIALIZE to ensure tables are created in order
 const db = new sqlite3.Database('./imposter.db');
 
-// Create users table
-db.run(`CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT UNIQUE NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  ff_uid TEXT,
-  role TEXT DEFAULT 'user',
-  discord_id TEXT,
-  discord_username TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  last_login DATETIME
-)`);
+// Use serialize to ensure tables are created sequentially
+db.serialize(() => {
+  console.log('📦 Creating database tables...');
+  
+  // Create users table
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    ff_uid TEXT,
+    role TEXT DEFAULT 'user',
+    discord_id TEXT,
+    discord_username TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME
+  )`, function(err) {
+    if (err) console.error('Error creating users table:', err);
+    else console.log('✅ Users table ready');
+  });
 
-// Create products table
-db.run(`CREATE TABLE IF NOT EXISTS products (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  subtitle TEXT,
-  price REAL NOT NULL,
-  price_suffix TEXT,
-  icon TEXT DEFAULT 'fa-bolt',
-  features TEXT,
-  status TEXT DEFAULT 'active',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)`);
+  // Create products table
+  db.run(`CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    subtitle TEXT,
+    price REAL NOT NULL,
+    price_suffix TEXT,
+    icon TEXT DEFAULT 'fa-bolt',
+    features TEXT,
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`, function(err) {
+    if (err) console.error('Error creating products table:', err);
+    else console.log('✅ Products table ready');
+  });
 
-// Create announcements table
-db.run(`CREATE TABLE IF NOT EXISTS announcements (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  message TEXT NOT NULL,
-  type TEXT DEFAULT 'info',
-  status TEXT DEFAULT 'active',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  created_by INTEGER
-)`);
+  // Create announcements table
+  db.run(`CREATE TABLE IF NOT EXISTS announcements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    type TEXT DEFAULT 'info',
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER
+  )`, function(err) {
+    if (err) console.error('Error creating announcements table:', err);
+    else console.log('✅ Announcements table ready');
+  });
 
-// Create orders table
-db.run(`CREATE TABLE IF NOT EXISTS orders (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER,
-  product_id INTEGER,
-  status TEXT DEFAULT 'pending',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (product_id) REFERENCES products(id)
-)`);
+  // Create orders table
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    product_id INTEGER,
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+  )`, function(err) {
+    if (err) console.error('Error creating orders table:', err);
+    else console.log('✅ Orders table ready');
+  });
 
-// Insert default products
-const defaultProducts = [
-  {
-    name: 'HEADSHOT ELITE',
-    subtitle: 'Aimbot + Antiban',
-    price: 19.99,
-    price_suffix: '/month',
-    icon: 'fa-bolt',
-    features: JSON.stringify([
-      '98% headshot rate',
-      'Aim lock (undetected)',
-      'Anti-ban shield',
-      '24/7 private server',
-      'Weekly updates',
-      'Premium support'
-    ])
-  },
-  {
-    name: 'DIAMOND FLOOD',
-    subtitle: 'Instant Delivery',
-    price: 44.99,
-    price_suffix: '/instant',
-    icon: 'fa-gem',
-    features: JSON.stringify([
-      '+20,000 diamonds',
-      'No password required',
-      'Delivery in 5min',
-      'Redeem code method',
-      'Safe & secure',
-      'No ban risk'
-    ])
-  },
-  {
-    name: 'RANK IMPOSTER',
-    subtitle: 'Heroic Boost',
-    price: 29.99,
-    price_suffix: '/season',
-    icon: 'fa-chess-queen',
-    features: JSON.stringify([
-      'Heroic rank boost',
-      'K/D spoofing',
-      'MVP unlocker',
-      'Invisible mode',
-      'Matchmaking bypass',
-      'Anti-detection'
-    ])
-  },
-  {
-    name: 'SKULL SKINS',
-    subtitle: 'Legendary Bundle',
-    price: 14.99,
-    price_suffix: '/unlock',
-    icon: 'fa-ghost',
-    features: JSON.stringify([
-      '50+ legendary skins',
-      'Imposter bundle',
-      'Emote collector',
-      'Weapon flamethrower',
-      'Exclusive items',
-      'Instant unlock'
-    ])
-  }
-];
+  // Insert default products AFTER table is created
+  setTimeout(() => {
+    const defaultProducts = [
+      {
+        name: 'HEADSHOT ELITE',
+        subtitle: 'Aimbot + Antiban',
+        price: 19.99,
+        price_suffix: '/month',
+        icon: 'fa-bolt',
+        features: JSON.stringify([
+          '98% headshot rate',
+          'Aim lock (undetected)',
+          'Anti-ban shield',
+          '24/7 private server',
+          'Weekly updates',
+          'Premium support'
+        ])
+      },
+      {
+        name: 'DIAMOND FLOOD',
+        subtitle: 'Instant Delivery',
+        price: 44.99,
+        price_suffix: '/instant',
+        icon: 'fa-gem',
+        features: JSON.stringify([
+          '+20,000 diamonds',
+          'No password required',
+          'Delivery in 5min',
+          'Redeem code method',
+          'Safe & secure',
+          'No ban risk'
+        ])
+      },
+      {
+        name: 'RANK IMPOSTER',
+        subtitle: 'Heroic Boost',
+        price: 29.99,
+        price_suffix: '/season',
+        icon: 'fa-chess-queen',
+        features: JSON.stringify([
+          'Heroic rank boost',
+          'K/D spoofing',
+          'MVP unlocker',
+          'Invisible mode',
+          'Matchmaking bypass',
+          'Anti-detection'
+        ])
+      },
+      {
+        name: 'SKULL SKINS',
+        subtitle: 'Legendary Bundle',
+        price: 14.99,
+        price_suffix: '/unlock',
+        icon: 'fa-ghost',
+        features: JSON.stringify([
+          '50+ legendary skins',
+          'Imposter bundle',
+          'Emote collector',
+          'Weapon flamethrower',
+          'Exclusive items',
+          'Instant unlock'
+        ])
+      }
+    ];
 
-defaultProducts.forEach(product => {
-  db.run(`INSERT OR IGNORE INTO products (name, subtitle, price, price_suffix, icon, features) 
-          VALUES (?, ?, ?, ?, ?, ?)`,
-    [product.name, product.subtitle, product.price, product.price_suffix, product.icon, product.features]
-  );
+    defaultProducts.forEach(product => {
+      db.get('SELECT id FROM products WHERE name = ?', [product.name], (err, row) => {
+        if (!row) {
+          db.run(`INSERT INTO products (name, subtitle, price, price_suffix, icon, features, status) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [product.name, product.subtitle, product.price, product.price_suffix, product.icon, product.features, 'active'],
+            function(err) {
+              if (err) console.error('Error inserting product:', err);
+            }
+          );
+        }
+      });
+    });
+    console.log('✅ Default products inserted');
+  }, 500); // Small delay to ensure table exists
+
+  // Create default admin account
+  setTimeout(async () => {
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    db.get('SELECT id FROM users WHERE username = ?', ['admin'], (err, row) => {
+      if (!row) {
+        db.run(`INSERT INTO users (username, email, password, role) 
+                VALUES (?, ?, ?, ?)`,
+          ['admin', 'admin@imposter.ff', hashedPassword, 'admin'],
+          function(err) {
+            if (err) console.error('Error creating admin:', err);
+            else console.log('✅ Default admin created - Username: admin, Password: admin123');
+          }
+        );
+      }
+    });
+  }, 500);
 });
-
-// Create default admin account
-const createAdmin = async () => {
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-  db.run(`INSERT OR IGNORE INTO users (username, email, password, role) 
-          VALUES (?, ?, ?, ?)`, 
-    ['admin', 'admin@imposter.ff', hashedPassword, 'admin']
-  );
-};
-createAdmin();
 
 console.log('✅ Database connected: imposter.db');
 
@@ -233,12 +267,18 @@ app.get('/api/user', requireLogin, (req, res) => {
 app.get('/api/products', (req, res) => {
   db.all('SELECT * FROM products WHERE status = "active" ORDER BY id ASC', [], (err, rows) => {
     if (err) {
+      console.error('Error fetching products:', err);
       res.status(500).json({ error: err.message });
       return;
     }
+    // Parse features JSON
     rows.forEach(row => {
       if (row.features) {
-        row.features = JSON.parse(row.features);
+        try {
+          row.features = JSON.parse(row.features);
+        } catch (e) {
+          row.features = [];
+        }
       }
     });
     res.json(rows);
@@ -253,7 +293,11 @@ app.get('/api/products/:id', (req, res) => {
       return;
     }
     if (row && row.features) {
-      row.features = JSON.parse(row.features);
+      try {
+        row.features = JSON.parse(row.features);
+      } catch (e) {
+        row.features = [];
+      }
     }
     res.json(row);
   });
@@ -263,10 +307,41 @@ app.get('/api/products/:id', (req, res) => {
 app.get('/api/announcements', (req, res) => {
   db.all('SELECT * FROM announcements WHERE status = "active" ORDER BY created_at DESC LIMIT 5', [], (err, rows) => {
     if (err) {
+      console.error('Error fetching announcements:', err);
       res.status(500).json({ error: err.message });
       return;
     }
-    res.json(rows);
+    res.json(rows || []);
+  });
+});
+
+// Create order
+app.post('/api/orders/create', requireLogin, (req, res) => {
+  const { product_id } = req.body;
+  db.run(
+    'INSERT INTO orders (user_id, product_id, status) VALUES (?, ?, ?)',
+    [req.session.userId, product_id, 'pending'],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ success: true, order_id: this.lastID });
+    }
+  );
+});
+
+// Update user profile
+app.post('/api/user/update', requireLogin, (req, res) => {
+  const { ff_uid, discord_id, discord_username } = req.body;
+  db.run('UPDATE users SET ff_uid = ?, discord_id = ?, discord_username = ? WHERE id = ?', 
+    [ff_uid || null, discord_id || null, discord_username || null, req.session.userId], 
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ success: true });
   });
 });
 
@@ -292,7 +367,11 @@ app.get('/api/admin/products', requireAdmin, (req, res) => {
     }
     rows.forEach(row => {
       if (row.features) {
-        row.features = JSON.parse(row.features);
+        try {
+          row.features = JSON.parse(row.features);
+        } catch (e) {
+          row.features = [];
+        }
       }
     });
     res.json(rows);
@@ -345,17 +424,6 @@ app.post('/api/admin/products/delete', requireAdmin, (req, res) => {
   });
 });
 
-// Get all announcements (admin)
-app.get('/api/admin/announcements', requireAdmin, (req, res) => {
-  db.all('SELECT * FROM announcements ORDER BY created_at DESC', [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
-});
-
 // Create announcement (admin)
 app.post('/api/admin/announcements', requireAdmin, (req, res) => {
   const { title, message, type, status } = req.body;
@@ -368,22 +436,6 @@ app.post('/api/admin/announcements', requireAdmin, (req, res) => {
         return;
       }
       res.json({ success: true, id: this.lastID });
-    }
-  );
-});
-
-// Update announcement (admin)
-app.post('/api/admin/announcements/update', requireAdmin, (req, res) => {
-  const { id, title, message, type, status } = req.body;
-  db.run(
-    'UPDATE announcements SET title = ?, message = ?, type = ?, status = ? WHERE id = ?',
-    [title, message, type, status, id],
-    (err) => {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ success: true });
     }
   );
 });
@@ -424,54 +476,7 @@ app.post('/api/admin/delete-user', requireAdmin, (req, res) => {
   });
 });
 
-// Create order
-app.post('/api/orders/create', requireLogin, (req, res) => {
-  const { product_id } = req.body;
-  db.run(
-    'INSERT INTO orders (user_id, product_id, status) VALUES (?, ?, ?)',
-    [req.session.userId, product_id, 'pending'],
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ success: true, order_id: this.lastID });
-    }
-  );
-});
-
-// Get user orders
-app.get('/api/user/orders', requireLogin, (req, res) => {
-  db.all(`
-    SELECT o.*, p.name as product_name, p.price 
-    FROM orders o 
-    JOIN products p ON o.product_id = p.id 
-    WHERE o.user_id = ? 
-    ORDER BY o.created_at DESC
-  `, [req.session.userId], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
-});
-
-// Update user profile
-app.post('/api/user/update', requireLogin, (req, res) => {
-  const { ff_uid, discord_id, discord_username } = req.body;
-  db.run('UPDATE users SET ff_uid = ?, discord_id = ?, discord_username = ? WHERE id = ?', 
-    [ff_uid || null, discord_id || null, discord_username || null, req.session.userId], 
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ success: true });
-  });
-});
-
-// Make user admin (temporary route - remove after use)
+// Make user admin (temporary route)
 app.get('/make-admin/:username', async (req, res) => {
   const { username } = req.params;
   db.run('UPDATE users SET role = "admin" WHERE username = ?', [username], (err) => {
