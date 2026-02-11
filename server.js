@@ -1,4 +1,4 @@
-// server.js - Complete with Admin Panel and Discord
+// server.js - Complete with Admin Panel, Discord, Profile
 const express = require('express');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
@@ -32,7 +32,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Database setup
 const db = new sqlite3.Database('./imposter.db');
 
-// Create users table with admin role
+// Create users table with admin role and discord fields
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
@@ -41,6 +41,7 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
   ff_uid TEXT,
   role TEXT DEFAULT 'user',
   discord_id TEXT,
+  discord_username TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_login DATETIME
 )`);
@@ -52,6 +53,7 @@ const createAdmin = async () => {
           VALUES (?, ?, ?, ?)`, 
     ['admin', 'admin@imposter.ff', hashedPassword, 'admin']
   );
+  console.log('✅ Default admin created - Username: admin, Password: admin123');
 };
 createAdmin();
 
@@ -96,7 +98,7 @@ app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'register.html'));
 });
 
-// Admin Panel Routes
+// Admin Panel
 app.get('/admin', requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
@@ -110,7 +112,7 @@ app.get('/profile', requireLogin, (req, res) => {
 
 // Get current user info
 app.get('/api/user', requireLogin, (req, res) => {
-  db.get('SELECT id, username, email, ff_uid, role, discord_id, created_at FROM users WHERE id = ?', 
+  db.get('SELECT id, username, email, ff_uid, role, discord_id, discord_username, created_at FROM users WHERE id = ?', 
     [req.session.userId], 
     (err, row) => {
       if (err) {
@@ -123,7 +125,7 @@ app.get('/api/user', requireLogin, (req, res) => {
 
 // Get all users (admin only)
 app.get('/api/admin/users', requireAdmin, (req, res) => {
-  db.all('SELECT id, username, email, ff_uid, role, discord_id, created_at, last_login FROM users', [], (err, rows) => {
+  db.all('SELECT id, username, email, ff_uid, role, discord_id, discord_username, created_at, last_login FROM users ORDER BY id DESC', [], (err, rows) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -158,15 +160,27 @@ app.post('/api/admin/delete-user', requireAdmin, (req, res) => {
 
 // Update user profile
 app.post('/api/user/update', requireLogin, (req, res) => {
-  const { ff_uid, discord_id } = req.body;
-  db.run('UPDATE users SET ff_uid = ?, discord_id = ? WHERE id = ?', 
-    [ff_uid || null, discord_id || null, req.session.userId], 
-    (err) => {
+  const { ff_uid, discord_id, discord_username } = req.body;
+  db.run('UPDATE users SET ff_uid = ?, discord_id = ?, discord_username = ? WHERE id = ?', 
+    [ff_uid || null, discord_id || null, discord_username || null, req.session.userId], 
+    function(err) {
       if (err) {
         res.status(500).json({ error: err.message });
         return;
       }
       res.json({ success: true });
+  });
+});
+
+// Make user admin (temporary route - remove after use)
+app.get('/make-admin/:username', async (req, res) => {
+  const { username } = req.params;
+  db.run('UPDATE users SET role = "admin" WHERE username = ?', [username], (err) => {
+    if (err) {
+      res.send('Error: ' + err.message);
+    } else {
+      res.send(`✅ User "${username}" is now an admin!`);
+    }
   });
 });
 
@@ -284,10 +298,12 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('\n🚀 IMP0STER PANEL DEPLOYED SUCCESSFULLY!');
   console.log('========================================');
   console.log(`📡 Server running on port: ${PORT}`);
-  console.log(`🔗 Login: https://imposter-website.onrender.com/login`);
-  console.log(`🔗 Register: https://imposter-website.onrender.com/register`);
-  console.log(`🔗 Store: https://imposter-website.onrender.com/`);
-  console.log(`🔗 Admin: https://imposter-website.onrender.com/admin`);
-  console.log(`🔗 Profile: https://imposter-website.onrender.com/profile`);
+  console.log(`🔗 Login: http://localhost:${PORT}/login`);
+  console.log(`🔗 Register: http://localhost:${PORT}/register`);
+  console.log(`🔗 Store: http://localhost:${PORT}/`);
+  console.log(`🔗 Admin: http://localhost:${PORT}/admin`);
+  console.log(`🔗 Profile: http://localhost:${PORT}/profile`);
+  console.log('========================================');
+  console.log('📝 Default Admin: admin / admin123');
   console.log('========================================\n');
 });
