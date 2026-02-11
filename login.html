@@ -1,0 +1,149 @@
+<!-- login.html - Login Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMP0STER · LOGIN</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0c0f;
+      background-image: radial-gradient(circle at 20% 30%, rgba(255, 70, 70, 0.08) 0%, transparent 25%);
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .auth-container {
+      max-width: 450px;
+      width: 100%;
+      background: rgba(7, 10, 15, 0.9);
+      backdrop-filter: blur(10px);
+      border: 2px solid #ff3838;
+      border-radius: 40px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(255, 50, 50, 0.3);
+    }
+    .glitch-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      text-shadow: 0.05em 0 0 rgba(255,0,0,0.7), -0.05em -0.025em 0 rgba(0,255,255,0.5);
+      animation: glitch 4s infinite alternate;
+    }
+    @keyframes glitch {
+      0% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.5); }
+      100% { text-shadow: -0.05em 0.025em 0 rgba(255,0,0,0.6), 0.025em 0.05em 0 rgba(0,255,255,0.5); }
+    }
+    .input-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .input-group i {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #ffa36b;
+      font-size: 1.1rem;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 1.2rem 1rem 1.2rem 3rem;
+      background: rgba(20, 25, 30, 0.9);
+      border: 2px solid #3a2c2c;
+      border-radius: 50px;
+      font-size: 1rem;
+      color: white;
+      transition: 0.2s;
+    }
+    .input-group input:focus {
+      border-color: #ff9f4b;
+      outline: none;
+      box-shadow: 0 0 15px #ff5e4d;
+    }
+    .auth-btn {
+      background: linear-gradient(145deg, #ff5e4d, #d93a2b);
+      border: none;
+      padding: 1.2rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      border-radius: 50px;
+      color: white;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .auth-btn:hover {
+      background: #ff3b2f;
+      box-shadow: 0 0 20px #ff2d2d;
+    }
+    .switch-link {
+      text-align: center;
+      margin-top: 1.8rem;
+      color: #ccc;
+    }
+    .switch-link a {
+      color: #ffbc6e;
+      text-decoration: none;
+      font-weight: bold;
+      border-bottom: 2px solid #ff8f6e;
+    }
+    .error-message {
+      background: rgba(255, 70, 70, 0.2);
+      border: 1px solid #ff3838;
+      color: #ffb3b3;
+      padding: 1rem;
+      border-radius: 50px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="glitch-title">IMP0STER</div>
+    <div style="text-align: center; margin-bottom: 2rem; color: #ffbe4d; font-size: 0.9rem; letter-spacing: 3px;">
+      <i class="fas fa-mask"></i> FREE FIRE PANEL LOGIN
+    </div>
+    
+    <% if (error) { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i> <%= error %>
+      </div>
+    <% } %>
+    
+    <form action="/login" method="POST">
+      <div class="input-group">
+        <i class="fas fa-user"></i>
+        <input type="text" name="username" placeholder="Imposter Username" required>
+      </div>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" name="password" placeholder="Password" required>
+      </div>
+      <button type="submit" class="auth-btn">
+        <i class="fas fa-mask"></i> ENTER PANEL
+      </button>
+    </form>
+    
+    <div class="switch-link">
+      NEED ACCOUNT? <a href="/register">BECOME IMPOSTER →</a>
+    </div>
+  </div>
+</body>
+</html>
