@@ -1,4 +1,4 @@
-// server.js - Complete Working Version for Render
+// server.js - Complete with Admin Panel and Discord
 const express = require('express');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
@@ -19,29 +19,41 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: false, // Set to false for Render HTTP
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    secure: false,
+    maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
     sameSite: 'lax'
   }
 }));
 
-// Set views directory for HTML files
+// Set views directory
 app.set('views', path.join(__dirname, 'views'));
 
-// Database setup - impostor.db
+// Database setup
 const db = new sqlite3.Database('./imposter.db');
 
-// Create users table
+// Create users table with admin role
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
   ff_uid TEXT,
+  role TEXT DEFAULT 'user',
+  discord_id TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_login DATETIME
 )`);
+
+// Create default admin account
+const createAdmin = async () => {
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  db.run(`INSERT OR IGNORE INTO users (username, email, password, role) 
+          VALUES (?, ?, ?, ?)`, 
+    ['admin', 'admin@imposter.ff', hashedPassword, 'admin']
+  );
+};
+createAdmin();
 
 console.log('✅ Database connected: imposter.db');
 
@@ -51,6 +63,15 @@ const requireLogin = (req, res, next) => {
     next();
   } else {
     res.redirect('/login');
+  }
+};
+
+// Middleware to check if user is admin
+const requireAdmin = (req, res, next) => {
+  if (req.session.role === 'admin') {
+    next();
+  } else {
+    res.redirect('/');
   }
 };
 
@@ -75,11 +96,21 @@ app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'register.html'));
 });
 
+// Admin Panel Routes
+app.get('/admin', requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+});
+
+// Profile Page
+app.get('/profile', requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'profile.html'));
+});
+
 // ============ API ENDPOINTS ============
 
 // Get current user info
 app.get('/api/user', requireLogin, (req, res) => {
-  db.get('SELECT id, username, email, ff_uid, created_at FROM users WHERE id = ?', 
+  db.get('SELECT id, username, email, ff_uid, role, discord_id, created_at FROM users WHERE id = ?', 
     [req.session.userId], 
     (err, row) => {
       if (err) {
@@ -87,6 +118,55 @@ app.get('/api/user', requireLogin, (req, res) => {
         return;
       }
       res.json(row);
+  });
+});
+
+// Get all users (admin only)
+app.get('/api/admin/users', requireAdmin, (req, res) => {
+  db.all('SELECT id, username, email, ff_uid, role, discord_id, created_at, last_login FROM users', [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+// Update user role (admin only)
+app.post('/api/admin/update-role', requireAdmin, (req, res) => {
+  const { userId, role } = req.body;
+  db.run('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true });
+  });
+});
+
+// Delete user (admin only)
+app.post('/api/admin/delete-user', requireAdmin, (req, res) => {
+  const { userId } = req.body;
+  db.run('DELETE FROM users WHERE id = ? AND role != "admin"', [userId], (err) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true });
+  });
+});
+
+// Update user profile
+app.post('/api/user/update', requireLogin, (req, res) => {
+  const { ff_uid, discord_id } = req.body;
+  db.run('UPDATE users SET ff_uid = ?, discord_id = ? WHERE id = ?', 
+    [ff_uid || null, discord_id || null, req.session.userId], 
+    (err) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ success: true });
   });
 });
 
@@ -121,6 +201,7 @@ app.post('/login', (req, res) => {
       req.session.userId = user.id;
       req.session.username = user.username;
       req.session.email = user.email;
+      req.session.role = user.role;
       
       res.redirect('/');
     } catch (error) {
@@ -134,7 +215,6 @@ app.post('/login', (req, res) => {
 app.post('/register', async (req, res) => {
   const { username, email, password, ff_uid } = req.body;
   
-  // Validation
   if (!username || !email || !password) {
     return res.redirect('/register?error=All fields are required');
   }
@@ -152,10 +232,8 @@ app.post('/register', async (req, res) => {
   }
   
   try {
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Insert user
     db.run(
       'INSERT INTO users (username, email, password, ff_uid) VALUES (?, ?, ?, ?)',
       [username, email, hashedPassword, ff_uid || null],
@@ -172,10 +250,10 @@ app.post('/register', async (req, res) => {
           return res.redirect('/register?error=Registration failed');
         }
         
-        // Auto login after registration
         req.session.userId = this.lastID;
         req.session.username = username;
         req.session.email = email;
+        req.session.role = 'user';
         
         res.redirect('/');
       }
@@ -189,9 +267,7 @@ app.post('/register', async (req, res) => {
 // ============ LOGOUT ============
 app.get('/logout', (req, res) => {
   req.session.destroy((err) => {
-    if (err) {
-      console.error(err);
-    }
+    if (err) console.error(err);
     res.redirect('/login');
   });
 });
@@ -204,14 +280,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ============ START SERVER ============
 app.listen(PORT, '0.0.0.0', () => {
   console.log('\n🚀 IMP0STER PANEL DEPLOYED SUCCESSFULLY!');
   console.log('========================================');
   console.log(`📡 Server running on port: ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Login URL: https://imposter-website.onrender.com/login`);
-  console.log(`🔗 Register URL: https://imposter-website.onrender.com/register`);
-  console.log(`🔗 Store URL: https://imposter-website.onrender.com/`);
+  console.log(`🔗 Login: https://imposter-website.onrender.com/login`);
+  console.log(`🔗 Register: https://imposter-website.onrender.com/register`);
+  console.log(`🔗 Store: https://imposter-website.onrender.com/`);
+  console.log(`🔗 Admin: https://imposter-website.onrender.com/admin`);
+  console.log(`🔗 Profile: https://imposter-website.onrender.com/profile`);
   console.log('========================================\n');
 });
