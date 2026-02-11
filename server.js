@@ -1,87 +1,172 @@
-const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
-const bodyParser = require("body-parser");
-const session = require("express-session");
+// server.js - Main Node.js application with SQLite database (imposter.db)
+const express = require('express');
+const session = require('express-session');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const bcrypt = require('bcrypt');
 
 const app = express();
-const db = new sqlite3.Database("./imposter.db");
+const PORT = process.env.PORT || 3000;
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static("public"));
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static('public'));
+
+// Session configuration
 app.use(session({
-    secret: "superSecretKey",
-    resave: false,
-    saveUninitialized: true
+  secret: 'imposter-ff-panel-secret-key-2025',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false, // set to true if using HTTPS (Render uses HTTPS)
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
-// Create Tables
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        password TEXT,
-        role TEXT DEFAULT 'user'
-    )`);
+// Database setup - impostor.db
+const db = new sqlite3.Database('./imposter.db');
 
-    db.run(`CREATE TABLE IF NOT EXISTS products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        price TEXT
-    )`);
+// Create users table
+db.run(`CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  ff_uid TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_login DATETIME
+)`);
+
+// Middleware to check if user is logged in
+const requireLogin = (req, res, next) => {
+  if (req.session.userId) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+};
+
+// Routes
+
+// Login page
+app.get('/login', (req, res) => {
+  if (req.session.userId) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
 
-// Default Admin
-db.get("SELECT * FROM users WHERE username='admin'", (err, row) => {
-    if (!row) {
-        db.run("INSERT INTO users (username,password,role) VALUES ('admin','admin123','admin')");
+// Login POST handler
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
+    if (err) {
+      console.error(err);
+      return res.sendFile(path.join(__dirname, 'login.html'), { error: 'Database error' });
     }
+    
+    if (!user) {
+      return res.sendFile(path.join(__dirname, 'login.html'), { error: 'User not found' });
+    }
+    
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.sendFile(path.join(__dirname, 'login.html'), { error: 'Invalid password' });
+    }
+    
+    // Update last login
+    db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
+    
+    // Set session
+    req.session.userId = user.id;
+    req.session.username = user.username;
+    req.session.email = user.email;
+    
+    res.redirect('/');
+  });
 });
 
-// Register
-app.post("/register", (req,res)=>{
-    const {username,password} = req.body;
-    db.run("INSERT INTO users (username,password) VALUES (?,?)",[username,password]);
-    res.redirect("/login.html");
+// Register page
+app.get('/register', (req, res) => {
+  if (req.session.userId) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, 'register.html'));
 });
 
-// Login
-app.post("/login",(req,res)=>{
-    const {username,password} = req.body;
-    db.get("SELECT * FROM users WHERE username=? AND password=?",[username,password],(err,user)=>{
-        if(user){
-            req.session.user = user;
-            if(user.role === "admin"){
-                res.redirect("/admin.html");
-            } else {
-                res.redirect("/shop.html");
-            }
-        } else {
-            res.send("Invalid Login");
+// Register POST handler
+app.post('/register', async (req, res) => {
+  const { username, email, password, ff_uid } = req.body;
+  
+  // Validation
+  if (!username || !email || !password) {
+    return res.sendFile(path.join(__dirname, 'register.html'), { error: 'All fields required' });
+  }
+  
+  try {
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Insert user
+    db.run(
+      'INSERT INTO users (username, email, password, ff_uid) VALUES (?, ?, ?, ?)',
+      [username, email, hashedPassword, ff_uid || null],
+      function(err) {
+        if (err) {
+          if (err.message.includes('UNIQUE constraint failed')) {
+            return res.sendFile(path.join(__dirname, 'register.html'), { 
+              error: 'Username or email already exists' 
+            });
+          }
+          console.error(err);
+          return res.sendFile(path.join(__dirname, 'register.html'), { error: 'Registration failed' });
         }
-    });
+        
+        // Auto login after registration
+        req.session.userId = this.lastID;
+        req.session.username = username;
+        req.session.email = email;
+        
+        res.redirect('/');
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.sendFile(path.join(__dirname, 'register.html'), { error: 'Server error' });
+  }
 });
 
-// Add Product (Admin)
-app.post("/add-product",(req,res)=>{
-    if(!req.session.user || req.session.user.role !== "admin"){
-        return res.send("Access Denied");
+// Main store page (protected)
+app.get('/', requireLogin, (req, res) => {
+  // Read the HTML file and replace username placeholder
+  let html = require('fs').readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  html = html.replace(/\{\{username\}\}/g, req.session.username);
+  res.send(html);
+});
+
+// Logout
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
+// API endpoint to get all users (for testing)
+app.get('/api/users', (req, res) => {
+  db.all('SELECT id, username, email, ff_uid, created_at, last_login FROM users', [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
     }
-    const {name,price} = req.body;
-    db.run("INSERT INTO products (name,price) VALUES (?,?)",[name,price]);
-    res.redirect("/admin.html");
+    res.json(rows);
+  });
 });
 
-// Get Products
-app.get("/products",(req,res)=>{
-    db.all("SELECT * FROM products",(err,rows)=>{
-        res.json(rows);
-    });
+// Start server
+app.listen(PORT, () => {
+  console.log(`IMP0STER Panel running on port ${PORT}`);
+  console.log(`Login: http://localhost:${PORT}/login`);
+  console.log(`Register: http://localhost:${PORT}/register`);
+  console.log(`Store: http://localhost:${PORT}/`);
 });
-
-app.get("/logout",(req,res)=>{
-    req.session.destroy();
-    res.redirect("/");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT,()=>console.log("Server running on "+PORT));
