@@ -5,96 +5,127 @@
 }
 
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: #0d0d0d;
     color: white;
 }
 
 header {
+    background: #111;
     padding: 20px;
     text-align: center;
-    font-size: 26px;
+    font-size: 28px;
     font-weight: bold;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
+    letter-spacing: 2px;
+    border-bottom: 2px solid #ff003c;
 }
 
 nav {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 25px;
     padding: 15px;
-    background: rgba(255,255,255,0.05);
+    background: #141414;
 }
 
 nav a {
     color: white;
     text-decoration: none;
-    padding: 8px 15px;
-    border-radius: 8px;
+    font-weight: 500;
     transition: 0.3s;
 }
 
 nav a:hover {
-    background: #00c6ff;
-    color: black;
-}
-
-.container {
-    padding: 40px;
-    text-align: center;
+    color: #ff003c;
 }
 
 .hero {
-    margin-top: 60px;
+    height: 70vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: linear-gradient(90deg,#000000 60%,#1a0008);
+    text-align: center;
 }
 
 .hero h1 {
-    font-size: 45px;
-    margin-bottom: 10px;
+    font-size: 50px;
+    color: #ff003c;
 }
 
 .hero p {
-    opacity: 0.8;
+    margin-top: 15px;
+    opacity: 0.7;
 }
 
-input {
-    padding: 12px;
-    margin: 10px;
-    width: 260px;
-    border-radius: 8px;
+.btn {
+    margin-top: 20px;
+    padding: 12px 25px;
+    background: #ff003c;
     border: none;
-}
-
-button {
-    padding: 12px 20px;
-    border-radius: 8px;
-    border: none;
-    background: #00c6ff;
+    color: white;
     cursor: pointer;
     font-weight: bold;
 }
 
-button:hover {
-    background: #00f2fe;
+.btn:hover {
+    background: #ff335f;
+}
+
+.container {
+    padding: 50px;
+    text-align: center;
 }
 
 .products {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+    gap: 30px;
     margin-top: 40px;
 }
 
 .card {
-    background: rgba(255,255,255,0.08);
+    background: #1a1a1a;
     padding: 20px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
+    border-radius: 10px;
     transition: 0.3s;
+    border: 1px solid #222;
 }
 
 .card:hover {
-    transform: scale(1.05);
+    transform: translateY(-5px);
+    border-color: #ff003c;
+}
+
+.card h3 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    color: #ff003c;
+    margin-bottom: 10px;
+}
+
+input {
+    padding: 12px;
+    width: 260px;
+    margin: 10px;
+    border: none;
+    background: #1a1a1a;
+    color: white;
+    border-radius: 6px;
+}
+
+button {
+    padding: 12px 20px;
+    background: #ff003c;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+button:hover {
+    background: #ff335f;
 }
