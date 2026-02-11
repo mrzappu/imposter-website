@@ -1,0 +1,50 @@
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f0f0f;
+    color: white;
+}
+
+header {
+    background: #1a1a1a;
+    padding: 15px;
+    text-align: center;
+    font-size: 22px;
+}
+
+nav {
+    background: #222;
+    padding: 10px;
+    text-align: center;
+}
+
+nav a {
+    color: #00ffff;
+    margin: 10px;
+    text-decoration: none;
+}
+
+.container {
+    padding: 30px;
+    text-align: center;
+}
+
+input {
+    padding: 10px;
+    margin: 10px;
+    width: 250px;
+}
+
+button {
+    padding: 10px 20px;
+    background: #00ffff;
+    border: none;
+    cursor: pointer;
+}
+
+.card {
+    background: #1c1c1c;
+    padding: 20px;
+    margin: 20px;
+    display: inline-block;
+}
