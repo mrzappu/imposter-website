@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMP0STER · EDIT PROFILE</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0c0f;
+      background-image: radial-gradient(circle at 20% 30%, rgba(255, 70, 70, 0.08) 0%, transparent 25%);
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .profile-container {
+      max-width: 500px;
+      width: 100%;
+      background: rgba(7, 10, 15, 0.95);
+      backdrop-filter: blur(10px);
+      border: 2px solid #ff8e4d;
+      border-radius: 40px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(255, 100, 50, 0.3);
+    }
+    .glitch-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      text-shadow: 0.05em 0 0 rgba(255,100,0,0.7), -0.05em -0.025em 0 rgba(0,200,255,0.5);
+    }
+    .input-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .input-group i {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #ffa36b;
+      font-size: 1.1rem;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 1.2rem 1rem 1.2rem 3rem;
+      background: rgba(20, 25, 30, 0.9);
+      border: 2px solid #3a2c2c;
+      border-radius: 50px;
+      font-size: 1rem;
+      color: white;
+    }
+    .input-group input:focus {
+      border-color: #ff9f4b;
+      outline: none;
+      box-shadow: 0 0 15px #ff8e4d;
+    }
+    .save-btn {
+      background: linear-gradient(145deg, #ff8e4d, #c5481f);
+      border: none;
+      padding: 1.2rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      border-radius: 50px;
+      color: white;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+      border-bottom: 4px solid #8a2f0e;
+      transition: 0.2s;
+    }
+    .save-btn:hover {
+      background: #ff6a2b;
+      transform: translateY(2px);
+      box-shadow: 0 10px 20px rgba(255, 142, 77, 0.4);
+    }
+    .back-btn {
+      display: block;
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #ffbe4d;
+      text-decoration: none;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 50px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      display: none;
+    }
+    .alert-success {
+      background: rgba(0, 255, 0, 0.2);
+      border: 1px solid #00ff00;
+      color: #00ff00;
+    }
+    .alert-error {
+      background: rgba(255, 0, 0, 0.2);
+      border: 1px solid #ff0000;
+      color: #ff0000;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-container">
+    <div class="glitch-title">EDIT PROFILE</div>
+    <div style="text-align: center; margin-bottom: 2rem; color: #ffbe4d;">
+      <i class="fas fa-user-edit"></i> Update your information
+    </div>
+
+    <div id="alertMessage" class="alert">
+      <i class="fas fa-info-circle"></i> <span id="alertText"></span>
+    </div>
+    
+    <form id="profileForm">
+      <div class="input-group">
+        <i class="fas fa-gamepad"></i>
+        <input type="text" id="ff_uid" name="ff_uid" placeholder="Free Fire UID">
+      </div>
+      
+      <div class="input-group">
+        <i class="fab fa-discord"></i>
+        <input type="text" id="discord_id" name="discord_id" placeholder="Discord ID (e.g., username#0000)">
+      </div>
+      
+      <div class="input-group">
+        <i class="fas fa-tag"></i>
+        <input type="text" id="discord_username" name="discord_username" placeholder="Discord Username">
+      </div>
+      
+      <button type="submit" class="save-btn">
+        <i class="fas fa-save"></i> SAVE CHANGES
+      </button>
+    </form>
+    
+    <a href="/" class="back-btn">
+      <i class="fas fa-arrow-left"></i> BACK TO STORE
+    </a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      fetch('/api/user')
+        .then(res => res.json())
+        .then(user => {
+          document.getElementById('ff_uid').value = user.ff_uid || '';
+          document.getElementById('discord_id').value = user.discord_id || '';
+          document.getElementById('discord_username').value = user.discord_username || '';
+        });
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const data = {
+        ff_uid: document.getElementById('ff_uid').value,
+        discord_id: document.getElementById('discord_id').value,
+        discord_username: document.getElementById('discord_username').value
+      };
+
+      fetch('/api/user/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('Profile updated successfully!', 'success');
+          setTimeout(() => window.location.href = '/', 1500);
+        }
+      })
+      .catch(error => {
+        showAlert('Error updating profile', 'error');
+      });
+    });
+
+    function showAlert(message, type) {
+      const alert = document.getElementById('alertMessage');
+      alert.className = `alert alert-${type}`;
+      document.getElementById('alertText').textContent = message;
+      alert.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
