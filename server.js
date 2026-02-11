@@ -1,4 +1,6 @@
-// server.js - Complete with Cart System, Order Logs & Discord Payment Integration
+// server.js - COMPLETE PRODUCTION SERVER
+// Features: User Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile
+
 const express = require('express');
 const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
@@ -8,7 +10,7 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// ============ MIDDLEWARE ============
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
@@ -19,8 +21,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: false,
-    maxAge: 24 * 60 * 60 * 1000,
+    secure: false, // Set to true if using HTTPS
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true,
     sameSite: 'lax'
   }
@@ -29,7 +31,7 @@ app.use(session({
 // Set views directory
 app.set('views', path.join(__dirname, 'views'));
 
-// Database setup
+// ============ DATABASE SETUP ============
 const db = new sqlite3.Database('./imposter.db');
 
 // Use serialize to ensure tables are created sequentially
@@ -46,8 +48,9 @@ db.serialize(() => {
     role TEXT DEFAULT 'user',
     discord_id TEXT,
     discord_username TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_login DATETIME
+    ip_address TEXT,
+    last_login DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
   // Create products table
@@ -99,6 +102,7 @@ db.serialize(() => {
     payment_status TEXT DEFAULT 'waiting',
     discord_contact TEXT,
     notes TEXT,
+    admin_notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
@@ -131,7 +135,7 @@ db.serialize(() => {
 
   console.log('✅ All database tables ready');
 
-  // Insert default products
+  // ============ INSERT DEFAULT PRODUCTS ============
   const defaultProducts = [
     {
       name: 'HEADSHOT ELITE',
@@ -206,7 +210,7 @@ db.serialize(() => {
     });
   });
 
-  // Create default admin account
+  // ============ CREATE DEFAULT ADMIN ACCOUNT ============
   setTimeout(async () => {
     const hashedPassword = await bcrypt.hash('admin123', 10);
     db.get('SELECT id FROM users WHERE username = ?', ['admin'], (err, row) => {
@@ -240,7 +244,7 @@ const requireAdmin = (req, res, next) => {
   }
 };
 
-// ============ ROUTES ============
+// ============ PAGE ROUTES ============
 app.get('/', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
@@ -267,13 +271,17 @@ app.get('/profile', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'profile.html'));
 });
 
+app.get('/edit-profile', requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'edit-profile.html'));
+});
+
 app.get('/cart', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'cart.html'));
 });
 
 // ============ USER API ENDPOINTS ============
 app.get('/api/user', requireLogin, (req, res) => {
-  db.get('SELECT id, username, email, ff_uid, role, discord_id, discord_username, created_at FROM users WHERE id = ?', 
+  db.get('SELECT id, username, email, ff_uid, role, discord_id, discord_username, created_at, last_login FROM users WHERE id = ?', 
     [req.session.userId], 
     (err, row) => {
       if (err) {
@@ -335,7 +343,6 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // ============ CART API ENDPOINTS ============
-// Get user cart
 app.get('/api/cart', requireLogin, (req, res) => {
   db.all(`
     SELECT c.*, p.name, p.price, p.price_suffix, p.icon, p.features
@@ -364,7 +371,6 @@ app.get('/api/cart', requireLogin, (req, res) => {
   });
 });
 
-// Add to cart
 app.post('/api/cart/add', requireLogin, (req, res) => {
   const { product_id, quantity = 1 } = req.body;
   
@@ -379,7 +385,6 @@ app.post('/api/cart/add', requireLogin, (req, res) => {
       return;
     }
     
-    // Log cart activity
     db.run(`
       INSERT INTO cart_logs (user_id, product_id, action, details) 
       VALUES (?, ?, ?, ?)
@@ -389,12 +394,10 @@ app.post('/api/cart/add', requireLogin, (req, res) => {
   });
 });
 
-// Update cart quantity
 app.post('/api/cart/update', requireLogin, (req, res) => {
   const { product_id, quantity } = req.body;
   
   if (quantity <= 0) {
-    // Remove item if quantity is 0
     return db.run(`
       DELETE FROM cart WHERE user_id = ? AND product_id = ?
     `, [req.session.userId, product_id], function(err) {
@@ -424,7 +427,6 @@ app.post('/api/cart/update', requireLogin, (req, res) => {
   });
 });
 
-// Remove from cart
 app.post('/api/cart/remove', requireLogin, (req, res) => {
   const { product_id } = req.body;
   
@@ -446,7 +448,6 @@ app.post('/api/cart/remove', requireLogin, (req, res) => {
   });
 });
 
-// Clear cart
 app.post('/api/cart/clear', requireLogin, (req, res) => {
   db.run(`DELETE FROM cart WHERE user_id = ?`, [req.session.userId], function(err) {
     if (err) {
@@ -463,7 +464,6 @@ app.post('/api/cart/clear', requireLogin, (req, res) => {
   });
 });
 
-// Get cart logs (user activity)
 app.get('/api/cart/logs', requireLogin, (req, res) => {
   db.all(`
     SELECT cl.*, p.name as product_name
@@ -482,11 +482,9 @@ app.get('/api/cart/logs', requireLogin, (req, res) => {
 });
 
 // ============ ORDER API ENDPOINTS ============
-// Create order with Discord payment
 app.post('/api/orders/create', requireLogin, (req, res) => {
   const { product_id, quantity = 1, discord_contact, notes } = req.body;
   
-  // Get product price
   db.get('SELECT price, name FROM products WHERE id = ?', [product_id], (err, product) => {
     if (err || !product) {
       res.status(500).json({ error: 'Product not found' });
@@ -516,13 +514,11 @@ app.post('/api/orders/create', requireLogin, (req, res) => {
       
       const orderId = this.lastID;
       
-      // Log order creation
       db.run(`
         INSERT INTO order_logs (order_id, user_id, action, details) 
         VALUES (?, ?, ?, ?)
       `, [orderId, req.session.userId, 'create', `Order created for ${product.name} - $${total_price}`]);
       
-      // Remove from cart if exists
       db.run(`DELETE FROM cart WHERE user_id = ? AND product_id = ?`, [req.session.userId, product_id]);
       
       res.json({ 
@@ -535,11 +531,9 @@ app.post('/api/orders/create', requireLogin, (req, res) => {
   });
 });
 
-// Checkout entire cart
 app.post('/api/orders/checkout', requireLogin, (req, res) => {
   const { discord_contact, notes } = req.body;
   
-  // Get all cart items
   db.all(`
     SELECT c.*, p.price, p.name, p.id as product_id
     FROM cart c
@@ -556,11 +550,9 @@ app.post('/api/orders/checkout', requireLogin, (req, res) => {
       total += item.price * item.quantity;
     });
     
-    // Create items summary
     const itemsSummary = cartItems.map(i => `${i.quantity}x ${i.name}`).join(', ');
     const fullNotes = notes ? `${notes}\nItems: ${itemsSummary}` : `Items: ${itemsSummary}`;
     
-    // Create order for first item and store all items in notes
     db.run(`
       INSERT INTO orders (user_id, product_id, quantity, total_price, payment_method, discord_contact, notes, status, payment_status) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -582,13 +574,11 @@ app.post('/api/orders/checkout', requireLogin, (req, res) => {
       
       const orderId = this.lastID;
       
-      // Log checkout
       db.run(`
         INSERT INTO order_logs (order_id, user_id, action, details) 
         VALUES (?, ?, ?, ?)
       `, [orderId, req.session.userId, 'checkout', `Checked out ${cartItems.length} items - $${total}`]);
       
-      // Clear cart after checkout
       db.run(`DELETE FROM cart WHERE user_id = ?`, [req.session.userId]);
       
       res.json({ 
@@ -602,7 +592,6 @@ app.post('/api/orders/checkout', requireLogin, (req, res) => {
   });
 });
 
-// Get user orders
 app.get('/api/user/orders', requireLogin, (req, res) => {
   db.all(`
     SELECT o.*, p.name as product_name, p.price 
@@ -619,7 +608,6 @@ app.get('/api/user/orders', requireLogin, (req, res) => {
   });
 });
 
-// Get order logs
 app.get('/api/user/order-logs', requireLogin, (req, res) => {
   db.all(`
     SELECT ol.*, p.name as product_name
@@ -649,12 +637,11 @@ app.get('/api/announcements', (req, res) => {
 });
 
 // ============ ADMIN API ENDPOINTS ============
-// Get all orders with details
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   db.all(`
     SELECT 
       o.id, o.user_id, o.product_id, o.quantity, o.total_price, 
-      o.status, o.payment_method, o.payment_status, o.discord_contact, o.notes,
+      o.status, o.payment_method, o.payment_status, o.discord_contact, o.notes, o.admin_notes,
       o.created_at, o.updated_at,
       u.username, u.email as user_email, u.ff_uid, u.discord_username,
       p.name as product_name, p.price
@@ -671,37 +658,32 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
   });
 });
 
-// Update order status
 app.post('/api/admin/orders/update-status', requireAdmin, (req, res) => {
-  const { orderId, status, payment_status } = req.body;
+  const { orderId, status, payment_status, admin_notes } = req.body;
   
   db.run(`
     UPDATE orders 
-    SET status = ?, payment_status = ?, updated_at = CURRENT_TIMESTAMP 
+    SET status = ?, payment_status = ?, admin_notes = ?, updated_at = CURRENT_TIMESTAMP 
     WHERE id = ?
-  `, [status, payment_status || status, orderId], function(err) {
+  `, [status, payment_status || status, admin_notes || '', orderId], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
     }
     
-    // Log status change
     db.run(`
       INSERT INTO order_logs (order_id, user_id, action, details) 
       VALUES (?, ?, ?, ?)
-    `, [orderId, req.session.userId, 'status_update', `Status changed to ${status}`]);
+    `, [orderId, req.session.userId, 'status_update', `Status changed to ${status}, Payment: ${payment_status}`]);
     
     res.json({ success: true });
   });
 });
 
-// Delete order
 app.post('/api/admin/orders/delete', requireAdmin, (req, res) => {
   const { orderId } = req.body;
   
-  // Delete logs first
   db.run(`DELETE FROM order_logs WHERE order_id = ?`, [orderId]);
-  // Delete order
   db.run(`DELETE FROM orders WHERE id = ?`, [orderId], (err) => {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -711,7 +693,6 @@ app.post('/api/admin/orders/delete', requireAdmin, (req, res) => {
   });
 });
 
-// Get all orders logs
 app.get('/api/admin/order-logs', requireAdmin, (req, res) => {
   db.all(`
     SELECT ol.*, u.username, p.name as product_name
@@ -729,7 +710,6 @@ app.get('/api/admin/order-logs', requireAdmin, (req, res) => {
   });
 });
 
-// Get all cart logs
 app.get('/api/admin/cart-logs', requireAdmin, (req, res) => {
   db.all(`
     SELECT cl.*, u.username, p.name as product_name
@@ -747,7 +727,6 @@ app.get('/api/admin/cart-logs', requireAdmin, (req, res) => {
   });
 });
 
-// Get all users
 app.get('/api/admin/users', requireAdmin, (req, res) => {
   db.all('SELECT id, username, email, ff_uid, role, discord_id, discord_username, created_at, last_login FROM users ORDER BY id DESC', [], (err, rows) => {
     if (err) {
@@ -758,7 +737,6 @@ app.get('/api/admin/users', requireAdmin, (req, res) => {
   });
 });
 
-// Get all products (admin)
 app.get('/api/admin/products', requireAdmin, (req, res) => {
   db.all('SELECT * FROM products ORDER BY id ASC', [], (err, rows) => {
     if (err) {
@@ -778,7 +756,6 @@ app.get('/api/admin/products', requireAdmin, (req, res) => {
   });
 });
 
-// Create/Update product
 app.post('/api/admin/products', requireAdmin, (req, res) => {
   const { id, name, subtitle, price, price_suffix, icon, features, status } = req.body;
   const featuresJson = JSON.stringify(features || []);
@@ -810,7 +787,6 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
   }
 });
 
-// Delete product
 app.post('/api/admin/products/delete', requireAdmin, (req, res) => {
   const { id } = req.body;
   db.run('DELETE FROM products WHERE id = ?', [id], (err) => {
@@ -822,7 +798,6 @@ app.post('/api/admin/products/delete', requireAdmin, (req, res) => {
   });
 });
 
-// Get all announcements (admin)
 app.get('/api/admin/announcements', requireAdmin, (req, res) => {
   db.all('SELECT * FROM announcements ORDER BY created_at DESC', [], (err, rows) => {
     if (err) {
@@ -833,7 +808,6 @@ app.get('/api/admin/announcements', requireAdmin, (req, res) => {
   });
 });
 
-// Create announcement
 app.post('/api/admin/announcements', requireAdmin, (req, res) => {
   const { title, message, type, status } = req.body;
   db.run(
@@ -849,7 +823,6 @@ app.post('/api/admin/announcements', requireAdmin, (req, res) => {
   );
 });
 
-// Update announcement
 app.post('/api/admin/announcements/update', requireAdmin, (req, res) => {
   const { id, title, message, type, status } = req.body;
   db.run(
@@ -865,7 +838,6 @@ app.post('/api/admin/announcements/update', requireAdmin, (req, res) => {
   );
 });
 
-// Delete announcement
 app.post('/api/admin/announcements/delete', requireAdmin, (req, res) => {
   const { id } = req.body;
   db.run('DELETE FROM announcements WHERE id = ?', [id], (err) => {
@@ -877,7 +849,6 @@ app.post('/api/admin/announcements/delete', requireAdmin, (req, res) => {
   });
 });
 
-// Update user role
 app.post('/api/admin/update-role', requireAdmin, (req, res) => {
   const { userId, role } = req.body;
   db.run('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err) => {
@@ -889,7 +860,6 @@ app.post('/api/admin/update-role', requireAdmin, (req, res) => {
   });
 });
 
-// Delete user
 app.post('/api/admin/delete-user', requireAdmin, (req, res) => {
   const { userId } = req.body;
   db.run('DELETE FROM users WHERE id = ? AND role != "admin"', [userId], (err) => {
@@ -925,7 +895,9 @@ app.post('/login', (req, res) => {
         return res.redirect('/login?error=Invalid password');
       }
       
-      db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown';
+      
+      db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP, ip_address = ? WHERE id = ?', [ip, user.id]);
       
       req.session.userId = user.id;
       req.session.username = user.username;
@@ -1018,22 +990,38 @@ app.get('/make-admin/:username', async (req, res) => {
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
+// ============ 404 HANDLER ============
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
+});
+
+// ============ ERROR HANDLER ============
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+// ============ START SERVER ============
 app.listen(PORT, '0.0.0.0', () => {
   console.log('\n🚀 IMP0STER PANEL DEPLOYED SUCCESSFULLY!');
   console.log('========================================');
   console.log(`📡 Server running on port: ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('========================================');
   console.log(`🔗 Login: http://localhost:${PORT}/login`);
   console.log(`🔗 Register: http://localhost:${PORT}/register`);
   console.log(`🔗 Store: http://localhost:${PORT}/`);
   console.log(`🔗 Cart: http://localhost:${PORT}/cart`);
-  console.log(`🔗 Admin: http://localhost:${PORT}/admin`);
   console.log(`🔗 Profile: http://localhost:${PORT}/profile`);
+  console.log(`🔗 Edit Profile: http://localhost:${PORT}/edit-profile`);
+  console.log(`🔗 Admin: http://localhost:${PORT}/admin`);
   console.log('========================================');
   console.log('📝 Default Admin: admin / admin123');
-  console.log('✅ Cart System + Order Logs + Discord Payments Active');
+  console.log('✅ Features: Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile');
   console.log('========================================\n');
 });
