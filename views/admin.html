@@ -17,8 +17,9 @@
       color: #fff;
       padding: 2rem;
     }
-    .container { max-width: 1400px; margin: 0 auto; }
+    .container { max-width: 1600px; margin: 0 auto; }
     
+    /* Header Styles */
     .header {
       display: flex;
       justify-content: space-between;
@@ -37,6 +38,10 @@
       letter-spacing: 3px;
       text-shadow: 0.05em 0 0 rgba(255,0,0,0.7), -0.05em -0.025em 0 rgba(0,255,255,0.5);
       animation: glitch 4s infinite alternate;
+    }
+    @keyframes glitch {
+      0% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.5); }
+      100% { text-shadow: -0.05em 0.025em 0 rgba(255,0,0,0.6), 0.025em 0.05em 0 rgba(0,255,255,0.5); }
     }
     .admin-badge {
       background: #ff3a3a;
@@ -76,7 +81,7 @@
     /* Stats Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
@@ -172,8 +177,34 @@
       box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
     }
     
-    /* Products Table */
-    .products-table, .announcements-table, .users-table {
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-select {
+      background: #2a2e34;
+      border: 1px solid #ff6a4d;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+    }
+    .search-input {
+      background: #2a2e34;
+      border: 1px solid #ff6a4d;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      min-width: 250px;
+    }
+    
+    /* Tables */
+    .orders-table, .products-table, .announcements-table, .users-table, .logs-table {
       background: rgba(7, 10, 15, 0.9);
       border: 1px solid #ff3838;
       border-radius: 24px;
@@ -181,7 +212,7 @@
       overflow-x: auto;
       margin-bottom: 2rem;
     }
-    .products-table h2, .announcements-table h2, .users-table h2 {
+    .orders-table h2, .products-table h2, .announcements-table h2, .users-table h2, .logs-table h2 {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -202,6 +233,8 @@
       padding: 1rem;
       border-bottom: 1px solid rgba(255, 100, 100, 0.2);
     }
+    
+    /* Status Badges */
     .status-badge {
       padding: 0.3rem 0.8rem;
       border-radius: 20px;
@@ -209,8 +242,15 @@
       font-weight: 700;
       display: inline-block;
     }
+    .status-pending { background: #f39c12; color: black; }
+    .status-processing { background: #3498db; color: white; }
+    .status-completed { background: #00b894; color: white; }
+    .status-failed { background: #ff3838; color: white; }
+    .status-cancelled { background: #7f8c8d; color: white; }
     .status-active { background: #00b894; color: white; }
     .status-inactive { background: #ff3838; color: white; }
+    .status-waiting { background: #f39c12; color: black; }
+    
     .role-badge {
       padding: 0.3rem 0.8rem;
       border-radius: 20px;
@@ -222,7 +262,7 @@
     .role-user { background: #2a2a2a; color: white; }
     
     /* Action Buttons */
-    .edit-btn, .delete-btn, .view-btn {
+    .edit-btn, .delete-btn, .view-btn, .process-btn, .complete-btn, .fail-btn {
       padding: 0.4rem 1rem;
       border: none;
       border-radius: 20px;
@@ -237,6 +277,9 @@
     .delete-btn:hover { background: #ff0000; transform: translateY(-2px); }
     .view-btn { background: #6c5ce7; color: white; }
     .view-btn:hover { background: #5f4ad4; transform: translateY(-2px); }
+    .process-btn { background: #3498db; color: white; }
+    .complete-btn { background: #00b894; color: white; }
+    .fail-btn { background: #ff3838; color: white; }
     .delete-btn:disabled { background: #666; cursor: not-allowed; }
     
     /* Modal */
@@ -270,6 +313,26 @@
       align-items: center;
       gap: 10px;
     }
+    .order-details {
+      background: #2a2e34;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px dotted rgba(255,255,255,0.1);
+    }
+    .detail-label {
+      color: #aaa;
+    }
+    .detail-value {
+      color: #ffbe4d;
+      font-weight: 700;
+    }
     .form-group {
       margin-bottom: 1.2rem;
     }
@@ -293,9 +356,6 @@
       border-color: #ffbe4d;
     }
     .features-list {
-      background: #2a2e34;
-      border-radius: 10px;
-      padding: 1rem;
       margin-bottom: 1rem;
     }
     .feature-item {
@@ -306,7 +366,6 @@
     }
     .feature-item input {
       flex: 1;
-      margin-bottom: 0;
     }
     .remove-feature {
       background: #ff3838;
@@ -316,6 +375,7 @@
       height: 30px;
       border-radius: 50%;
       cursor: pointer;
+      font-weight: 700;
     }
     .add-feature-btn {
       background: transparent;
@@ -359,6 +419,7 @@
     }
     .alert-success { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #00ff00; }
     .alert-error { background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000; color: #ff0000; }
+    .alert-info { background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; color: #3498db; }
     
     @media (max-width: 768px) {
       body { padding: 1rem; }
@@ -391,6 +452,34 @@
     <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="stat-info">
+          <h3>TOTAL ORDERS</h3>
+          <div class="stat-number" id="totalOrders">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+          <h3>PENDING</h3>
+          <div class="stat-number" id="pendingOrders">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+          <h3>COMPLETED</h3>
+          <div class="stat-number" id="completedOrders">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info">
+          <h3>FAILED</h3>
+          <div class="stat-number" id="failedOrders">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-users"></i></div>
         <div class="stat-info">
           <h3>TOTAL USERS</h3>
@@ -404,25 +493,14 @@
           <div class="stat-number" id="totalProducts">0</div>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-bullhorn"></i></div>
-        <div class="stat-info">
-          <h3>ANNOUNCEMENTS</h3>
-          <div class="stat-number" id="totalAnnouncements">0</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-calendar"></i></div>
-        <div class="stat-info">
-          <h3>TODAY</h3>
-          <div class="stat-number" id="todayDate"></div>
-        </div>
-      </div>
     </div>
 
     <!-- Tab Navigation -->
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('users')">
+      <button class="tab-btn active" onclick="switchTab('orders')">
+        <i class="fas fa-shopping-cart"></i> ORDERS
+      </button>
+      <button class="tab-btn" onclick="switchTab('users')">
         <i class="fas fa-users"></i> USERS
       </button>
       <button class="tab-btn" onclick="switchTab('products')">
@@ -431,12 +509,72 @@
       <button class="tab-btn" onclick="switchTab('announcements')">
         <i class="fas fa-bullhorn"></i> ANNOUNCEMENTS
       </button>
+      <button class="tab-btn" onclick="switchTab('logs')">
+        <i class="fas fa-history"></i> ACTIVITY LOGS
+      </button>
+    </div>
+
+    <!-- ============ ORDERS TAB ============ -->
+    <div id="orders-tab" class="tab-content active">
+      <div class="action-bar">
+        <h2 style="color: #ffbe4d;"><i class="fas fa-shopping-cart"></i> ORDER MANAGEMENT</h2>
+      </div>
+      
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <select id="orderStatusFilter" class="filter-select" onchange="filterOrders()">
+          <option value="all">📋 All Orders</option>
+          <option value="pending">⏳ Pending</option>
+          <option value="processing">⚙️ Processing</option>
+          <option value="completed">✅ Completed</option>
+          <option value="failed">❌ Failed</option>
+          <option value="cancelled">🚫 Cancelled</option>
+        </select>
+        
+        <select id="paymentStatusFilter" class="filter-select" onchange="filterOrders()">
+          <option value="all">💰 All Payments</option>
+          <option value="waiting">⏳ Waiting</option>
+          <option value="processing">⚙️ Processing</option>
+          <option value="completed">✅ Paid</option>
+          <option value="failed">❌ Failed</option>
+        </select>
+        
+        <input type="text" id="orderSearchInput" class="search-input" placeholder="🔍 Search by username, email or order ID..." onkeyup="filterOrders()">
+      </div>
+      
+      <div class="orders-table">
+        <table>
+          <thead>
+            <tr>
+              <th>ORDER ID</th>
+              <th>CUSTOMER</th>
+              <th>PRODUCT</th>
+              <th>AMOUNT</th>
+              <th>DISCORD</th>
+              <th>DATE</th>
+              <th>STATUS</th>
+              <th>PAYMENT</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin"></i> Loading orders...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ============ USERS TAB ============ -->
-    <div id="users-tab" class="tab-content active">
+    <div id="users-tab" class="tab-content">
       <div class="users-table">
         <h2><i class="fas fa-database"></i> USER MANAGEMENT</h2>
+        <div class="filter-bar">
+          <input type="text" id="userSearchInput" class="search-input" placeholder="🔍 Search by username or email..." onkeyup="filterUsers()">
+        </div>
         <table>
           <thead>
             <tr>
@@ -446,8 +584,8 @@
               <th>FF UID</th>
               <th>DISCORD</th>
               <th>ROLE</th>
+              <th>ORDERS</th>
               <th>JOINED</th>
-              <th>LAST LOGIN</th>
               <th>ACTIONS</th>
             </tr>
           </thead>
@@ -528,6 +666,95 @@
         </table>
       </div>
     </div>
+
+    <!-- ============ ACTIVITY LOGS TAB ============ -->
+    <div id="logs-tab" class="tab-content">
+      <div class="logs-table">
+        <h2><i class="fas fa-shopping-cart"></i> ORDER ACTIVITY LOGS</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>TIME</th>
+              <th>USER</th>
+              <th>ACTION</th>
+              <th>DETAILS</th>
+              <th>ORDER ID</th>
+            </tr>
+          </thead>
+          <tbody id="orderLogsBody">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin"></i> Loading logs...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="logs-table">
+        <h2><i class="fas fa-cart-plus"></i> CART ACTIVITY LOGS</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>TIME</th>
+              <th>USER</th>
+              <th>ACTION</th>
+              <th>DETAILS</th>
+              <th>PRODUCT</th>
+            </tr>
+          </thead>
+          <tbody id="cartLogsBody">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin"></i> Loading logs...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ORDER DETAILS MODAL ============ -->
+  <div id="orderDetailsModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-shopping-cart"></i> ORDER DETAILS</h3>
+      
+      <div id="orderDetailsContent" class="order-details">
+        <!-- Order details will be inserted here -->
+      </div>
+      
+      <div class="form-group">
+        <label>Order Status</label>
+        <select id="orderStatusSelect" class="filter-select" style="width: 100%;">
+          <option value="pending">⏳ Pending</option>
+          <option value="processing">⚙️ Processing</option>
+          <option value="completed">✅ Completed</option>
+          <option value="failed">❌ Failed</option>
+          <option value="cancelled">🚫 Cancelled</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Payment Status</label>
+        <select id="paymentStatusSelect" class="filter-select" style="width: 100%;">
+          <option value="waiting">⏳ Waiting for Payment</option>
+          <option value="processing">⚙️ Processing Payment</option>
+          <option value="completed">✅ Payment Completed</option>
+          <option value="failed">❌ Payment Failed</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Admin Notes</label>
+        <textarea id="adminNotes" rows="2" placeholder="Add notes about this order..."></textarea>
+      </div>
+      
+      <button class="save-btn" onclick="updateOrderStatus()">
+        <i class="fas fa-save"></i> UPDATE ORDER
+      </button>
+      <button class="close-btn" onclick="closeOrderModal()">CLOSE</button>
+    </div>
   </div>
 
   <!-- ============ PRODUCT MODAL ============ -->
@@ -567,19 +794,21 @@
           <option value="fa-fire">🔥 Fire</option>
           <option value="fa-shield-alt">🛡️ Shield</option>
           <option value="fa-crosshairs">🎯 Crosshair</option>
+          <option value="fa-mask">🎭 Mask</option>
+          <option value="fa-dragon">🐉 Dragon</option>
         </select>
       </div>
       
       <div class="form-group">
         <label>Status</label>
         <select id="productStatus">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">🟢 Active</option>
+          <option value="inactive">🔴 Inactive</option>
         </select>
       </div>
       
       <div class="form-group">
-        <label>Features (Click + to add more)</label>
+        <label>Features</label>
         <div id="featuresContainer" class="features-list">
           <!-- Features will be added here dynamically -->
         </div>
@@ -625,8 +854,8 @@
       <div class="form-group">
         <label>Status</label>
         <select id="announcementStatus">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">🟢 Active</option>
+          <option value="inactive">🔴 Inactive</option>
         </select>
       </div>
       
@@ -639,14 +868,17 @@
 
   <script>
     // ============ GLOBAL VARIABLES ============
+    let currentOrderId = null;
     let currentProductId = null;
     let currentAnnouncementId = null;
+    let currentEditUserId = null;
+    let orders = [];
     let products = [];
     let announcements = [];
+    let users = [];
 
     // ============ TAB SWITCHING ============
     function switchTab(tabName) {
-      // Hide all tabs
       document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
       });
@@ -654,24 +886,271 @@
         btn.classList.remove('active');
       });
       
-      // Show selected tab
       document.getElementById(`${tabName}-tab`).classList.add('active');
       event.target.classList.add('active');
       
       // Load tab data
+      if (tabName === 'orders') loadOrders();
+      if (tabName === 'users') loadUsers();
       if (tabName === 'products') loadProducts();
       if (tabName === 'announcements') loadAnnouncements();
+      if (tabName === 'logs') {
+        loadOrderLogs();
+        loadCartLogs();
+      }
     }
 
     // ============ LOAD ALL DATA ============
     document.addEventListener('DOMContentLoaded', function() {
+      loadOrders();
       loadUsers();
       loadProducts();
       loadAnnouncements();
-      document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric', year: 'numeric'
-      });
     });
+
+    // ============ ORDER MANAGEMENT ============
+    function loadOrders() {
+      fetch('/api/admin/orders')
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to load orders');
+          return response.json();
+        })
+        .then(data => {
+          orders = data;
+          updateOrderStats(data);
+          displayOrders(data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          document.getElementById('ordersTableBody').innerHTML = 
+            '<tr><td colspan="9" style="text-align: center; color: #ff3838;">Failed to load orders</td></tr>';
+        });
+    }
+
+    function updateOrderStats(orders) {
+      const total = orders.length;
+      const pending = orders.filter(o => o.status === 'pending').length;
+      const completed = orders.filter(o => o.status === 'completed').length;
+      const failed = orders.filter(o => o.status === 'failed' || o.status === 'cancelled').length;
+      
+      document.getElementById('totalOrders').textContent = total;
+      document.getElementById('pendingOrders').textContent = pending;
+      document.getElementById('completedOrders').textContent = completed;
+      document.getElementById('failedOrders').textContent = failed;
+    }
+
+    function displayOrders(orders) {
+      const tbody = document.getElementById('ordersTableBody');
+      
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No orders found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.map(order => {
+        const statusClass = {
+          'pending': 'status-pending',
+          'processing': 'status-processing',
+          'completed': 'status-completed',
+          'failed': 'status-failed',
+          'cancelled': 'status-cancelled'
+        }[order.status] || 'status-pending';
+        
+        const paymentClass = {
+          'waiting': 'status-pending',
+          'processing': 'status-processing',
+          'completed': 'status-completed',
+          'failed': 'status-failed'
+        }[order.payment_status] || 'status-pending';
+        
+        return `
+          <tr>
+            <td style="color: #ffbe4d;">#${order.id}</td>
+            <td>
+              <strong>${escapeHtml(order.username || 'Unknown')}</strong><br>
+              <small style="color: #aaa;">${escapeHtml(order.user_email || '')}</small>
+            </td>
+            <td>${escapeHtml(order.product_name || 'Unknown Product')}</td>
+            <td>$${parseFloat(order.total_price || order.price || 0).toFixed(2)}</td>
+            <td>
+              ${order.discord_contact ? 
+                `<span style="color: #5865F2;"><i class="fab fa-discord"></i> ${escapeHtml(order.discord_contact)}</span>` : 
+                '<span style="color: #aaa;">—</span>'}
+            </td>
+            <td>${formatDate(order.created_at)}</td>
+            <td>
+              <span class="status-badge ${statusClass}">
+                ${order.status?.toUpperCase() || 'PENDING'}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge ${paymentClass}">
+                ${order.payment_status?.toUpperCase() || 'WAITING'}
+              </span>
+            </td>
+            <td>
+              <button class="view-btn" onclick="viewOrderDetails(${order.id})">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="delete-btn" onclick="deleteOrder(${order.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterOrders() {
+      const statusFilter = document.getElementById('orderStatusFilter').value;
+      const paymentFilter = document.getElementById('paymentStatusFilter').value;
+      const searchTerm = document.getElementById('orderSearchInput').value.toLowerCase();
+      
+      let filteredOrders = orders;
+      
+      if (statusFilter !== 'all') {
+        filteredOrders = filteredOrders.filter(o => o.status === statusFilter);
+      }
+      
+      if (paymentFilter !== 'all') {
+        filteredOrders = filteredOrders.filter(o => o.payment_status === paymentFilter);
+      }
+      
+      if (searchTerm) {
+        filteredOrders = filteredOrders.filter(o => 
+          (o.username && o.username.toLowerCase().includes(searchTerm)) ||
+          (o.user_email && o.user_email.toLowerCase().includes(searchTerm)) ||
+          (o.id && o.id.toString().includes(searchTerm))
+        );
+      }
+      
+      displayOrders(filteredOrders);
+    }
+
+    function viewOrderDetails(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+      
+      currentOrderId = orderId;
+      
+      const statusClass = {
+        'pending': 'status-pending',
+        'processing': 'status-processing',
+        'completed': 'status-completed',
+        'failed': 'status-failed',
+        'cancelled': 'status-cancelled'
+      }[order.status] || 'status-pending';
+      
+      const notes = order.notes || 'No notes provided';
+      
+      const detailsHtml = `
+        <div style="margin-bottom: 1.5rem;">
+          <span class="status-badge ${statusClass}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+            ${order.status?.toUpperCase() || 'PENDING'}
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Order ID:</span>
+          <span class="detail-value">#${order.id}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Customer:</span>
+          <span class="detail-value">${escapeHtml(order.username || 'Unknown')}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email:</span>
+          <span class="detail-value">${escapeHtml(order.user_email || 'N/A')}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">FF UID:</span>
+          <span class="detail-value">${order.ff_uid || 'Not set'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Discord:</span>
+          <span class="detail-value">${order.discord_contact || order.discord_username || 'Not provided'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Product:</span>
+          <span class="detail-value">${escapeHtml(order.product_name || 'Unknown')}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Quantity:</span>
+          <span class="detail-value">${order.quantity || 1}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Total Price:</span>
+          <span class="detail-value">$${parseFloat(order.total_price || order.price || 0).toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Payment Method:</span>
+          <span class="detail-value"><i class="fab fa-discord"></i> Discord</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Order Date:</span>
+          <span class="detail-value">${new Date(order.created_at).toLocaleString()}</span>
+        </div>
+        <div class="detail-row" style="border-bottom: none;">
+          <span class="detail-label">Notes:</span>
+          <span class="detail-value" style="white-space: pre-wrap;">${escapeHtml(notes)}</span>
+        </div>
+      `;
+      
+      document.getElementById('orderDetailsContent').innerHTML = detailsHtml;
+      document.getElementById('orderStatusSelect').value = order.status || 'pending';
+      document.getElementById('paymentStatusSelect').value = order.payment_status || 'waiting';
+      document.getElementById('adminNotes').value = order.admin_notes || '';
+      document.getElementById('orderDetailsModal').style.display = 'flex';
+    }
+
+    function updateOrderStatus() {
+      const newStatus = document.getElementById('orderStatusSelect').value;
+      const newPaymentStatus = document.getElementById('paymentStatusSelect').value;
+      const adminNotes = document.getElementById('adminNotes').value;
+      
+      fetch('/api/admin/orders/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          orderId: currentOrderId, 
+          status: newStatus,
+          payment_status: newPaymentStatus,
+          admin_notes: adminNotes
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert(`Order #${currentOrderId} updated successfully!`, 'success');
+          closeOrderModal();
+          loadOrders();
+        }
+      })
+      .catch(error => {
+        showAlert('Error updating order status', 'error');
+      });
+    }
+
+    function deleteOrder(orderId) {
+      if (!confirm('⚠️ Delete this order? This cannot be undone!')) return;
+      
+      fetch('/api/admin/orders/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('Order deleted!', 'success');
+          loadOrders();
+        }
+      });
+    }
+
+    function closeOrderModal() {
+      document.getElementById('orderDetailsModal').style.display = 'none';
+      currentOrderId = null;
+    }
 
     // ============ USER MANAGEMENT ============
     function loadUsers() {
@@ -680,18 +1159,28 @@
           if (!response.ok) throw new Error('Failed to load users');
           return response.json();
         })
-        .then(users => {
-          updateUserStats(users);
-          displayUsers(users);
+        .then(data => {
+          users = data;
+          document.getElementById('totalUsers').textContent = data.length;
+          displayUsers(data);
         })
         .catch(error => {
           console.error('Error:', error);
-          showAlert('Failed to load users', 'error');
         });
     }
 
-    function updateUserStats(users) {
-      document.getElementById('totalUsers').textContent = users.length;
+    function filterUsers() {
+      const searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
+      if (!searchTerm) {
+        displayUsers(users);
+        return;
+      }
+      
+      const filtered = users.filter(u => 
+        u.username.toLowerCase().includes(searchTerm) ||
+        u.email.toLowerCase().includes(searchTerm)
+      );
+      displayUsers(filtered);
     }
 
     function displayUsers(users) {
@@ -702,30 +1191,34 @@
         return;
       }
 
-      tbody.innerHTML = users.map(user => `
-        <tr>
-          <td style="color: #ffbe4d;">#${user.id}</td>
-          <td><strong>${escapeHtml(user.username)}</strong></td>
-          <td>${escapeHtml(user.email)}</td>
-          <td>${user.ff_uid || '—'}</td>
-          <td>${user.discord_username || user.discord_id || '—'}</td>
-          <td>
-            <span class="role-badge ${user.role === 'admin' ? 'role-admin' : 'role-user'}">
-              ${user.role?.toUpperCase() || 'USER'}
-            </span>
-          </td>
-          <td>${formatDate(user.created_at)}</td>
-          <td>${user.last_login ? formatDate(user.last_login) : 'Never'}</td>
-          <td>
-            <button class="edit-btn" onclick="openEditRoleModal('${user.id}', '${escapeHtml(user.username)}', '${user.role}')">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="delete-btn" onclick="deleteUser('${user.id}')" ${user.role === 'admin' ? 'disabled' : ''}>
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = users.map(user => {
+        const userOrders = orders.filter(o => o.user_id === user.id).length;
+        
+        return `
+          <tr>
+            <td style="color: #ffbe4d;">#${user.id}</td>
+            <td><strong>${escapeHtml(user.username)}</strong></td>
+            <td>${escapeHtml(user.email)}</td>
+            <td>${user.ff_uid || '—'}</td>
+            <td>${user.discord_username || user.discord_id || '—'}</td>
+            <td>
+              <span class="role-badge ${user.role === 'admin' ? 'role-admin' : 'role-user'}">
+                ${user.role?.toUpperCase() || 'USER'}
+              </span>
+            </td>
+            <td style="text-align: center;">${userOrders}</td>
+            <td>${formatDate(user.created_at)}</td>
+            <td>
+              <button class="edit-btn" onclick="openEditRoleModal('${user.id}', '${escapeHtml(user.username)}', '${user.role}')">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="delete-btn" onclick="deleteUser('${user.id}')" ${user.role === 'admin' ? 'disabled' : ''}>
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function openEditRoleModal(userId, username, currentRole) {
@@ -782,8 +1275,6 @@
         })
         .catch(error => {
           console.error('Error:', error);
-          document.getElementById('productsTableBody').innerHTML = 
-            '<tr><td colspan="8" style="text-align: center; color: #ff3838;">Failed to load products</td></tr>';
         });
     }
 
@@ -799,7 +1290,10 @@
         <tr>
           <td style="color: #ffbe4d;">#${product.id}</td>
           <td><i class="fas ${product.icon || 'fa-bolt'}" style="color: #ff984f;"></i></td>
-          <td><strong>${escapeHtml(product.name)}</strong><br><small style="color: #aaa;">${product.subtitle || ''}</small></td>
+          <td>
+            <strong>${escapeHtml(product.name)}</strong><br>
+            <small style="color: #aaa;">${product.subtitle || ''}</small>
+          </td>
           <td>$${product.price} ${product.price_suffix || ''}</td>
           <td>${Array.isArray(product.features) ? product.features.length : 0} features</td>
           <td>
@@ -831,7 +1325,6 @@
       document.getElementById('productIcon').value = 'fa-bolt';
       document.getElementById('productStatus').value = 'active';
       
-      // Reset features
       document.getElementById('featuresContainer').innerHTML = `
         <div class="feature-item">
           <input type="text" class="feature-input" placeholder="Feature 1" value="98% headshot rate">
@@ -839,6 +1332,10 @@
         </div>
         <div class="feature-item">
           <input type="text" class="feature-input" placeholder="Feature 2" value="Anti-ban shield">
+          <button class="remove-feature" onclick="removeFeature(this)">×</button>
+        </div>
+        <div class="feature-item">
+          <input type="text" class="feature-input" placeholder="Feature 3" value="24/7 support">
           <button class="remove-feature" onclick="removeFeature(this)">×</button>
         </div>
       `;
@@ -860,7 +1357,6 @@
       document.getElementById('productIcon').value = product.icon || 'fa-bolt';
       document.getElementById('productStatus').value = product.status || 'active';
       
-      // Load features
       const featuresContainer = document.getElementById('featuresContainer');
       featuresContainer.innerHTML = '';
       
@@ -868,22 +1364,24 @@
                       (typeof product.features === 'string' ? JSON.parse(product.features) : ['New feature']);
       
       features.forEach((feature, index) => {
-        addFeatureField(feature);
+        const div = document.createElement('div');
+        div.className = 'feature-item';
+        div.innerHTML = `
+          <input type="text" class="feature-input" placeholder="Feature ${index + 1}" value="${escapeHtml(feature)}">
+          <button class="remove-feature" onclick="removeFeature(this)">×</button>
+        `;
+        featuresContainer.appendChild(div);
       });
-      
-      if (features.length === 0) {
-        addFeatureField();
-      }
       
       document.getElementById('productModal').style.display = 'flex';
     }
 
-    function addFeatureField(value = '') {
+    function addFeatureField() {
       const container = document.getElementById('featuresContainer');
       const div = document.createElement('div');
       div.className = 'feature-item';
       div.innerHTML = `
-        <input type="text" class="feature-input" placeholder="Feature description" value="${escapeHtml(value)}">
+        <input type="text" class="feature-input" placeholder="New feature">
         <button class="remove-feature" onclick="removeFeature(this)">×</button>
       `;
       container.appendChild(div);
@@ -976,13 +1474,10 @@
         })
         .then(data => {
           announcements = data;
-          document.getElementById('totalAnnouncements').textContent = data.length;
           displayAnnouncements(data);
         })
         .catch(error => {
           console.error('Error:', error);
-          document.getElementById('announcementsTableBody').innerHTML = 
-            '<tr><td colspan="7" style="text-align: center; color: #ff3838;">Failed to load announcements</td></tr>';
         });
     }
 
@@ -999,7 +1494,11 @@
           <td style="color: #ffbe4d;">#${ann.id}</td>
           <td><strong>${escapeHtml(ann.title)}</strong></td>
           <td>${escapeHtml(ann.message.substring(0, 50))}${ann.message.length > 50 ? '...' : ''}</td>
-          <td><span style="color: #ffbe4d;">${ann.type?.toUpperCase() || 'INFO'}</span></td>
+          <td>
+            <span style="color: ${ann.type === 'warning' ? '#ff3838' : ann.type === 'success' ? '#00b894' : ann.type === 'sale' ? '#ff8e4d' : '#ffbe4d'};">
+              ${ann.type?.toUpperCase() || 'INFO'}
+            </span>
+          </td>
           <td>
             <span class="status-badge ${ann.status === 'active' ? 'status-active' : 'status-inactive'}">
               ${ann.status?.toUpperCase() || 'INACTIVE'}
@@ -1096,6 +1595,67 @@
       currentAnnouncementId = null;
     }
 
+    // ============ LOGS MANAGEMENT ============
+    function loadOrderLogs() {
+      fetch('/api/admin/order-logs')
+        .then(response => response.json())
+        .then(logs => {
+          const tbody = document.getElementById('orderLogsBody');
+          
+          if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No order logs found</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = logs.map(log => `
+            <tr>
+              <td>${new Date(log.created_at).toLocaleString()}</td>
+              <td>${escapeHtml(log.username || 'System')}</td>
+              <td>
+                <span style="color: ${log.action === 'create' ? '#00b894' : log.action === 'status_update' ? '#ffbe4d' : '#ff8e4d'};">
+                  ${log.action?.toUpperCase()}
+                </span>
+              </td>
+              <td>${escapeHtml(log.details || '')}</td>
+              <td style="color: #ffbe4d;">#${log.order_id || ''}</td>
+            </tr>
+          `).join('');
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
+    function loadCartLogs() {
+      fetch('/api/admin/cart-logs')
+        .then(response => response.json())
+        .then(logs => {
+          const tbody = document.getElementById('cartLogsBody');
+          
+          if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No cart logs found</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = logs.map(log => `
+            <tr>
+              <td>${new Date(log.created_at).toLocaleString()}</td>
+              <td>${escapeHtml(log.username || 'System')}</td>
+              <td>
+                <span style="color: ${log.action === 'add' ? '#00b894' : log.action === 'remove' ? '#ff3838' : log.action === 'clear' ? '#ff8e4d' : '#ffbe4d'};">
+                  ${log.action?.toUpperCase()}
+                </span>
+              </td>
+              <td>${escapeHtml(log.details || '')}</td>
+              <td>${log.product_name ? escapeHtml(log.product_name) : '—'}</td>
+            </tr>
+          `).join('');
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
     // ============ UTILITY FUNCTIONS ============
     function showAlert(message, type) {
       const alert = document.getElementById('alertMessage');
@@ -1108,7 +1668,7 @@
     function formatDate(dateString) {
       if (!dateString) return '—';
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     function escapeHtml(text) {
@@ -1120,8 +1680,11 @@
 
     // Close modals when clicking outside
     window.onclick = function(event) {
+      const orderModal = document.getElementById('orderDetailsModal');
       const productModal = document.getElementById('productModal');
       const announcementModal = document.getElementById('announcementModal');
+      
+      if (event.target === orderModal) closeOrderModal();
       if (event.target === productModal) closeProductModal();
       if (event.target === announcementModal) closeAnnouncementModal();
     }
