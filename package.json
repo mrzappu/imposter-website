@@ -1,4 +1,3 @@
-// package.json
 {
   "name": "imposter-ff-panel",
   "version": "1.0.0",
@@ -12,8 +11,7 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "sqlite3": "^5.1.6",
-    "bcrypt": "^5.1.1",
-    "ejs": "^3.1.9"
+    "bcrypt": "^5.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
