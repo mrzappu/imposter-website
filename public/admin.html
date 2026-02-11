@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Panel</title>
+    <title>Admin</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>Admin Panel</header>
+
+<header>⚙ Admin Panel</header>
+
 <nav>
-<a href="/">Home</a>
-<a href="/logout">Logout</a>
+    <a href="/">Home</a>
+    <a href="/logout">Logout</a>
 </nav>
+
 <div class="container">
-<h2>Admin Dashboard</h2>
-<p>Username: admin</p>
-<p>Password: admin123</p>
+    <h2>Add Product</h2>
+    <form action="/add-product" method="POST">
+        <input type="text" name="name" placeholder="Product Name" required><br>
+        <input type="text" name="price" placeholder="Price" required><br>
+        <button type="submit">Add Product</button>
+    </form>
 </div>
+
 </body>
 </html>
