@@ -1,50 +1,100 @@
-body {
+* {
     margin: 0;
-    font-family: Arial;
-    background: #0f0f0f;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    min-height: 100vh;
     color: white;
 }
 
 header {
-    background: #1a1a1a;
-    padding: 15px;
+    padding: 20px;
     text-align: center;
-    font-size: 22px;
+    font-size: 26px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
 }
 
 nav {
-    background: #222;
-    padding: 10px;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 15px;
+    background: rgba(255,255,255,0.05);
 }
 
 nav a {
-    color: #00ffff;
-    margin: 10px;
+    color: white;
     text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    background: #00c6ff;
+    color: black;
 }
 
 .container {
-    padding: 30px;
+    padding: 40px;
     text-align: center;
 }
 
+.hero {
+    margin-top: 60px;
+}
+
+.hero h1 {
+    font-size: 45px;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    opacity: 0.8;
+}
+
 input {
-    padding: 10px;
+    padding: 12px;
     margin: 10px;
-    width: 250px;
+    width: 260px;
+    border-radius: 8px;
+    border: none;
 }
 
 button {
-    padding: 10px 20px;
-    background: #00ffff;
+    padding: 12px 20px;
+    border-radius: 8px;
     border: none;
+    background: #00c6ff;
     cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #00f2fe;
+}
+
+.products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
 }
 
 .card {
-    background: #1c1c1c;
+    background: rgba(255,255,255,0.08);
     padding: 20px;
-    margin: 20px;
-    display: inline-block;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.05);
 }
