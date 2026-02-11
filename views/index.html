@@ -298,4 +298,175 @@
         <span class="ff-badge"><i class="fas fa-mask"></i> FF PANEL</span>
       </div>
       <div class="user-welcome" id="userWelcome">
-       
+        <i class="fas fa-user-secret"></i>
+        <span class="username" id="usernameDisplay">LOADING...</span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> EXIT</a>
+      </div>
+    </header>
+
+    <!-- Store Title -->
+    <div class="section-title">
+      <i class="fas fa-store"></i>
+      <h2>IMPOSTER STORE</h2>
+      <span class="store-badge"><i class="fas fa-fire"></i> SELLING PANELS</span>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="card-grid">
+      <!-- Panel 1: Headshot Elite -->
+      <div class="panel-card">
+        <div class="card-icon"><i class="fas fa-bolt"></i></div>
+        <h3>HEADSHOT<br>ELITE</h3>
+        <div class="price">$19.99 <span>/month</span></div>
+        <ul class="feature-list">
+          <li><i class="fas fa-check-circle"></i> 98% headshot rate</li>
+          <li><i class="fas fa-check-circle"></i> Aim lock (undetected)</li>
+          <li><i class="fas fa-check-circle"></i> Anti-ban shield</li>
+          <li><i class="fas fa-check-circle"></i> 24/7 private server</li>
+        </ul>
+        <button class="btn"><i class="fas fa-shopping-cart"></i> BUY NOW</button>
+      </div>
+      
+      <!-- Panel 2: Diamond Flood -->
+      <div class="panel-card">
+        <div class="card-icon"><i class="fas fa-gem"></i></div>
+        <h3>DIAMOND<br>FLOOD</h3>
+        <div class="price">$44.99 <span>/instant</span></div>
+        <ul class="feature-list">
+          <li><i class="fas fa-check-circle"></i> +20,000 diamonds</li>
+          <li><i class="fas fa-check-circle"></i> No password required</li>
+          <li><i class="fas fa-check-circle"></i> Delivery in 5min</li>
+          <li><i class="fas fa-check-circle"></i> Redeem code method</li>
+        </ul>
+        <button class="btn"><i class="fas fa-bolt"></i> BUY NOW</button>
+      </div>
+      
+      <!-- Panel 3: Rank Imposter -->
+      <div class="panel-card">
+        <div class="card-icon"><i class="fas fa-chess-queen"></i></div>
+        <h3>RANK<br>IMPOSTER</h3>
+        <div class="price">$29.99 <span>/season</span></div>
+        <ul class="feature-list">
+          <li><i class="fas fa-check-circle"></i> Heroic rank boost</li>
+          <li><i class="fas fa-check-circle"></i> K/D spoofing</li>
+          <li><i class="fas fa-check-circle"></i> MVP unlocker</li>
+          <li><i class="fas fa-check-circle"></i> Invisible mode</li>
+        </ul>
+        <button class="btn"><i class="fas fa-mask"></i> BUY NOW</button>
+      </div>
+      
+      <!-- Panel 4: Skull Skins -->
+      <div class="panel-card">
+        <div class="card-icon"><i class="fas fa-ghost"></i></div>
+        <h3>SKULL<br>SKINS</h3>
+        <div class="price">$14.99 <span>/unlock</span></div>
+        <ul class="feature-list">
+          <li><i class="fas fa-check-circle"></i> 50+ legendary skins</li>
+          <li><i class="fas fa-check-circle"></i> Imposter bundle</li>
+          <li><i class="fas fa-check-circle"></i> Emote collector</li>
+          <li><i class="fas fa-check-circle"></i> Weapon flamethrower</li>
+        </ul>
+        <button class="btn"><i class="fas fa-tag"></i> BUY NOW</button>
+      </div>
+    </div>
+
+    <!-- Trust Banner -->
+    <div class="trust-banner">
+      <div class="trust-item"><i class="fas fa-shield-alt"></i> UNDETECTED</div>
+      <div class="trust-item"><i class="fas fa-bolt"></i> 1.2M+ SALES</div>
+      <div class="trust-item"><i class="fas fa-mask"></i> IMPOSTER PROTOCOL</div>
+      <div class="trust-item"><i class="fas fa-headset"></i> 24/7 SUPPORT</div>
+    </div>
+
+    <!-- Stats Counter -->
+    <div class="stats-container">
+      <div class="stat-item">
+        <div class="stat-number">1.2M+</div>
+        <div class="stat-label">HAPPY IMPOSTERS</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">50K+</div>
+        <div class="stat-label">DIAMONDS SOLD</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">99.9%</div>
+        <div class="stat-label">UPTIME</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">24/7</div>
+        <div class="stat-label">SUPPORT</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div><span style="font-weight: 800; color: #ff9f7e;">IMP0STER.FF</span> — Premium Free Fire Panel</div>
+      <div>
+        <i class="fas fa-database"></i> imposter.db 
+        <span id="userEmail" style="margin-left: 15px; color: #ffbe4d;"></span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- JavaScript to load user data from session -->
+  <script>
+    // This script will fetch the current logged-in user info
+    document.addEventListener('DOMContentLoaded', function() {
+      // Fetch user data from API
+      fetch('/api/user')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Not logged in');
+          }
+          return response.json();
+        })
+        .then(user => {
+          // Update username in header
+          document.getElementById('usernameDisplay').textContent = user.username || 'IMPOSTER';
+          // Update email in footer
+          const emailEl = document.getElementById('userEmail');
+          if (emailEl) {
+            emailEl.textContent = `📧 ${user.email || ''}`;
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching user:', error);
+          document.getElementById('usernameDisplay').textContent = 'GUEST';
+          // If not logged in, redirect to login page
+          if (error.message === 'Not logged in') {
+            window.location.href = '/login';
+          }
+        });
+    });
+
+    // Add to cart animation
+    const buyButtons = document.querySelectorAll('.btn');
+    buyButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-check"></i> ADDED!';
+        this.style.background = '#ff6a4d';
+        this.style.color = '#000';
+        
+        setTimeout(() => {
+          this.innerHTML = originalText;
+          this.style.background = 'transparent';
+          this.style.color = '#ffb347';
+        }, 1500);
+      });
+    });
+
+    // Glitch effect on hover for panel cards
+    const cards = document.querySelectorAll('.panel-card');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.animation = 'glitch 0.3s infinite';
+      });
+      card.addEventListener('mouseleave', function() {
+        this.style.animation = 'none';
+      });
+    });
+  </script>
+</body>
+</html>
