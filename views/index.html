@@ -21,6 +21,123 @@
       max-width: 1280px; 
       margin: 0 auto; 
       padding: 1.5rem 2rem; 
+      display: flex;
+      gap: 2rem;
+    }
+    
+    /* Side Profile Bar */
+    .sidebar {
+      width: 280px;
+      background: rgba(7, 10, 15, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid #ff3838;
+      border-radius: 24px;
+      padding: 1.5rem;
+      height: fit-content;
+      position: sticky;
+      top: 1.5rem;
+    }
+    .profile-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(145deg, #ff5e4d, #d93a2b);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      border: 3px solid #ffbe4d;
+    }
+    .profile-avatar i {
+      font-size: 3rem;
+      color: #fff;
+    }
+    .profile-name {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #ffbe4d;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .profile-role {
+      display: inline-block;
+      background: #ff3a3a;
+      padding: 0.2rem 1rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: black;
+      font-weight: 800;
+      margin-top: 0.5rem;
+    }
+    .profile-stats {
+      margin: 1.5rem 0;
+      padding: 1rem 0;
+      border-top: 1px solid rgba(255, 100, 100, 0.3);
+      border-bottom: 1px solid rgba(255, 100, 100, 0.3);
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+    .stat-label {
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+    .stat-value {
+      color: #ffbe4d;
+      font-weight: 700;
+    }
+    .discord-btn {
+      background: #5865F2;
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 50px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      width: 100%;
+      margin: 1rem 0;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+    .discord-btn:hover {
+      background: #4752c4;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
+    }
+    .admin-btn {
+      background: transparent;
+      border: 2px solid #ff6a4d;
+      color: #ffb347;
+      padding: 0.8rem;
+      border-radius: 50px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      width: 100%;
+      margin: 0.5rem 0;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+    .admin-btn:hover {
+      background: #ff6a4d;
+      color: #000;
+    }
+    
+    /* Main Content */
+    .main-content {
+      flex: 1;
     }
     
     /* Header Styles */
@@ -61,39 +178,6 @@
       font-size: 0.8rem;
       font-weight: 800;
       text-transform: uppercase;
-    }
-    .user-welcome {
-      background: rgba(255, 94, 77, 0.1);
-      padding: 0.5rem 1.5rem;
-      border-radius: 40px;
-      border: 1px solid #ff6a4d;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .user-welcome i { 
-      color: #ffbe4d; 
-      font-size: 1.1rem;
-    }
-    .username { 
-      color: #ffbe4d; 
-      font-weight: 800;
-      font-size: 1.1rem;
-      text-transform: uppercase;
-    }
-    .logout-btn {
-      color: #fff;
-      text-decoration: none;
-      padding: 0.3rem 1rem;
-      border-radius: 30px;
-      background: rgba(255, 70, 70, 0.2);
-      border: 1px solid #ff6a4d;
-      font-size: 0.8rem;
-      transition: 0.2s;
-    }
-    .logout-btn:hover { 
-      background: #ff6a4d; 
-      color: #000; 
     }
     
     /* Store Title */
@@ -242,34 +326,6 @@
       color: #ffb347;
     }
     
-    /* Stats Section */
-    .stats-container {
-      display: flex;
-      justify-content: space-around;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 30px;
-      padding: 2rem;
-      margin: 2rem 0;
-      border: 1px solid #ff6a4d40;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    .stat-item {
-      text-align: center;
-    }
-    .stat-number {
-      font-size: 2.2rem;
-      font-weight: 900;
-      color: #ffbe4d;
-      font-family: 'Orbitron', sans-serif;
-    }
-    .stat-label {
-      color: #ccc;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    
     /* Footer */
     .footer {
       margin-top: 3rem;
@@ -281,191 +337,169 @@
       color: #aaa;
     }
     
-    /* Responsive */
-    @media (max-width: 768px) {
-      .container { padding: 1rem; }
-      .glitch-title { font-size: 1.5rem; }
-      .section-title h2 { font-size: 1.5rem; }
+    @media (max-width: 1024px) {
+      .container { flex-direction: column; }
+      .sidebar { width: 100%; position: static; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Header with User Info -->
-    <header class="top-header">
-      <div class="logo-area">
-        <h1 class="glitch-title">IMP0STER</h1>
-        <span class="ff-badge"><i class="fas fa-mask"></i> FF PANEL</span>
-      </div>
-      <div class="user-welcome" id="userWelcome">
-        <i class="fas fa-user-secret"></i>
-        <span class="username" id="usernameDisplay">LOADING...</span>
-        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> EXIT</a>
-      </div>
-    </header>
-
-    <!-- Store Title -->
-    <div class="section-title">
-      <i class="fas fa-store"></i>
-      <h2>IMPOSTER STORE</h2>
-      <span class="store-badge"><i class="fas fa-fire"></i> SELLING PANELS</span>
-    </div>
-
-    <!-- Product Grid -->
-    <div class="card-grid">
-      <!-- Panel 1: Headshot Elite -->
-      <div class="panel-card">
-        <div class="card-icon"><i class="fas fa-bolt"></i></div>
-        <h3>HEADSHOT<br>ELITE</h3>
-        <div class="price">$19.99 <span>/month</span></div>
-        <ul class="feature-list">
-          <li><i class="fas fa-check-circle"></i> 98% headshot rate</li>
-          <li><i class="fas fa-check-circle"></i> Aim lock (undetected)</li>
-          <li><i class="fas fa-check-circle"></i> Anti-ban shield</li>
-          <li><i class="fas fa-check-circle"></i> 24/7 private server</li>
-        </ul>
-        <button class="btn"><i class="fas fa-shopping-cart"></i> BUY NOW</button>
+    <!-- Side Profile Bar -->
+    <div class="sidebar">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <i class="fas fa-user-secret"></i>
+        </div>
+        <div class="profile-name" id="sidebarUsername">LOADING...</div>
+        <span class="profile-role" id="userRole">USER</span>
       </div>
       
-      <!-- Panel 2: Diamond Flood -->
-      <div class="panel-card">
-        <div class="card-icon"><i class="fas fa-gem"></i></div>
-        <h3>DIAMOND<br>FLOOD</h3>
-        <div class="price">$44.99 <span>/instant</span></div>
-        <ul class="feature-list">
-          <li><i class="fas fa-check-circle"></i> +20,000 diamonds</li>
-          <li><i class="fas fa-check-circle"></i> No password required</li>
-          <li><i class="fas fa-check-circle"></i> Delivery in 5min</li>
-          <li><i class="fas fa-check-circle"></i> Redeem code method</li>
-        </ul>
-        <button class="btn"><i class="fas fa-bolt"></i> BUY NOW</button>
+      <div class="profile-stats">
+        <div class="stat-row">
+          <span class="stat-label"><i class="fas fa-envelope"></i> Email</span>
+          <span class="stat-value" id="userEmail">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label"><i class="fas fa-gamepad"></i> FF UID</span>
+          <span class="stat-value" id="userFFUID">Not set</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label"><i class="fas fa-discord"></i> Discord</span>
+          <span class="stat-value" id="userDiscord">Not linked</span>
+        </div>
       </div>
+
+      <a href="https://discord.gg/EYT8NmaMph" target="_blank" class="discord-btn">
+        <i class="fab fa-discord"></i> JOIN DISCORD
+      </a>
       
-      <!-- Panel 3: Rank Imposter -->
-      <div class="panel-card">
-        <div class="card-icon"><i class="fas fa-chess-queen"></i></div>
-        <h3>RANK<br>IMPOSTER</h3>
-        <div class="price">$29.99 <span>/season</span></div>
-        <ul class="feature-list">
-          <li><i class="fas fa-check-circle"></i> Heroic rank boost</li>
-          <li><i class="fas fa-check-circle"></i> K/D spoofing</li>
-          <li><i class="fas fa-check-circle"></i> MVP unlocker</li>
-          <li><i class="fas fa-check-circle"></i> Invisible mode</li>
-        </ul>
-        <button class="btn"><i class="fas fa-mask"></i> BUY NOW</button>
-      </div>
+      <a href="/profile" class="admin-btn">
+        <i class="fas fa-user-edit"></i> EDIT PROFILE
+      </a>
       
-      <!-- Panel 4: Skull Skins -->
-      <div class="panel-card">
-        <div class="card-icon"><i class="fas fa-ghost"></i></div>
-        <h3>SKULL<br>SKINS</h3>
-        <div class="price">$14.99 <span>/unlock</span></div>
-        <ul class="feature-list">
-          <li><i class="fas fa-check-circle"></i> 50+ legendary skins</li>
-          <li><i class="fas fa-check-circle"></i> Imposter bundle</li>
-          <li><i class="fas fa-check-circle"></i> Emote collector</li>
-          <li><i class="fas fa-check-circle"></i> Weapon flamethrower</li>
-        </ul>
-        <button class="btn"><i class="fas fa-tag"></i> BUY NOW</button>
-      </div>
+      <div id="adminButtonContainer"></div>
+      
+      <a href="/logout" style="display: block; text-align: center; margin-top: 1rem; color: #ff6a4d; text-decoration: none;">
+        <i class="fas fa-sign-out-alt"></i> LOGOUT
+      </a>
     </div>
 
-    <!-- Trust Banner -->
-    <div class="trust-banner">
-      <div class="trust-item"><i class="fas fa-shield-alt"></i> UNDETECTED</div>
-      <div class="trust-item"><i class="fas fa-bolt"></i> 1.2M+ SALES</div>
-      <div class="trust-item"><i class="fas fa-mask"></i> IMPOSTER PROTOCOL</div>
-      <div class="trust-item"><i class="fas fa-headset"></i> 24/7 SUPPORT</div>
-    </div>
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="top-header">
+        <div class="logo-area">
+          <h1 class="glitch-title">IMP0STER</h1>
+          <span class="ff-badge"><i class="fas fa-mask"></i> FF PANEL</span>
+        </div>
+      </header>
 
-    <!-- Stats Counter -->
-    <div class="stats-container">
-      <div class="stat-item">
-        <div class="stat-number">1.2M+</div>
-        <div class="stat-label">HAPPY IMPOSTERS</div>
+      <div class="section-title">
+        <i class="fas fa-store"></i>
+        <h2>IMPOSTER STORE</h2>
+        <span class="store-badge"><i class="fas fa-fire"></i> SELLING PANELS</span>
       </div>
-      <div class="stat-item">
-        <div class="stat-number">50K+</div>
-        <div class="stat-label">DIAMONDS SOLD</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">99.9%</div>
-        <div class="stat-label">UPTIME</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">24/7</div>
-        <div class="stat-label">SUPPORT</div>
-      </div>
-    </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div><span style="font-weight: 800; color: #ff9f7e;">IMP0STER.FF</span> — Premium Free Fire Panel</div>
-      <div>
-        <i class="fas fa-database"></i> imposter.db 
-        <span id="userEmail" style="margin-left: 15px; color: #ffbe4d;"></span>
+      <!-- Product Grid -->
+      <div class="card-grid">
+        <div class="panel-card">
+          <div class="card-icon"><i class="fas fa-bolt"></i></div>
+          <h3>HEADSHOT<br>ELITE</h3>
+          <div class="price">$19.99 <span>/month</span></div>
+          <ul class="feature-list">
+            <li><i class="fas fa-check-circle"></i> 98% headshot rate</li>
+            <li><i class="fas fa-check-circle"></i> Aim lock (undetected)</li>
+            <li><i class="fas fa-check-circle"></i> Anti-ban shield</li>
+            <li><i class="fas fa-check-circle"></i> 24/7 private server</li>
+          </ul>
+          <button class="btn"><i class="fas fa-shopping-cart"></i> BUY NOW</button>
+        </div>
+        
+        <div class="panel-card">
+          <div class="card-icon"><i class="fas fa-gem"></i></div>
+          <h3>DIAMOND<br>FLOOD</h3>
+          <div class="price">$44.99 <span>/instant</span></div>
+          <ul class="feature-list">
+            <li><i class="fas fa-check-circle"></i> +20,000 diamonds</li>
+            <li><i class="fas fa-check-circle"></i> No password required</li>
+            <li><i class="fas fa-check-circle"></i> Delivery in 5min</li>
+            <li><i class="fas fa-check-circle"></i> Redeem code method</li>
+          </ul>
+          <button class="btn"><i class="fas fa-bolt"></i> BUY NOW</button>
+        </div>
+        
+        <div class="panel-card">
+          <div class="card-icon"><i class="fas fa-chess-queen"></i></div>
+          <h3>RANK<br>IMPOSTER</h3>
+          <div class="price">$29.99 <span>/season</span></div>
+          <ul class="feature-list">
+            <li><i class="fas fa-check-circle"></i> Heroic rank boost</li>
+            <li><i class="fas fa-check-circle"></i> K/D spoofing</li>
+            <li><i class="fas fa-check-circle"></i> MVP unlocker</li>
+            <li><i class="fas fa-check-circle"></i> Invisible mode</li>
+          </ul>
+          <button class="btn"><i class="fas fa-mask"></i> BUY NOW</button>
+        </div>
+        
+        <div class="panel-card">
+          <div class="card-icon"><i class="fas fa-ghost"></i></div>
+          <h3>SKULL<br>SKINS</h3>
+          <div class="price">$14.99 <span>/unlock</span></div>
+          <ul class="feature-list">
+            <li><i class="fas fa-check-circle"></i> 50+ legendary skins</li>
+            <li><i class="fas fa-check-circle"></i> Imposter bundle</li>
+            <li><i class="fas fa-check-circle"></i> Emote collector</li>
+            <li><i class="fas fa-check-circle"></i> Weapon flamethrower</li>
+          </ul>
+          <button class="btn"><i class="fas fa-tag"></i> BUY NOW</button>
+        </div>
       </div>
-    </footer>
+
+      <div class="trust-banner">
+        <div class="trust-item"><i class="fas fa-shield-alt"></i> UNDETECTED</div>
+        <div class="trust-item"><i class="fas fa-bolt"></i> 1.2M+ SALES</div>
+        <div class="trust-item"><i class="fas fa-mask"></i> IMPOSTER PROTOCOL</div>
+        <div class="trust-item"><i class="fas fa-headset"></i> 24/7 SUPPORT</div>
+      </div>
+
+      <footer class="footer">
+        <div><span style="font-weight: 800; color: #ff9f7e;">IMP0STER.FF</span> — Premium Free Fire Panel</div>
+        <div>
+          <i class="fas fa-database"></i> imposter.db
+        </div>
+      </footer>
+    </div>
   </div>
 
-  <!-- JavaScript to load user data from session -->
   <script>
-    // This script will fetch the current logged-in user info
     document.addEventListener('DOMContentLoaded', function() {
-      // Fetch user data from API
       fetch('/api/user')
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Not logged in');
-          }
+          if (!response.ok) throw new Error('Not logged in');
           return response.json();
         })
         .then(user => {
-          // Update username in header
-          document.getElementById('usernameDisplay').textContent = user.username || 'IMPOSTER';
-          // Update email in footer
-          const emailEl = document.getElementById('userEmail');
-          if (emailEl) {
-            emailEl.textContent = `📧 ${user.email || ''}`;
+          // Update sidebar
+          document.getElementById('sidebarUsername').textContent = user.username;
+          document.getElementById('userEmail').textContent = user.email;
+          document.getElementById('userFFUID').textContent = user.ff_uid || 'Not set';
+          document.getElementById('userDiscord').textContent = user.discord_id || 'Not linked';
+          document.getElementById('userRole').textContent = user.role.toUpperCase();
+          
+          // Show admin button if user is admin
+          if (user.role === 'admin') {
+            const adminBtn = document.createElement('a');
+            adminBtn.href = '/admin';
+            adminBtn.className = 'admin-btn';
+            adminBtn.style.marginTop = '0.5rem';
+            adminBtn.innerHTML = '<i class="fas fa-shield-alt"></i> ADMIN PANEL';
+            document.getElementById('adminButtonContainer').appendChild(adminBtn);
           }
         })
         .catch(error => {
-          console.error('Error fetching user:', error);
-          document.getElementById('usernameDisplay').textContent = 'GUEST';
-          // If not logged in, redirect to login page
-          if (error.message === 'Not logged in') {
-            window.location.href = '/login';
-          }
+          console.error('Error:', error);
+          window.location.href = '/login';
         });
-    });
-
-    // Add to cart animation
-    const buyButtons = document.querySelectorAll('.btn');
-    buyButtons.forEach(button => {
-      button.addEventListener('click', function(e) {
-        e.preventDefault();
-        const originalText = this.innerHTML;
-        this.innerHTML = '<i class="fas fa-check"></i> ADDED!';
-        this.style.background = '#ff6a4d';
-        this.style.color = '#000';
-        
-        setTimeout(() => {
-          this.innerHTML = originalText;
-          this.style.background = 'transparent';
-          this.style.color = '#ffb347';
-        }, 1500);
-      });
-    });
-
-    // Glitch effect on hover for panel cards
-    const cards = document.querySelectorAll('.panel-card');
-    cards.forEach(card => {
-      card.addEventListener('mouseenter', function() {
-        this.style.animation = 'glitch 0.3s infinite';
-      });
-      card.addEventListener('mouseleave', function() {
-        this.style.animation = 'none';
-      });
     });
   </script>
 </body>
