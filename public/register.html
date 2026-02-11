@@ -1,17 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Register</title>
-    <link rel="stylesheet" href="css/style.css">
+<title>Admin</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>Register</header>
+
+<header>ADMIN PANEL</header>
+
+<nav>
+<a href="/">Home</a>
+<a href="/logout">Logout</a>
+</nav>
+
 <div class="container">
-<form action="/register" method="POST">
-<input type="text" name="username" placeholder="Username" required><br>
-<input type="password" name="password" placeholder="Password" required><br>
-<button type="submit">Register</button>
+<h2>Add New Product</h2>
+<form action="/add-product" method="POST">
+<input type="text" name="name" placeholder="Product Name" required><br>
+<input type="text" name="price" placeholder="Price" required><br>
+<button type="submit">Add Product</button>
 </form>
 </div>
+
 </body>
 </html>
