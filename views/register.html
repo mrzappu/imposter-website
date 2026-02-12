@@ -9,8 +9,8 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #0a0c0f;
-      background-image: radial-gradient(circle at 80% 70%, rgba(255, 200, 50, 0.05) 0%, transparent 30%);
+      background: #0a0c14;
+      background-image: radial-gradient(circle at 80% 70%, rgba(0, 200, 255, 0.05) 0%, transparent 30%);
       font-family: 'Inter', sans-serif;
       color: #fff;
       display: flex;
@@ -22,12 +22,12 @@
     .auth-container {
       max-width: 500px;
       width: 100%;
-      background: rgba(7, 10, 15, 0.95);
+      background: rgba(10, 20, 30, 0.95);
       backdrop-filter: blur(10px);
-      border: 2px solid #ff8e4d;
+      border: 2px solid #0096ff;
       border-radius: 40px;
       padding: 2.5rem;
-      box-shadow: 0 20px 40px rgba(255, 100, 50, 0.3);
+      box-shadow: 0 20px 40px rgba(0, 150, 255, 0.2);
       animation: fadeIn 0.5s ease;
     }
     @keyframes fadeIn {
@@ -40,7 +40,8 @@
       font-weight: 900;
       text-align: center;
       margin-bottom: 0.5rem;
-      text-shadow: 0.05em 0 0 rgba(255,100,0,0.7), -0.05em -0.025em 0 rgba(0,200,255,0.5);
+      color: #4db8ff;
+      text-shadow: 0.05em 0 0 rgba(0,150,255,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.3);
     }
     .input-group {
       margin-bottom: 1.5rem;
@@ -51,28 +52,28 @@
       left: 20px;
       top: 50%;
       transform: translateY(-50%);
-      color: #ffa36b;
+      color: #4db8ff;
       font-size: 1.1rem;
       z-index: 1;
     }
     .input-group input {
       width: 100%;
       padding: 1.2rem 1rem 1.2rem 3rem;
-      background: rgba(20, 25, 30, 0.9);
-      border: 2px solid #3a2c2c;
+      background: rgba(20, 30, 40, 0.9);
+      border: 2px solid #2a3a4a;
       border-radius: 50px;
       font-size: 1rem;
       color: white;
       transition: 0.2s;
     }
     .input-group input:focus {
-      border-color: #ff9f4b;
+      border-color: #0096ff;
       outline: none;
-      box-shadow: 0 0 15px #ff8e4d;
-      background: rgba(30, 35, 40, 0.9);
+      box-shadow: 0 0 15px rgba(0,150,255,0.3);
+      background: rgba(30, 40, 50, 0.9);
     }
     .auth-btn {
-      background: linear-gradient(145deg, #ff8e4d, #c5481f);
+      background: linear-gradient(145deg, #0096ff, #0066cc);
       border: none;
       padding: 1.2rem;
       font-size: 1.2rem;
@@ -88,14 +89,14 @@
       cursor: pointer;
       width: 100%;
       margin-top: 1rem;
-      border-bottom: 4px solid #8a2f0e;
+      border-bottom: 4px solid #004080;
       transition: 0.2s;
     }
     .auth-btn:hover {
-      background: #ff6a2b;
+      background: #0066cc;
       border-bottom-width: 2px;
       transform: translateY(2px);
-      box-shadow: 0 10px 20px rgba(255, 142, 77, 0.4);
+      box-shadow: 0 10px 20px rgba(0,150,255,0.4);
     }
     .switch-link {
       text-align: center;
@@ -103,20 +104,20 @@
       color: #ccc;
     }
     .switch-link a {
-      color: #ffbc6e;
+      color: #4db8ff;
       text-decoration: none;
       font-weight: bold;
-      border-bottom: 2px solid #ff8f6e;
+      border-bottom: 2px solid #0096ff;
       transition: 0.2s;
     }
     .switch-link a:hover {
-      color: #ffd700;
-      border-bottom-color: #ffd700;
+      color: #fff;
+      border-bottom-color: #fff;
     }
     .error-message {
-      background: rgba(255, 70, 70, 0.2);
-      border: 1px solid #ff3838;
-      color: #ffb3b3;
+      background: rgba(0, 150, 255, 0.1);
+      border: 1px solid #0096ff;
+      color: #4db8ff;
       padding: 1rem;
       border-radius: 50px;
       margin-bottom: 1.5rem;
@@ -139,8 +140,8 @@
 <body>
   <div class="auth-container">
     <div class="glitch-title">JOIN US</div>
-    <div style="text-align: center; margin-bottom: 2rem; color: #ffbe4d; letter-spacing: 2px;">
-      <i class="fas fa-pen-fancy"></i> CREATE IMPOSTER ACCOUNT
+    <div style="text-align: center; margin-bottom: 2rem; color: #4db8ff; letter-spacing: 2px;">
+      <i class="fas fa-pen-fancy"></i> CREATE DIGITAL ACCOUNT
     </div>
     
     <div id="errorContainer" style="display: none;" class="error-message">
@@ -171,19 +172,19 @@
       
       <div class="input-group">
         <i class="fas fa-gamepad"></i>
-        <input type="text" name="ff_uid" placeholder="Free Fire UID (optional)">
+        <input type="text" name="ff_uid" placeholder="Discord ID / UID (optional)">
       </div>
       <div class="requirements">
-        <i class="fas fa-info-circle"></i> Your Free Fire player ID
+        <i class="fas fa-info-circle"></i> Your Discord username or ID
       </div>
       
       <button type="submit" class="auth-btn">
-        <i class="fas fa-mask"></i> BECOME IMPOSTER
+        <i class="fas fa-mask"></i> CREATE ACCOUNT
       </button>
     </form>
     
     <div class="switch-link">
-      ALREADY HAVE PANEL? <a href="/login">LOGIN →</a>
+      ALREADY HAVE ACCOUNT? <a href="/login">LOGIN →</a>
     </div>
   </div>
 
