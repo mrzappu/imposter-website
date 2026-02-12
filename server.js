@@ -1,5 +1,6 @@
 // server.js - COMPLETE PRODUCTION SERVER
 // Features: User Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile
+// Theme: Blue Theme Support - Fully Updated
 
 const express = require('express');
 const session = require('express-session');
@@ -53,14 +54,15 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Create products table
+  // Create products table with category support
   db.run(`CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     subtitle TEXT,
+    category TEXT DEFAULT 'other',
     price REAL NOT NULL,
     price_suffix TEXT,
-    icon TEXT DEFAULT 'fa-bolt',
+    icon TEXT DEFAULT 'fa-box',
     features TEXT,
     status TEXT DEFAULT 'active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -137,64 +139,301 @@ db.serialize(() => {
 
   // ============ INSERT DEFAULT PRODUCTS ============
   const defaultProducts = [
+    // DISCORD TOOLS
     {
-      name: 'HEADSHOT ELITE',
-      subtitle: 'Aimbot + Antiban',
-      price: 19.99,
-      price_suffix: '/month',
+      name: 'DISCORD NITRO GENERATOR',
+      subtitle: 'Working Discord Nitro Codes',
+      category: 'discord',
+      price: 9.99,
+      price_suffix: '/lifetime',
       icon: 'fa-bolt',
       features: JSON.stringify([
-        '98% headshot rate',
-        'Aim lock (undetected)',
-        'Anti-ban shield',
-        '24/7 private server',
-        'Weekly updates',
-        'Premium support'
-      ])
-    },
-    {
-      name: 'DIAMOND FLOOD',
-      subtitle: 'Instant Delivery',
-      price: 44.99,
-      price_suffix: '/instant',
-      icon: 'fa-gem',
-      features: JSON.stringify([
-        '+20,000 diamonds',
-        'No password required',
-        'Delivery in 5min',
-        'Redeem code method',
-        'Safe & secure',
+        'Working Discord Nitro codes',
+        'Monthly updated list',
+        'Lifetime access',
+        '24/7 support',
+        'Instant delivery',
         'No ban risk'
       ])
     },
     {
-      name: 'RANK IMPOSTER',
-      subtitle: 'Heroic Boost',
-      price: 29.99,
-      price_suffix: '/season',
-      icon: 'fa-chess-queen',
+      name: 'DISCORD TOKEN JOINER',
+      subtitle: 'Auto Join Servers',
+      category: 'discord',
+      price: 24.99,
+      price_suffix: '/lifetime',
+      icon: 'fa-robot',
       features: JSON.stringify([
-        'Heroic rank boost',
-        'K/D spoofing',
-        'MVP unlocker',
-        'Invisible mode',
-        'Matchmaking bypass',
-        'Anti-detection'
+        'Join servers automatically',
+        'Proxy support',
+        'Multi-threaded',
+        'Captcha bypass',
+        'User-friendly GUI',
+        'Free updates'
       ])
     },
     {
-      name: 'SKULL SKINS',
-      subtitle: 'Legendary Bundle',
-      price: 14.99,
-      price_suffix: '/unlock',
-      icon: 'fa-ghost',
+      name: 'DISCORD MASS DM BOT',
+      subtitle: 'Promote Your Server',
+      category: 'discord',
+      price: 34.99,
+      price_suffix: '/lifetime',
+      icon: 'fa-envelope',
       features: JSON.stringify([
-        '50+ legendary skins',
-        'Imposter bundle',
-        'Emote collector',
-        'Weapon flamethrower',
-        'Exclusive items',
-        'Instant unlock'
+        'Send DMs to thousands',
+        'Customizable messages',
+        'Delay settings',
+        'Proxy support',
+        'Safe mode',
+        'Scrape members'
+      ])
+    },
+    {
+      name: 'DISCORD ACCOUNT CREATOR',
+      subtitle: 'Create Bulk Accounts',
+      category: 'discord',
+      price: 44.99,
+      price_suffix: '/lifetime',
+      icon: 'fa-user-plus',
+      features: JSON.stringify([
+        'Auto email verification',
+        'Captcha solver',
+        'Proxy support',
+        'Custom usernames',
+        'Save accounts to file',
+        'High success rate'
+      ])
+    },
+    
+    // CODE / APPLICATION
+    {
+      name: 'PYTHON CHEAT ENGINE',
+      subtitle: 'Memory Scanner / Hacker Tool',
+      category: 'code',
+      price: 49.99,
+      price_suffix: '/source code',
+      icon: 'fa-code',
+      features: JSON.stringify([
+        'Full source code included',
+        'Memory scanner',
+        'Value finder',
+        'Address pointer',
+        'Speed hack module',
+        'Undetected methods'
+      ])
+    },
+    {
+      name: 'AUTO CLICKER PRO',
+      subtitle: 'Advanced Automation',
+      category: 'code',
+      price: 14.99,
+      price_suffix: '/lifetime',
+      icon: 'fa-mouse-pointer',
+      features: JSON.stringify([
+        'Record & playback',
+        'Custom hotkeys',
+        'Random delays',
+        'Multiple profiles',
+        'Stealth mode',
+        'Portable executable'
+      ])
+    },
+    {
+      name: 'MINECRAFT ALTS GENERATOR',
+      subtitle: 'Premium Accounts',
+      category: 'code',
+      price: 19.99,
+      price_suffix: '/month',
+      icon: 'fa-cube',
+      features: JSON.stringify([
+        'Working Minecraft accounts',
+        'Daily updates',
+        'Email:pass format',
+        'No launcher required',
+        'Instant delivery',
+        'Replacements included'
+      ])
+    },
+    {
+      name: 'SPOTIFY PREMIUM GEN',
+      subtitle: 'Account Generator',
+      category: 'code',
+      price: 12.99,
+      price_suffix: '/month',
+      icon: 'fa-spotify',
+      features: JSON.stringify([
+        'Working Spotify Premium',
+        'Email:pass included',
+        'Works on all devices',
+        'Monthly refresh',
+        'No app required',
+        '24/7 support'
+      ])
+    },
+    
+    // WEBSITE DEVELOPMENT
+    {
+      name: 'E-COMMERCE WEBSITE',
+      subtitle: 'Complete HTML/CSS/JS Template',
+      category: 'web',
+      price: 79.99,
+      price_suffix: '/full source',
+      icon: 'fa-shopping-cart',
+      features: JSON.stringify([
+        'Responsive design',
+        'Product catalog',
+        'Shopping cart',
+        'Checkout page',
+        'Admin panel',
+        'SQLite database included'
+      ])
+    },
+    {
+      name: 'ADMIN DASHBOARD',
+      subtitle: 'Bootstrap 5 Template',
+      category: 'web',
+      price: 39.99,
+      price_suffix: '/full source',
+      icon: 'fa-chart-line',
+      features: JSON.stringify([
+        'Dark theme',
+        'Charts & graphs',
+        'User management',
+        'Analytics dashboard',
+        'Fully responsive',
+        'Easy to customize'
+      ])
+    },
+    {
+      name: 'NODE.JS BOT BASE',
+      subtitle: 'Discord Bot Template',
+      category: 'web',
+      price: 29.99,
+      price_suffix: '/source code',
+      icon: 'fa-node',
+      features: JSON.stringify([
+        'Slash commands',
+        'Database setup',
+        'Moderation features',
+        'Economy system',
+        'Music player',
+        'Hosting ready'
+      ])
+    },
+    {
+      name: 'LOGIN SYSTEM',
+      subtitle: 'PHP/MySQL Authentication',
+      category: 'web',
+      price: 24.99,
+      price_suffix: '/source code',
+      icon: 'fa-lock',
+      features: JSON.stringify([
+        'Register/Login',
+        'Password hashing',
+        'Session management',
+        'Remember me',
+        'Reset password',
+        'Admin panel'
+      ])
+    },
+    
+    // BOTS
+    {
+      name: 'DISCORD MUSIC BOT',
+      subtitle: '24/7 Music Player',
+      category: 'bot',
+      price: 34.99,
+      price_suffix: '/hosted',
+      icon: 'fa-music',
+      features: JSON.stringify([
+        'Play from YouTube',
+        'Queue system',
+        'Loop & shuffle',
+        'Volume control',
+        '24/7 uptime',
+        'Free hosting included'
+      ])
+    },
+    {
+      name: 'TELEGRAM AUTO POSTER',
+      subtitle: 'Content Automation',
+      category: 'bot',
+      price: 19.99,
+      price_suffix: '/lifetime',
+      icon: 'fa-paper-plane',
+      features: JSON.stringify([
+        'Auto post to channels',
+        'RSS feeds',
+        'Schedule posts',
+        'Multiple channels',
+        'Custom formatting',
+        'Free updates'
+      ])
+    },
+    {
+      name: 'TWITCH DROP FARMER',
+      subtitle: 'Auto Claim Drops',
+      category: 'bot',
+      price: 22.99,
+      price_suffix: '/lifetime',
+      icon: 'fa-twitch',
+      features: JSON.stringify([
+        'Auto watch streams',
+        'Claim drops',
+        'Multi-account',
+        'Proxy support',
+        'Stealth mode',
+        'Free updates'
+      ])
+    },
+    
+    // OTHER
+    {
+      name: 'VPN ACCOUNTS',
+      subtitle: 'Premium VPN Access',
+      category: 'other',
+      price: 8.99,
+      price_suffix: '/month',
+      icon: 'fa-shield',
+      features: JSON.stringify([
+        '1Gbps speed',
+        'No logs policy',
+        '10 countries',
+        'Works with Netflix',
+        'Windows/Mac/Android',
+        'Instant delivery'
+      ])
+    },
+    {
+      name: 'NETFLIX ACCOUNT',
+      subtitle: 'Premium 4K',
+      category: 'other',
+      price: 6.99,
+      price_suffix: '/month',
+      icon: 'fa-film',
+      features: JSON.stringify([
+        '4K UHD streaming',
+        '4 screens',
+        'No ads',
+        'Download movies',
+        'Profile support',
+        'Replacement warranty'
+      ])
+    },
+    {
+      name: 'CANVA PRO',
+      subtitle: 'Premium Design Tools',
+      category: 'other',
+      price: 5.99,
+      price_suffix: '/month',
+      icon: 'fa-paint-brush',
+      features: JSON.stringify([
+        'All premium templates',
+        'Background remover',
+        'Brand kit',
+        'Content planner',
+        'Magic resize',
+        'Team collaboration'
       ])
     }
   ];
@@ -202,9 +441,9 @@ db.serialize(() => {
   defaultProducts.forEach(product => {
     db.get('SELECT id FROM products WHERE name = ?', [product.name], (err, row) => {
       if (!row) {
-        db.run(`INSERT INTO products (name, subtitle, price, price_suffix, icon, features, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [product.name, product.subtitle, product.price, product.price_suffix, product.icon, product.features, 'active']
+        db.run(`INSERT INTO products (name, subtitle, category, price, price_suffix, icon, features, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [product.name, product.subtitle, product.category, product.price, product.price_suffix, product.icon, product.features, 'active']
         );
       }
     });
@@ -342,10 +581,30 @@ app.get('/api/products/:id', (req, res) => {
   });
 });
 
+app.get('/api/products/category/:category', (req, res) => {
+  const { category } = req.params;
+  db.all('SELECT * FROM products WHERE status = "active" AND category = ? ORDER BY id ASC', [category], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    rows.forEach(row => {
+      if (row.features) {
+        try {
+          row.features = JSON.parse(row.features);
+        } catch (e) {
+          row.features = [];
+        }
+      }
+    });
+    res.json(rows);
+  });
+});
+
 // ============ CART API ENDPOINTS ============
 app.get('/api/cart', requireLogin, (req, res) => {
   db.all(`
-    SELECT c.*, p.name, p.price, p.price_suffix, p.icon, p.features
+    SELECT c.*, p.name, p.price, p.price_suffix, p.icon, p.features, p.category
     FROM cart c
     JOIN products p ON c.product_id = p.id
     WHERE c.user_id = ?
@@ -644,7 +903,7 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
       o.status, o.payment_method, o.payment_status, o.discord_contact, o.notes, o.admin_notes,
       o.created_at, o.updated_at,
       u.username, u.email as user_email, u.ff_uid, u.discord_username,
-      p.name as product_name, p.price
+      p.name as product_name, p.price, p.category
     FROM orders o
     LEFT JOIN users u ON o.user_id = u.id
     LEFT JOIN products p ON o.product_id = p.id
@@ -757,13 +1016,13 @@ app.get('/api/admin/products', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/products', requireAdmin, (req, res) => {
-  const { id, name, subtitle, price, price_suffix, icon, features, status } = req.body;
+  const { id, name, subtitle, category, price, price_suffix, icon, features, status } = req.body;
   const featuresJson = JSON.stringify(features || []);
   
   if (id) {
     db.run(
-      'UPDATE products SET name = ?, subtitle = ?, price = ?, price_suffix = ?, icon = ?, features = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [name, subtitle, price, price_suffix, icon, featuresJson, status, id],
+      'UPDATE products SET name = ?, subtitle = ?, category = ?, price = ?, price_suffix = ?, icon = ?, features = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [name, subtitle, category || 'other', price, price_suffix, icon, featuresJson, status, id],
       function(err) {
         if (err) {
           res.status(500).json({ error: err.message });
@@ -774,8 +1033,8 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
     );
   } else {
     db.run(
-      'INSERT INTO products (name, subtitle, price, price_suffix, icon, features, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, subtitle, price, price_suffix, icon, featuresJson, status || 'active'],
+      'INSERT INTO products (name, subtitle, category, price, price_suffix, icon, features, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, subtitle, category || 'other', price, price_suffix, icon, featuresJson, status || 'active'],
       function(err) {
         if (err) {
           res.status(500).json({ error: err.message });
@@ -991,7 +1250,8 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -1023,5 +1283,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('========================================');
   console.log('📝 Default Admin: admin / admin123');
   console.log('✅ Features: Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile');
+  console.log('✅ Categories: Discord Tools, Code/Apps, Web Dev, Bots, Other');
+  console.log('✅ Theme: Blue Theme Support');
   console.log('========================================\n');
 });
