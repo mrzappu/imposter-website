@@ -1,5 +1,5 @@
 // server.js - COMPLETE PRODUCTION SERVER
-// Features: User Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile
+// Features: User Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile, Messages
 // Theme: Blue Theme Support - Fully Updated
 
 const express = require('express');
@@ -133,6 +133,24 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
+  )`);
+
+  // ============ MESSAGES TABLE ============
+  db.run(`CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender_id INTEGER,
+    recipient_id INTEGER,
+    send_to_all BOOLEAN DEFAULT 0,
+    subject TEXT,
+    message TEXT NOT NULL,
+    reply TEXT,
+    priority TEXT DEFAULT 'normal',
+    read BOOLEAN DEFAULT 0,
+    order_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES users(id),
+    FOREIGN KEY (recipient_id) REFERENCES users(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id)
   )`);
 
   console.log('✅ All database tables ready');
@@ -541,6 +559,66 @@ app.post('/api/user/update', requireLogin, (req, res) => {
         return;
       }
       res.json({ success: true });
+  });
+});
+
+// ============ USER MESSAGES API ENDPOINTS ============
+app.get('/api/user/messages', requireLogin, (req, res) => {
+  db.all(`
+    SELECT m.*, u.username as sender_name
+    FROM messages m
+    LEFT JOIN users u ON m.sender_id = u.id
+    WHERE m.recipient_id = ? OR m.send_to_all = 1
+    ORDER BY m.created_at DESC
+  `, [req.session.userId], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+app.post('/api/user/messages/read', requireLogin, (req, res) => {
+  const { message_id } = req.body;
+  db.run(`
+    UPDATE messages SET read = 1 
+    WHERE id = ? AND (recipient_id = ? OR send_to_all = 1)
+  `, [message_id, req.session.userId], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true });
+  });
+});
+
+app.post('/api/user/messages/reply', requireLogin, (req, res) => {
+  const { message_id, reply } = req.body;
+  
+  db.get('SELECT sender_id FROM messages WHERE id = ?', [message_id], (err, message) => {
+    if (err || !message) {
+      res.status(500).json({ error: 'Message not found' });
+      return;
+    }
+    
+    db.run(`
+      INSERT INTO messages (sender_id, recipient_id, subject, message, reply, priority) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [
+      req.session.userId,
+      message.sender_id,
+      'RE: Customer Reply',
+      reply,
+      null,
+      'normal'
+    ], function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ success: true, id: this.lastID });
+    });
   });
 });
 
@@ -1057,6 +1135,133 @@ app.post('/api/admin/products/delete', requireAdmin, (req, res) => {
   });
 });
 
+// ============ ADMIN MESSAGES API ENDPOINTS ============
+app.get('/api/admin/messages', requireAdmin, (req, res) => {
+  db.all(`
+    SELECT 
+      m.*,
+      sender.username as sender_name,
+      recipient.username as recipient_name
+    FROM messages m
+    LEFT JOIN users sender ON m.sender_id = sender.id
+    LEFT JOIN users recipient ON m.recipient_id = recipient.id
+    ORDER BY m.created_at DESC
+  `, [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+app.post('/api/admin/messages/send', requireAdmin, (req, res) => {
+  const { user_id, send_to_all, subject, message, priority, order_id } = req.body;
+  
+  if (send_to_all) {
+    // Send to all users
+    db.all('SELECT id FROM users', [], (err, users) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      
+      let count = 0;
+      const stmt = db.prepare(`
+        INSERT INTO messages (sender_id, recipient_id, subject, message, priority, send_to_all, order_id) 
+        VALUES (?, ?, ?, ?, ?, 1, ?)
+      `);
+      
+      users.forEach(user => {
+        stmt.run([req.session.userId, user.id, subject || 'Announcement', message, priority || 'normal', order_id || null]);
+        count++;
+      });
+      
+      stmt.finalize();
+      res.json({ success: true, count: count });
+    });
+  } else {
+    // Send to single user
+    db.run(`
+      INSERT INTO messages (sender_id, recipient_id, subject, message, priority, order_id) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [req.session.userId, user_id, subject || 'New Message', message, priority || 'normal', order_id || null], function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ success: true, id: this.lastID });
+    });
+  }
+});
+
+app.post('/api/admin/messages/reply', requireAdmin, (req, res) => {
+  const { message_id, reply } = req.body;
+  
+  // Get original message to get recipient
+  db.get('SELECT sender_id, recipient_id, subject FROM messages WHERE id = ?', [message_id], (err, message) => {
+    if (err || !message) {
+      res.status(500).json({ error: 'Message not found' });
+      return;
+    }
+    
+    // Update original message with reply
+    db.run(`
+      UPDATE messages 
+      SET reply = ?, read = 1 
+      WHERE id = ?
+    `, [reply, message_id], function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      
+      // Create reply message
+      db.run(`
+        INSERT INTO messages (sender_id, recipient_id, subject, message, priority) 
+        VALUES (?, ?, ?, ?, ?)
+      `, [
+        req.session.userId,
+        message.sender_id,
+        `RE: ${message.subject || 'Your Message'}`,
+        reply,
+        'normal'
+      ], function(err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        res.json({ success: true, id: this.lastID });
+      });
+    });
+  });
+});
+
+app.post('/api/admin/messages/delete', requireAdmin, (req, res) => {
+  const { message_id } = req.body;
+  
+  db.run('DELETE FROM messages WHERE id = ?', [message_id], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true });
+  });
+});
+
+app.post('/api/admin/messages/mark-read', requireAdmin, (req, res) => {
+  const { message_id } = req.body;
+  
+  db.run('UPDATE messages SET read = 1 WHERE id = ?', [message_id], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true });
+  });
+});
+
+// ============ ADMIN ANNOUNCEMENTS API ENDPOINTS ============
 app.get('/api/admin/announcements', requireAdmin, (req, res) => {
   db.all('SELECT * FROM announcements ORDER BY created_at DESC', [], (err, rows) => {
     if (err) {
@@ -1108,6 +1313,7 @@ app.post('/api/admin/announcements/delete', requireAdmin, (req, res) => {
   });
 });
 
+// ============ ADMIN USER MANAGEMENT API ENDPOINTS ============
 app.post('/api/admin/update-role', requireAdmin, (req, res) => {
   const { userId, role } = req.body;
   db.run('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err) => {
@@ -1282,7 +1488,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🔗 Admin: http://localhost:${PORT}/admin`);
   console.log('========================================');
   console.log('📝 Default Admin: admin / admin123');
-  console.log('✅ Features: Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile');
+  console.log('✅ Features: Auth, Products, Cart, Orders, Discord Payments, Admin Panel, Logs, Profile, Messages');
   console.log('✅ Categories: Discord Tools, Code/Apps, Web Dev, Bots, Other');
   console.log('✅ Theme: Blue Theme Support');
   console.log('========================================\n');
