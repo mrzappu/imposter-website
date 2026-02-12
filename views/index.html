@@ -18,130 +18,12 @@
       line-height: 1.6;
     }
     .container { 
-      max-width: 1400px; 
+      max-width: 1280px; 
       margin: 0 auto; 
       padding: 1.5rem 2rem; 
-      display: flex;
-      gap: 2rem;
     }
     
-    /* Side Profile Bar */
-    .sidebar {
-      width: 320px;
-      background: rgba(7, 10, 15, 0.9);
-      backdrop-filter: blur(10px);
-      border: 1px solid #ff3838;
-      border-radius: 24px;
-      padding: 1.8rem;
-      height: fit-content;
-      position: sticky;
-      top: 1.5rem;
-    }
-    .profile-header {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    .profile-avatar {
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(145deg, #ff5e4d, #d93a2b);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1rem;
-      border: 3px solid #ffbe4d;
-      box-shadow: 0 0 20px rgba(255, 94, 77, 0.5);
-    }
-    .profile-avatar i {
-      font-size: 3.5rem;
-      color: #fff;
-    }
-    .profile-name {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #ffbe4d;
-      font-family: 'Orbitron', sans-serif;
-    }
-    .profile-role {
-      display: inline-block;
-      background: #ff3a3a;
-      padding: 0.3rem 1.2rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      color: black;
-      font-weight: 800;
-      margin-top: 0.5rem;
-      text-transform: uppercase;
-    }
-    .profile-stats {
-      margin: 1.5rem 0;
-      padding: 1.2rem 0;
-      border-top: 1px solid rgba(255, 100, 100, 0.3);
-      border-bottom: 1px solid rgba(255, 100, 100, 0.3);
-    }
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.8rem;
-    }
-    .stat-label {
-      color: #aaa;
-      font-size: 0.9rem;
-    }
-    .stat-value {
-      color: #ffbe4d;
-      font-weight: 700;
-    }
-    .discord-btn {
-      background: #5865F2;
-      color: white;
-      border: none;
-      padding: 0.9rem;
-      border-radius: 50px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      cursor: pointer;
-      width: 100%;
-      margin: 1rem 0;
-      transition: 0.2s;
-      text-decoration: none;
-    }
-    .discord-btn:hover {
-      background: #4752c4;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
-    }
-    .profile-btn {
-      background: transparent;
-      border: 2px solid #ff6a4d;
-      color: #ffb347;
-      padding: 0.9rem;
-      border-radius: 50px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      cursor: pointer;
-      width: 100%;
-      margin: 0.5rem 0;
-      transition: 0.2s;
-      text-decoration: none;
-    }
-    .profile-btn:hover {
-      background: #ff6a4d;
-      color: #000;
-    }
-    
-    /* Main Content */
-    .main-content {
-      flex: 1;
-    }
-    
+    /* ============ HEADER ============ */
     .top-header {
       display: flex;
       justify-content: space-between;
@@ -149,6 +31,13 @@
       padding: 0.8rem 0 1.5rem;
       border-bottom: 1px solid rgba(255, 70, 70, 0.3);
       margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .glitch-title {
       font-family: 'Orbitron', sans-serif;
@@ -171,10 +60,69 @@
       border: 1px solid #ff3838;
       font-size: 0.8rem;
       font-weight: 800;
-      margin-left: 1rem;
+      text-transform: uppercase;
     }
     
-    /* Announcement Banner */
+    /* ============ USER MENU - TOP RIGHT ============ */
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .profile-btn {
+      background: linear-gradient(145deg, #ff5e4d, #d93a2b);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+      border-bottom: 3px solid #721c1c;
+    }
+    .profile-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 94, 77, 0.4);
+    }
+    .cart-btn {
+      background: transparent;
+      border: 2px solid #ff6a4d;
+      color: #ffb347;
+      padding: 0.7rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+    .cart-btn:hover {
+      background: #ff6a4d;
+      color: black;
+    }
+    .logout-btn {
+      color: #ff6a4d;
+      text-decoration: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 40px;
+      border: 1px solid #ff6a4d;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logout-btn:hover {
+      background: #ff6a4d;
+      color: black;
+    }
+    
+    /* ============ ANNOUNCEMENT BANNER ============ */
     .announcement-banner {
       background: linear-gradient(145deg, rgba(255, 70, 70, 0.1), rgba(255, 100, 50, 0.1));
       border: 1px solid #ff3838;
@@ -208,6 +156,7 @@
       color: #fff;
     }
     
+    /* ============ STORE TITLE ============ */
     .section-title {
       display: flex;
       align-items: center;
@@ -231,7 +180,7 @@
       font-weight: 800;
     }
     
-    /* Product Grid */
+    /* ============ PRODUCT GRID ============ */
     .card-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -311,6 +260,10 @@
       transition: 0.2s;
       flex: 1;
       font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     .btn:hover {
       background: #ff6a4d;
@@ -323,7 +276,43 @@
       color: #ff984f;
     }
     
-    /* Product Modal */
+    /* ============ TRUST BANNER ============ */
+    .trust-banner {
+      display: flex;
+      justify-content: space-around;
+      background: #0e0b14b8;
+      backdrop-filter: blur(4px);
+      border-radius: 60px;
+      padding: 1.5rem;
+      margin: 3rem 0;
+      border: 1px solid #ff6a4d70;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffe6b3;
+      font-weight: 600;
+    }
+    .trust-item i {
+      font-size: 1.6rem;
+      color: #ffb347;
+    }
+    
+    /* ============ FOOTER ============ */
+    .footer {
+      margin-top: 3rem;
+      border-top: 1px solid rgba(255, 100, 100, 0.3);
+      padding: 2rem 0 1rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      color: #aaa;
+    }
+    
+    /* ============ PRODUCT MODAL ============ */
     .modal {
       display: none;
       position: fixed;
@@ -422,6 +411,7 @@
       margin-top: 1rem;
       text-transform: uppercase;
       letter-spacing: 3px;
+      border-bottom: 4px solid #721c1c;
     }
     .modal-buy-btn:hover {
       background: #ff3b2f;
@@ -429,156 +419,104 @@
       box-shadow: 0 10px 20px rgba(255, 45, 45, 0.4);
     }
     
-    /* Trust Banner */
-    .trust-banner {
-      display: flex;
-      justify-content: space-around;
-      background: #0e0b14b8;
-      backdrop-filter: blur(4px);
-      border-radius: 60px;
-      padding: 1.5rem;
-      margin: 3rem 0;
-      border: 1px solid #ff6a4d70;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #ffe6b3;
-      font-weight: 600;
-    }
-    .trust-item i {
-      font-size: 1.6rem;
-      color: #ffb347;
-    }
-    
-    /* Footer */
-    .footer {
-      margin-top: 3rem;
-      border-top: 1px solid rgba(255, 100, 100, 0.3);
-      padding: 2rem 0 1rem;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      color: #aaa;
-    }
-    
-    /* Loading */
-    .loading {
-      text-align: center;
-      padding: 2rem;
-      color: #ffbe4d;
-    }
-    .loading i {
-      font-size: 2rem;
+    /* ============ ALERT ============ */
+    .alert {
+      padding: 1rem;
+      border-radius: 10px;
       margin-bottom: 1rem;
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      animation: slideIn 0.3s;
     }
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    .alert-success { background: rgba(0, 184, 148, 0.9); border: 1px solid #00b894; color: white; }
+    .alert-error { background: rgba(255, 56, 56, 0.9); border: 1px solid #ff3838; color: white; }
     
-    @media (max-width: 1024px) {
-      .container { flex-direction: column; }
-      .sidebar { width: 100%; position: static; }
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .glitch-title { font-size: 1.5rem; }
+      .section-title h2 { font-size: 1.5rem; }
+      .user-menu { flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Side Profile Bar -->
-    <div class="sidebar">
-      <div class="profile-header">
-        <div class="profile-avatar">
+    <!-- ============ HEADER WITH PROFILE BUTTON ============ -->
+    <header class="top-header">
+      <div class="logo-area">
+        <h1 class="glitch-title">IMP0STER</h1>
+        <span class="ff-badge"><i class="fas fa-mask"></i> FF PANEL</span>
+      </div>
+      
+      <!-- USER MENU - TOP RIGHT - ALL USER INFO HIDDEN INSIDE PROFILE BUTTON -->
+      <div class="user-menu">
+        <a href="/profile" class="profile-btn">
           <i class="fas fa-user-secret"></i>
-        </div>
-        <div class="profile-name" id="sidebarUsername">LOADING...</div>
-        <span class="profile-role" id="userRole">USER</span>
+          <span id="profileButtonText">PROFILE</span>
+          <span id="profileBadge" style="background: #ffbe4d; color: black; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; display: none;"></span>
+        </a>
+        <a href="/cart" class="cart-btn">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cartCount">0</span>
+        </a>
+        <a href="/logout" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
       </div>
-      
-      <div class="profile-stats">
-        <div class="stat-row">
-          <span class="stat-label"><i class="fas fa-envelope"></i> Email</span>
-          <span class="stat-value" id="userEmail">-</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label"><i class="fas fa-gamepad"></i> FF UID</span>
-          <span class="stat-value" id="userFFUID">Not set</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label"><i class="fab fa-discord"></i> Discord</span>
-          <span class="stat-value" id="userDiscord">Not linked</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label"><i class="fas fa-calendar"></i> Member Since</span>
-          <span class="stat-value" id="userJoined">-</span>
-        </div>
-      </div>
+    </header>
 
-      <a href="https://discord.gg/EYT8NmaMph" target="_blank" class="discord-btn">
-        <i class="fab fa-discord"></i> JOIN DISCORD SUPPORT
-      </a>
-      
-      <a href="/profile" class="profile-btn">
-        <i class="fas fa-user-edit"></i> EDIT PROFILE
-      </a>
-      
-      <div id="adminButtonContainer"></div>
-      
-      <a href="/logout" style="display: block; text-align: center; margin-top: 1rem; color: #ff6a4d; text-decoration: none;">
-        <i class="fas fa-sign-out-alt"></i> LOGOUT
-      </a>
+    <!-- ============ ANNOUNCEMENT BANNER ============ -->
+    <div id="announcementContainer" style="display: none;" class="announcement-banner">
+      <div class="announcement-icon">
+        <i class="fas fa-bullhorn"></i>
+      </div>
+      <div class="announcement-content">
+        <div class="announcement-title" id="announcementTitle"></div>
+        <div class="announcement-message" id="announcementMessage"></div>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <header class="top-header">
-        <div style="display: flex; align-items: center;">
-          <h1 class="glitch-title">IMP0STER</h1>
-          <span class="ff-badge"><i class="fas fa-mask"></i> FF PANEL</span>
-        </div>
-      </header>
-
-      <!-- Announcement Banner -->
-      <div id="announcementContainer" style="display: none;" class="announcement-banner">
-        <div class="announcement-icon">
-          <i class="fas fa-bullhorn"></i>
-        </div>
-        <div class="announcement-content">
-          <div class="announcement-title" id="announcementTitle"></div>
-          <div class="announcement-message" id="announcementMessage"></div>
-        </div>
-      </div>
-
-      <div class="section-title">
-        <i class="fas fa-store"></i>
-        <h2>IMPOSTER STORE</h2>
-        <span class="store-badge"><i class="fas fa-fire"></i> SELLING PANELS</span>
-      </div>
-
-      <!-- Products Grid -->
-      <div id="productsContainer" class="card-grid">
-        <div class="loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          <p>Loading products...</p>
-        </div>
-      </div>
-
-      <div class="trust-banner">
-        <div class="trust-item"><i class="fas fa-shield-alt"></i> UNDETECTED</div>
-        <div class="trust-item"><i class="fas fa-bolt"></i> 1.2M+ SALES</div>
-        <div class="trust-item"><i class="fas fa-mask"></i> IMPOSTER PROTOCOL</div>
-        <div class="trust-item"><i class="fas fa-headset"></i> 24/7 SUPPORT</div>
-      </div>
-
-      <footer class="footer">
-        <div><span style="font-weight: 800; color: #ff9f7e;">IMP0STER.FF</span> — Premium Free Fire Panel</div>
-        <div>
-          <i class="fas fa-database"></i> imposter.db
-        </div>
-      </footer>
+    <!-- ============ STORE TITLE ============ -->
+    <div class="section-title">
+      <i class="fas fa-store"></i>
+      <h2>IMPOSTER STORE</h2>
+      <span class="store-badge"><i class="fas fa-fire"></i> SELLING PANELS</span>
     </div>
+
+    <!-- ============ PRODUCT GRID ============ -->
+    <div id="productsContainer" class="card-grid">
+      <div style="text-align: center; padding: 3rem; grid-column: 1/-1;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #ffbe4d;"></i>
+        <p style="margin-top: 1rem; color: #aaa;">Loading products...</p>
+      </div>
+    </div>
+
+    <!-- ============ TRUST BANNER ============ -->
+    <div class="trust-banner">
+      <div class="trust-item"><i class="fas fa-shield-alt"></i> UNDETECTED</div>
+      <div class="trust-item"><i class="fas fa-bolt"></i> 1.2M+ SALES</div>
+      <div class="trust-item"><i class="fas fa-mask"></i> IMPOSTER PROTOCOL</div>
+      <div class="trust-item"><i class="fas fa-headset"></i> 24/7 SUPPORT</div>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer">
+      <div><span style="font-weight: 800; color: #ff9f7e;">IMP0STER.FF</span> — Premium Free Fire Panel</div>
+      <div>
+        <i class="fas fa-database"></i> imposter.db
+      </div>
+    </footer>
   </div>
 
-  <!-- Product Details Modal -->
+  <!-- ============ PRODUCT DETAILS MODAL ============ -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -592,58 +530,68 @@
         <h4><i class="fas fa-list"></i> FEATURES</h4>
         <ul id="modalFeaturesList"></ul>
       </div>
-      <button class="modal-buy-btn" onclick="buyProduct()">
-        <i class="fas fa-shopping-cart"></i> PURCHASE NOW
+      <button class="modal-buy-btn" onclick="buyFromModal()">
+        <i class="fas fa-shopping-cart"></i> ADD TO CART
       </button>
     </div>
   </div>
 
+  <!-- ============ ALERT NOTIFICATION ============ -->
+  <div id="alertMessage" class="alert">
+    <i class="fas fa-info-circle"></i> <span id="alertText"></span>
+  </div>
+
   <script>
-    // Global variables
+    // ============ GLOBAL VARIABLES ============
     let currentProduct = null;
     let products = [];
+    let userData = null;
 
-    // ============ LOAD USER DATA ============
+    // ============ LOAD ALL DATA ============
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUserData();
+      loadProducts();
+      loadAnnouncements();
+      loadCartCount();
+    });
+
+    // ============ LOAD USER DATA (HIDDEN - ONLY FOR PROFILE BUTTON) ============
     async function loadUserData() {
       try {
         const response = await fetch('/api/user');
-        if (!response.ok) {
-          throw new Error('Not logged in');
-        }
-        const user = await response.json();
+        if (!response.ok) throw new Error('Not logged in');
+        userData = await response.json();
         
-        // Update sidebar with user data
-        document.getElementById('sidebarUsername').textContent = user.username || 'IMPOSTER';
-        document.getElementById('userEmail').textContent = user.email || '-';
-        document.getElementById('userFFUID').textContent = user.ff_uid || 'Not set';
-        document.getElementById('userDiscord').textContent = user.discord_username || user.discord_id || 'Not linked';
-        document.getElementById('userRole').textContent = user.role?.toUpperCase() || 'USER';
-        
-        // Format join date
-        if (user.created_at) {
-          const date = new Date(user.created_at);
-          document.getElementById('userJoined').textContent = date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            year: 'numeric' 
-          });
+        // Update profile button with username (subtle)
+        if (userData.username) {
+          document.getElementById('profileButtonText').innerHTML = `<i class="fas fa-user-secret"></i> ${userData.username}`;
+          
+          // Show admin badge if admin
+          if (userData.role === 'admin') {
+            document.getElementById('profileBadge').style.display = 'inline-block';
+            document.getElementById('profileBadge').textContent = 'ADMIN';
+          }
         }
         
-        // Show admin button if user is admin
-        if (user.role === 'admin') {
-          const adminBtn = document.createElement('a');
-          adminBtn.href = '/admin';
-          adminBtn.className = 'profile-btn';
-          adminBtn.style.marginTop = '0.5rem';
-          adminBtn.innerHTML = '<i class="fas fa-shield-alt"></i> ADMIN PANEL';
-          document.getElementById('adminButtonContainer').appendChild(adminBtn);
-        }
-        
-        return user;
+        return userData;
       } catch (error) {
         console.error('Error loading user:', error);
-        // Redirect to login if not authenticated
         window.location.href = '/login';
         return null;
+      }
+    }
+
+    // ============ LOAD CART COUNT ============
+    async function loadCartCount() {
+      try {
+        const response = await fetch('/api/cart');
+        if (response.ok) {
+          const data = await response.json();
+          const count = data.items?.length || 0;
+          document.getElementById('cartCount').textContent = count;
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
       }
     }
 
@@ -653,35 +601,43 @@
         const response = await fetch('/api/products');
         if (!response.ok) throw new Error('Failed to load products');
         products = await response.json();
-        
-        const container = document.getElementById('productsContainer');
-        
-        if (products.length === 0) {
-          container.innerHTML = '<div style="text-align: center; padding: 2rem;">No products available</div>';
-          return;
-        }
-        
-        container.innerHTML = products.map(product => `
-          <div class="panel-card">
-            <div class="card-icon"><i class="fas ${product.icon || 'fa-bolt'}"></i></div>
-            <h3>${product.name}</h3>
-            <div class="product-subtitle">${product.subtitle || ''}</div>
-            <div class="price">$${product.price} <span>${product.price_suffix || ''}</span></div>
-            <div class="btn-group">
-              <button class="btn btn-details" onclick="showProductDetails(${product.id})">
-                <i class="fas fa-info-circle"></i> DETAILS
-              </button>
-              <button class="btn" onclick="quickBuy(${product.id})">
-                <i class="fas fa-bolt"></i> BUY
-              </button>
-            </div>
-          </div>
-        `).join('');
+        displayProducts(products);
       } catch (error) {
-        console.error('Error loading products:', error);
-        document.getElementById('productsContainer').innerHTML = 
-          '<div style="text-align: center; padding: 2rem; color: #ff3838;">Failed to load products</div>';
+        console.error('Error:', error);
+        document.getElementById('productsContainer').innerHTML = `
+          <div style="text-align: center; padding: 3rem; grid-column: 1/-1;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ff3838;"></i>
+            <p style="margin-top: 1rem; color: #ff3838;">Failed to load products</p>
+          </div>
+        `;
       }
+    }
+
+    // ============ DISPLAY PRODUCTS ============
+    function displayProducts(products) {
+      const container = document.getElementById('productsContainer');
+      
+      if (products.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 3rem; grid-column: 1/-1;">No products available</div>';
+        return;
+      }
+
+      container.innerHTML = products.map(product => `
+        <div class="panel-card">
+          <div class="card-icon"><i class="fas ${product.icon || 'fa-bolt'}"></i></div>
+          <h3>${product.name}</h3>
+          <div class="product-subtitle">${product.subtitle || ''}</div>
+          <div class="price">$${product.price} <span>${product.price_suffix || ''}</span></div>
+          <div class="btn-group">
+            <button class="btn btn-details" onclick="showProductDetails(${product.id})">
+              <i class="fas fa-info-circle"></i> DETAILS
+            </button>
+            <button class="btn" onclick="addToCart(${product.id})">
+              <i class="fas fa-cart-plus"></i> BUY
+            </button>
+          </div>
+        </div>
+      `).join('');
     }
 
     // ============ LOAD ANNOUNCEMENTS ============
@@ -702,20 +658,37 @@
       }
     }
 
-    // ============ PRODUCT MODAL FUNCTIONS ============
+    // ============ ADD TO CART ============
+    async function addToCart(productId) {
+      try {
+        const response = await fetch('/api/cart/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, quantity: 1 })
+        });
+        
+        if (response.ok) {
+          showAlert('✅ Added to cart!', 'success');
+          loadCartCount();
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to add to cart', 'error');
+      }
+    }
+
+    // ============ SHOW PRODUCT DETAILS ============
     function showProductDetails(productId) {
-      const product = products.find(p => p.id == productId);
+      const product = products.find(p => p.id === productId);
       if (!product) return;
       
       currentProduct = product;
       
-      // Set modal content
       document.getElementById('modalIcon').className = `fas ${product.icon || 'fa-bolt'}`;
       document.getElementById('modalTitle').textContent = product.name;
       document.getElementById('modalSubtitle').textContent = product.subtitle || '';
       document.getElementById('modalPrice').innerHTML = `$${product.price} <span style="font-size: 1rem;">${product.price_suffix || ''}</span>`;
       
-      // Set features list
       const featuresList = document.getElementById('modalFeaturesList');
       if (product.features && Array.isArray(product.features)) {
         featuresList.innerHTML = product.features.map(feature => 
@@ -725,59 +698,44 @@
         featuresList.innerHTML = '<li>No features listed</li>';
       }
       
-      // Show modal
       document.getElementById('productModal').style.display = 'flex';
     }
 
+    // ============ BUY FROM MODAL ============
+    async function buyFromModal() {
+      if (currentProduct) {
+        await addToCart(currentProduct.id);
+        closeModal();
+      }
+    }
+
+    // ============ CLOSE MODAL ============
     function closeModal() {
       document.getElementById('productModal').style.display = 'none';
       currentProduct = null;
     }
 
-    // ============ BUY FUNCTIONS ============
-    async function quickBuy(productId) {
-      const product = products.find(p => p.id == productId);
-      if (!product) return;
+    // ============ SHOW ALERT ============
+    function showAlert(message, type) {
+      const alert = document.getElementById('alertMessage');
+      alert.className = `alert alert-${type}`;
+      document.getElementById('alertText').textContent = message;
+      alert.style.display = 'block';
       
-      if (confirm(`Purchase ${product.name} for $${product.price}?`)) {
-        try {
-          const response = await fetch('/api/orders/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: productId })
-          });
-          
-          const data = await response.json();
-          if (data.success) {
-            alert('✅ Order placed successfully! Check your profile for details.');
-          } else {
-            alert('❌ Failed to place order');
-          }
-        } catch (error) {
-          console.error('Error placing order:', error);
-          alert('❌ Error placing order');
-        }
-      }
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 3000);
     }
 
-    async function buyProduct() {
-      if (currentProduct) {
-        await quickBuy(currentProduct.id);
-        closeModal();
-      }
+    // ============ ESCAPE HTML ============
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
-    // ============ INITIALIZE PAGE ============
-    document.addEventListener('DOMContentLoaded', async function() {
-      // Load all data in parallel
-      await Promise.all([
-        loadUserData(),
-        loadProducts(),
-        loadAnnouncements()
-      ]);
-    });
-
-    // Close modal when clicking outside
+    // ============ CLOSE MODAL WHEN CLICKING OUTSIDE ============
     window.onclick = function(event) {
       const modal = document.getElementById('productModal');
       if (event.target === modal) {
