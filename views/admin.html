@@ -9,24 +9,24 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #0a0c0f;
+      background: #0a0c14;
       background-image: 
-        radial-gradient(circle at 20% 30%, rgba(255, 70, 70, 0.08) 0%, transparent 25%),
-        radial-gradient(circle at 80% 70%, rgba(255, 200, 50, 0.05) 0%, transparent 30%);
+        radial-gradient(circle at 20% 30%, rgba(0, 150, 255, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 80% 70%, rgba(0, 200, 255, 0.05) 0%, transparent 30%);
       font-family: 'Inter', sans-serif;
       color: #fff;
       padding: 2rem;
     }
     .container { max-width: 1600px; margin: 0 auto; }
     
-    /* Header Styles */
+    /* ============ HEADER ============ */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
       padding-bottom: 1rem;
-      border-bottom: 1px solid rgba(255, 70, 70, 0.3);
+      border-bottom: 1px solid rgba(0, 150, 255, 0.3);
       flex-wrap: wrap;
       gap: 1rem;
     }
@@ -36,18 +36,19 @@
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 3px;
-      text-shadow: 0.05em 0 0 rgba(255,0,0,0.7), -0.05em -0.025em 0 rgba(0,255,255,0.5);
+      color: #4db8ff;
+      text-shadow: 0.05em 0 0 rgba(0,150,255,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.3);
       animation: glitch 4s infinite alternate;
     }
     @keyframes glitch {
-      0% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.5); }
-      100% { text-shadow: -0.05em 0.025em 0 rgba(255,0,0,0.6), 0.025em 0.05em 0 rgba(0,255,255,0.5); }
+      0% { text-shadow: 0.05em 0 0 rgba(0,150,255,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.3); }
+      100% { text-shadow: -0.05em 0.025em 0 rgba(0,150,255,0.6), 0.025em 0.05em 0 rgba(0,200,255,0.3); }
     }
     .admin-badge {
-      background: #ff3a3a;
+      background: #0096ff;
       padding: 0.3rem 1rem;
       border-radius: 30px;
-      color: black;
+      color: white;
       font-weight: 800;
       margin-left: 1rem;
     }
@@ -61,12 +62,12 @@
       transition: 0.2s;
     }
     .back-btn {
-      color: #ffbe4d;
-      border: 1px solid #ff6a4d;
+      color: #4db8ff;
+      border: 1px solid #0096ff;
     }
     .back-btn:hover {
-      background: #ff6a4d;
-      color: black;
+      background: #0096ff;
+      color: white;
     }
     .discord-btn {
       background: #5865F2;
@@ -78,7 +79,7 @@
       transform: translateY(-2px);
     }
     
-    /* Stats Grid */
+    /* ============ STATS GRID ============ */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -86,8 +87,8 @@
       margin-bottom: 2rem;
     }
     .stat-card {
-      background: rgba(12, 15, 20, 0.85);
-      border: 1px solid #ff3838;
+      background: rgba(10, 20, 30, 0.85);
+      border: 1px solid #0096ff;
       border-radius: 20px;
       padding: 1.5rem;
       display: flex;
@@ -96,7 +97,7 @@
     }
     .stat-icon {
       font-size: 2.5rem;
-      color: #ffbe4d;
+      color: #4db8ff;
     }
     .stat-info h3 {
       font-size: 0.9rem;
@@ -106,23 +107,23 @@
     .stat-number {
       font-size: 2rem;
       font-weight: 800;
-      color: #ffd966;
+      color: #4db8ff;
       font-family: 'Orbitron', sans-serif;
     }
     
-    /* Tab Navigation */
+    /* ============ TAB NAVIGATION ============ */
     .tabs {
       display: flex;
       gap: 1rem;
       margin-bottom: 2rem;
-      border-bottom: 1px solid rgba(255, 70, 70, 0.3);
+      border-bottom: 1px solid rgba(0, 150, 255, 0.3);
       padding-bottom: 1rem;
       flex-wrap: wrap;
     }
     .tab-btn {
       background: transparent;
-      border: 2px solid #ff6a4d;
-      color: #ffb347;
+      border: 2px solid #0096ff;
+      color: #4db8ff;
       padding: 0.8rem 2rem;
       border-radius: 40px;
       font-weight: 700;
@@ -133,15 +134,15 @@
       gap: 10px;
     }
     .tab-btn.active {
-      background: #ff6a4d;
-      color: black;
+      background: #0096ff;
+      color: white;
     }
     .tab-btn:hover {
-      background: #ff6a4d;
-      color: black;
+      background: #0096ff;
+      color: white;
     }
     
-    /* Tab Content */
+    /* ============ TAB CONTENT ============ */
     .tab-content {
       display: none;
     }
@@ -149,7 +150,7 @@
       display: block;
     }
     
-    /* Action Bar */
+    /* ============ ACTION BAR ============ */
     .action-bar {
       display: flex;
       justify-content: space-between;
@@ -174,10 +175,27 @@
     .create-btn:hover {
       background: #00a884;
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+      box-shadow: 0 5px 15px rgba(0,184,148,0.4);
+    }
+    .message-btn {
+      background: #0096ff;
+      border: none;
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+    .message-btn:hover {
+      background: #0066cc;
+      transform: translateY(-2px);
     }
     
-    /* Filter Bar */
+    /* ============ FILTER BAR ============ */
     .filter-bar {
       display: flex;
       gap: 1rem;
@@ -186,38 +204,41 @@
       align-items: center;
     }
     .filter-select {
-      background: #2a2e34;
-      border: 1px solid #ff6a4d;
+      background: rgba(20, 30, 40, 0.9);
+      border: 1px solid #0096ff;
       color: white;
       padding: 0.6rem 1.2rem;
       border-radius: 30px;
       font-size: 0.9rem;
     }
     .search-input {
-      background: #2a2e34;
-      border: 1px solid #ff6a4d;
+      background: rgba(20, 30, 40, 0.9);
+      border: 1px solid #0096ff;
       color: white;
       padding: 0.6rem 1.2rem;
       border-radius: 30px;
       font-size: 0.9rem;
       min-width: 250px;
     }
+    .search-input::placeholder {
+      color: #888;
+    }
     
-    /* Tables */
-    .orders-table, .products-table, .announcements-table, .users-table, .logs-table {
-      background: rgba(7, 10, 15, 0.9);
-      border: 1px solid #ff3838;
+    /* ============ TABLES ============ */
+    .orders-table, .products-table, .announcements-table, .users-table, .logs-table, .messages-table {
+      background: rgba(10, 20, 30, 0.9);
+      border: 1px solid #0096ff;
       border-radius: 24px;
       padding: 1.5rem;
       overflow-x: auto;
       margin-bottom: 2rem;
     }
-    .orders-table h2, .products-table h2, .announcements-table h2, .users-table h2, .logs-table h2 {
+    .orders-table h2, .products-table h2, .announcements-table h2, .users-table h2, .logs-table h2, .messages-table h2 {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 1.5rem;
-      color: #ffbe4d;
+      color: #4db8ff;
     }
     table {
       width: 100%;
@@ -226,15 +247,15 @@
     th {
       text-align: left;
       padding: 1rem;
-      color: #ffbe4d;
-      border-bottom: 2px solid #ff3838;
+      color: #4db8ff;
+      border-bottom: 2px solid #0096ff;
     }
     td {
       padding: 1rem;
-      border-bottom: 1px solid rgba(255, 100, 100, 0.2);
+      border-bottom: 1px solid rgba(0,150,255,0.2);
     }
     
-    /* Status Badges */
+    /* ============ STATUS BADGES ============ */
     .status-badge {
       padding: 0.3rem 0.8rem;
       border-radius: 20px;
@@ -245,11 +266,11 @@
     .status-pending { background: #f39c12; color: black; }
     .status-processing { background: #3498db; color: white; }
     .status-completed { background: #00b894; color: white; }
-    .status-failed { background: #ff3838; color: white; }
+    .status-failed { background: #ff4d4d; color: white; }
     .status-cancelled { background: #7f8c8d; color: white; }
-    .status-active { background: #00b894; color: white; }
-    .status-inactive { background: #ff3838; color: white; }
     .status-waiting { background: #f39c12; color: black; }
+    .status-active { background: #00b894; color: white; }
+    .status-inactive { background: #ff4d4d; color: white; }
     
     .role-badge {
       padding: 0.3rem 0.8rem;
@@ -258,11 +279,11 @@
       font-weight: 700;
       display: inline-block;
     }
-    .role-admin { background: #ff3a3a; color: black; }
-    .role-user { background: #2a2a2a; color: white; }
+    .role-admin { background: #0096ff; color: white; }
+    .role-user { background: #2a3a4a; color: white; }
     
-    /* Action Buttons */
-    .edit-btn, .delete-btn, .view-btn, .process-btn, .complete-btn, .fail-btn {
+    /* ============ ACTION BUTTONS ============ */
+    .edit-btn, .delete-btn, .view-btn, .process-btn, .complete-btn, .fail-btn, .message-send-btn, .reply-btn {
       padding: 0.4rem 1rem;
       border: none;
       border-radius: 20px;
@@ -271,18 +292,20 @@
       margin: 0 0.2rem;
       transition: 0.2s;
     }
-    .edit-btn { background: #ffbe4d; color: black; }
-    .edit-btn:hover { background: #ffd966; transform: translateY(-2px); }
-    .delete-btn { background: #ff3838; color: white; }
+    .edit-btn { background: #4db8ff; color: black; }
+    .edit-btn:hover { background: #0096ff; color: white; transform: translateY(-2px); }
+    .delete-btn { background: #ff4d4d; color: white; }
     .delete-btn:hover { background: #ff0000; transform: translateY(-2px); }
     .view-btn { background: #6c5ce7; color: white; }
     .view-btn:hover { background: #5f4ad4; transform: translateY(-2px); }
     .process-btn { background: #3498db; color: white; }
     .complete-btn { background: #00b894; color: white; }
-    .fail-btn { background: #ff3838; color: white; }
+    .fail-btn { background: #ff4d4d; color: white; }
+    .message-send-btn { background: #0096ff; color: white; }
+    .reply-btn { background: #00b894; color: white; }
     .delete-btn:disabled { background: #666; cursor: not-allowed; }
     
-    /* Modal */
+    /* ============ MODAL ============ */
     .modal {
       display: none;
       position: fixed;
@@ -296,17 +319,17 @@
       z-index: 1000;
     }
     .modal-content {
-      background: #1a1e24;
+      background: #1a2a3a;
       padding: 2rem;
       border-radius: 24px;
-      border: 2px solid #ff3838;
+      border: 2px solid #0096ff;
       max-width: 600px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
     }
     .modal-content h3 {
-      color: #ffbe4d;
+      color: #4db8ff;
       margin-bottom: 1.5rem;
       font-family: 'Orbitron', sans-serif;
       display: flex;
@@ -314,7 +337,7 @@
       gap: 10px;
     }
     .order-details {
-      background: #2a2e34;
+      background: #0a1a2a;
       border-radius: 16px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
@@ -324,13 +347,13 @@
       justify-content: space-between;
       margin-bottom: 0.8rem;
       padding-bottom: 0.8rem;
-      border-bottom: 1px dotted rgba(255,255,255,0.1);
+      border-bottom: 1px dotted rgba(0,150,255,0.3);
     }
     .detail-label {
       color: #aaa;
     }
     .detail-value {
-      color: #ffbe4d;
+      color: #4db8ff;
       font-weight: 700;
     }
     .form-group {
@@ -338,22 +361,23 @@
     }
     .form-group label {
       display: block;
-      color: #ffbe4d;
+      color: #4db8ff;
       margin-bottom: 0.5rem;
       font-size: 0.9rem;
     }
     .form-group input, .form-group select, .form-group textarea {
       width: 100%;
       padding: 0.8rem;
-      background: #2a2e34;
-      border: 1px solid #ff6a4d;
+      background: #0a1a2a;
+      border: 1px solid #0096ff;
       border-radius: 10px;
       color: white;
       font-size: 1rem;
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
       outline: none;
-      border-color: #ffbe4d;
+      border-color: #4db8ff;
+      box-shadow: 0 0 10px rgba(0,150,255,0.3);
     }
     .features-list {
       margin-bottom: 1rem;
@@ -368,7 +392,7 @@
       flex: 1;
     }
     .remove-feature {
-      background: #ff3838;
+      background: #ff4d4d;
       color: white;
       border: none;
       width: 30px;
@@ -379,17 +403,20 @@
     }
     .add-feature-btn {
       background: transparent;
-      border: 1px dashed #ff6a4d;
-      color: #ffb347;
+      border: 1px dashed #0096ff;
+      color: #4db8ff;
       padding: 0.5rem;
       border-radius: 10px;
       width: 100%;
       cursor: pointer;
       margin-top: 0.5rem;
     }
+    .add-feature-btn:hover {
+      background: rgba(0,150,255,0.1);
+    }
     .save-btn {
-      background: #ff6a4d;
-      color: black;
+      background: #0096ff;
+      color: white;
       border: none;
       padding: 1rem;
       border-radius: 50px;
@@ -398,10 +425,15 @@
       cursor: pointer;
       margin-top: 1rem;
       font-size: 1rem;
+      border-bottom: 4px solid #004080;
+    }
+    .save-btn:hover {
+      background: #0066cc;
+      transform: translateY(-2px);
     }
     .close-btn {
       background: transparent;
-      border: 1px solid #ff3838;
+      border: 1px solid #0096ff;
       color: white;
       padding: 0.5rem 1rem;
       border-radius: 20px;
@@ -409,17 +441,59 @@
       margin-top: 1rem;
       width: 100%;
     }
+    .close-btn:hover {
+      background: #0096ff;
+    }
     
-    /* Alert */
+    /* ============ MESSAGE CARD ============ */
+    .message-card {
+      background: #0a1a2a;
+      border: 1px solid #0096ff;
+      border-radius: 16px;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+    .message-sender {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .message-sender i {
+      color: #4db8ff;
+    }
+    .message-time {
+      color: #aaa;
+      font-size: 0.8rem;
+    }
+    .message-content {
+      color: #fff;
+      margin: 0.8rem 0;
+      padding: 0.8rem;
+      background: rgba(0,150,255,0.1);
+      border-radius: 12px;
+    }
+    .message-reply {
+      margin-top: 0.8rem;
+      padding-left: 1.5rem;
+      border-left: 3px solid #4db8ff;
+    }
+    
+    /* ============ ALERT ============ */
     .alert {
       padding: 1rem;
       border-radius: 10px;
       margin-bottom: 1rem;
       display: none;
     }
-    .alert-success { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #00ff00; }
-    .alert-error { background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000; color: #ff0000; }
-    .alert-info { background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; color: #3498db; }
+    .alert-success { background: rgba(0,150,255,0.2); border: 1px solid #0096ff; color: #4db8ff; }
+    .alert-error { background: rgba(255,70,70,0.2); border: 1px solid #ff4d4d; color: #ff4d4d; }
+    .alert-info { background: rgba(0,150,255,0.2); border: 1px solid #0096ff; color: #4db8ff; }
     
     @media (max-width: 768px) {
       body { padding: 1rem; }
@@ -430,7 +504,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+    <!-- ============ HEADER ============ -->
     <div class="header">
       <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <h1 class="glitch-title">IMP0STER</h1>
@@ -444,12 +518,12 @@
       </div>
     </div>
 
-    <!-- Alert Message -->
+    <!-- ============ ALERT MESSAGE ============ -->
     <div id="alertMessage" class="alert">
       <i class="fas fa-info-circle"></i> <span id="alertText"></span>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- ============ STATS CARDS ============ -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
@@ -487,15 +561,15 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-box"></i></div>
+        <div class="stat-icon"><i class="fas fa-envelope"></i></div>
         <div class="stat-info">
-          <h3>PRODUCTS</h3>
-          <div class="stat-number" id="totalProducts">0</div>
+          <h3>MESSAGES</h3>
+          <div class="stat-number" id="totalMessages">0</div>
         </div>
       </div>
     </div>
 
-    <!-- Tab Navigation -->
+    <!-- ============ TAB NAVIGATION ============ -->
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('orders')">
         <i class="fas fa-shopping-cart"></i> ORDERS
@@ -505,6 +579,9 @@
       </button>
       <button class="tab-btn" onclick="switchTab('products')">
         <i class="fas fa-box"></i> PRODUCTS
+      </button>
+      <button class="tab-btn" onclick="switchTab('messages')">
+        <i class="fas fa-envelope"></i> MESSAGES
       </button>
       <button class="tab-btn" onclick="switchTab('announcements')">
         <i class="fas fa-bullhorn"></i> ANNOUNCEMENTS
@@ -517,10 +594,9 @@
     <!-- ============ ORDERS TAB ============ -->
     <div id="orders-tab" class="tab-content active">
       <div class="action-bar">
-        <h2 style="color: #ffbe4d;"><i class="fas fa-shopping-cart"></i> ORDER MANAGEMENT</h2>
+        <h2 style="color: #4db8ff;"><i class="fas fa-shopping-cart"></i> ORDER MANAGEMENT</h2>
       </div>
       
-      <!-- Filter Bar -->
       <div class="filter-bar">
         <select id="orderStatusFilter" class="filter-select" onchange="filterOrders()">
           <option value="all">📋 All Orders</option>
@@ -570,22 +646,34 @@
 
     <!-- ============ USERS TAB ============ -->
     <div id="users-tab" class="tab-content">
+      <div class="action-bar">
+        <h2 style="color: #4db8ff;"><i class="fas fa-users"></i> USER MANAGEMENT</h2>
+        <button class="message-btn" onclick="openMessageModal('all')">
+          <i class="fas fa-envelope"></i> MESSAGE ALL USERS
+        </button>
+      </div>
+      
+      <div class="filter-bar">
+        <input type="text" id="userSearchInput" class="search-input" placeholder="🔍 Search by username or email..." onkeyup="filterUsers()">
+        <select id="userRoleFilter" class="filter-select" onchange="filterUsers()">
+          <option value="all">👥 All Roles</option>
+          <option value="admin">👑 Admin</option>
+          <option value="user">👤 User</option>
+        </select>
+      </div>
+      
       <div class="users-table">
-        <h2><i class="fas fa-database"></i> USER MANAGEMENT</h2>
-        <div class="filter-bar">
-          <input type="text" id="userSearchInput" class="search-input" placeholder="🔍 Search by username or email..." onkeyup="filterUsers()">
-        </div>
         <table>
           <thead>
             <tr>
               <th>ID</th>
               <th>USERNAME</th>
               <th>EMAIL</th>
-              <th>FF UID</th>
               <th>DISCORD</th>
               <th>ROLE</th>
               <th>ORDERS</th>
               <th>JOINED</th>
+              <th>LAST LOGIN</th>
               <th>ACTIONS</th>
             </tr>
           </thead>
@@ -603,10 +691,26 @@
     <!-- ============ PRODUCTS TAB ============ -->
     <div id="products-tab" class="tab-content">
       <div class="action-bar">
-        <h2 style="color: #ffbe4d;"><i class="fas fa-box"></i> PRODUCT MANAGEMENT</h2>
+        <h2 style="color: #4db8ff;"><i class="fas fa-box"></i> PRODUCT MANAGEMENT</h2>
         <button class="create-btn" onclick="openProductModal()">
           <i class="fas fa-plus"></i> CREATE PRODUCT
         </button>
+      </div>
+      
+      <div class="filter-bar">
+        <select id="productCategoryFilter" class="filter-select" onchange="filterProducts()">
+          <option value="all">📦 All Categories</option>
+          <option value="discord">🎮 Discord Tools</option>
+          <option value="code">💻 Code/Apps</option>
+          <option value="web">🌐 Web Dev</option>
+          <option value="bot">🤖 Bots</option>
+          <option value="other">📁 Other</option>
+        </select>
+        <select id="productStatusFilter" class="filter-select" onchange="filterProducts()">
+          <option value="all">🔵 All Status</option>
+          <option value="active">🟢 Active</option>
+          <option value="inactive">🔴 Inactive</option>
+        </select>
       </div>
       
       <div class="products-table">
@@ -616,6 +720,7 @@
               <th>ID</th>
               <th>ICON</th>
               <th>NAME</th>
+              <th>CATEGORY</th>
               <th>PRICE</th>
               <th>FEATURES</th>
               <th>STATUS</th>
@@ -625,7 +730,7 @@
           </thead>
           <tbody id="productsTableBody">
             <tr>
-              <td colspan="8" style="text-align: center; padding: 2rem;">
+              <td colspan="9" style="text-align: center; padding: 2rem;">
                 <i class="fas fa-spinner fa-spin"></i> Loading products...
               </td>
             </tr>
@@ -634,10 +739,33 @@
       </div>
     </div>
 
+    <!-- ============ MESSAGES TAB ============ -->
+    <div id="messages-tab" class="tab-content">
+      <div class="action-bar">
+        <h2 style="color: #4db8ff;"><i class="fas fa-envelope"></i> MESSAGE CENTER</h2>
+        <button class="create-btn" onclick="openMessageModal()">
+          <i class="fas fa-plus"></i> NEW MESSAGE
+        </button>
+      </div>
+      
+      <div class="filter-bar">
+        <select id="messageFilter" class="filter-select" onchange="loadMessages()">
+          <option value="all">📨 All Messages</option>
+          <option value="unread">🔵 Unread</option>
+          <option value="replied">🟢 Replied</option>
+        </select>
+        <input type="text" id="messageSearchInput" class="search-input" placeholder="🔍 Search messages..." onkeyup="filterMessages()">
+      </div>
+      
+      <div id="messagesContainer" class="messages-table">
+        <!-- Messages will be loaded here -->
+      </div>
+    </div>
+
     <!-- ============ ANNOUNCEMENTS TAB ============ -->
     <div id="announcements-tab" class="tab-content">
       <div class="action-bar">
-        <h2 style="color: #ffbe4d;"><i class="fas fa-bullhorn"></i> ANNOUNCEMENT MANAGEMENT</h2>
+        <h2 style="color: #4db8ff;"><i class="fas fa-bullhorn"></i> ANNOUNCEMENT MANAGEMENT</h2>
         <button class="create-btn" onclick="openAnnouncementModal()">
           <i class="fas fa-plus"></i> CREATE ANNOUNCEMENT
         </button>
@@ -750,10 +878,50 @@
         <textarea id="adminNotes" rows="2" placeholder="Add notes about this order..."></textarea>
       </div>
       
+      <div class="form-group">
+        <label>Message to Customer</label>
+        <textarea id="orderMessage" rows="2" placeholder="Send a message to the customer about this order..."></textarea>
+        <button class="message-send-btn" style="margin-top: 0.5rem; width: 100%;" onclick="sendOrderMessage()">
+          <i class="fas fa-paper-plane"></i> SEND MESSAGE
+        </button>
+      </div>
+      
       <button class="save-btn" onclick="updateOrderStatus()">
         <i class="fas fa-save"></i> UPDATE ORDER
       </button>
       <button class="close-btn" onclick="closeOrderModal()">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- ============ USER DETAILS MODAL ============ -->
+  <div id="userDetailsModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-user"></i> USER DETAILS</h3>
+      
+      <div id="userDetailsContent" class="order-details">
+        <!-- User details will be inserted here -->
+      </div>
+      
+      <div class="form-group">
+        <label>Change Role</label>
+        <select id="userRoleSelect" class="filter-select" style="width: 100%;">
+          <option value="user">👤 User</option>
+          <option value="admin">👑 Admin</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Send Message to User</label>
+        <textarea id="userMessage" rows="3" placeholder="Write a message to this user..."></textarea>
+        <button class="message-send-btn" style="margin-top: 0.5rem; width: 100%;" onclick="sendUserMessage()">
+          <i class="fas fa-paper-plane"></i> SEND MESSAGE
+        </button>
+      </div>
+      
+      <button class="save-btn" onclick="updateUserRole()">
+        <i class="fas fa-save"></i> UPDATE ROLE
+      </button>
+      <button class="close-btn" onclick="closeUserModal()">CLOSE</button>
     </div>
   </div>
 
@@ -766,12 +934,23 @@
       
       <div class="form-group">
         <label>Product Name</label>
-        <input type="text" id="productName" placeholder="e.g., HEADSHOT ELITE" maxlength="50">
+        <input type="text" id="productName" placeholder="e.g., DISCORD NITRO GENERATOR" maxlength="50">
       </div>
       
       <div class="form-group">
         <label>Subtitle</label>
-        <input type="text" id="productSubtitle" placeholder="e.g., Aimbot + Antiban">
+        <input type="text" id="productSubtitle" placeholder="e.g., Working Discord Nitro Codes">
+      </div>
+      
+      <div class="form-group">
+        <label>Category</label>
+        <select id="productCategory">
+          <option value="discord">🎮 Discord Tools</option>
+          <option value="code">💻 Code/Applications</option>
+          <option value="web">🌐 Website Development</option>
+          <option value="bot">🤖 Bots</option>
+          <option value="other">📁 Other</option>
+        </select>
       </div>
       
       <div class="form-group">
@@ -781,21 +960,21 @@
       
       <div class="form-group">
         <label>Price Suffix</label>
-        <input type="text" id="productPriceSuffix" placeholder="/month, /season, /instant">
+        <input type="text" id="productPriceSuffix" placeholder="/lifetime, /month, /source code">
       </div>
       
       <div class="form-group">
         <label>Icon (Font Awesome)</label>
         <select id="productIcon">
           <option value="fa-bolt">⚡ Bolt</option>
-          <option value="fa-gem">💎 Gem</option>
-          <option value="fa-chess-queen">♕ Rank</option>
-          <option value="fa-ghost">👻 Skull</option>
-          <option value="fa-fire">🔥 Fire</option>
-          <option value="fa-shield-alt">🛡️ Shield</option>
-          <option value="fa-crosshairs">🎯 Crosshair</option>
-          <option value="fa-mask">🎭 Mask</option>
-          <option value="fa-dragon">🐉 Dragon</option>
+          <option value="fa-robot">🤖 Robot</option>
+          <option value="fa-code">💻 Code</option>
+          <option value="fa-globe">🌐 Globe</option>
+          <option value="fa-shopping-cart">🛒 Cart</option>
+          <option value="fa-music">🎵 Music</option>
+          <option value="fa-shield">🛡️ Shield</option>
+          <option value="fa-cube">📦 Cube</option>
+          <option value="fa-gamepad">🎮 Gamepad</option>
         </select>
       </div>
       
@@ -808,7 +987,7 @@
       </div>
       
       <div class="form-group">
-        <label>Features</label>
+        <label>Features (Click + to add more)</label>
         <div id="featuresContainer" class="features-list">
           <!-- Features will be added here dynamically -->
         </div>
@@ -821,6 +1000,76 @@
         <i class="fas fa-save"></i> SAVE PRODUCT
       </button>
       <button class="close-btn" onclick="closeProductModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- ============ MESSAGE MODAL ============ -->
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-envelope"></i> <span id="messageModalTitle">SEND MESSAGE</span></h3>
+      
+      <input type="hidden" id="messageRecipientId">
+      <input type="hidden" id="messageRecipientType">
+      
+      <div class="form-group">
+        <label>Recipient</label>
+        <input type="text" id="messageRecipient" class="filter-select" readonly style="background: #0a1a2a;">
+      </div>
+      
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" id="messageSubject" placeholder="Message subject...">
+      </div>
+      
+      <div class="form-group">
+        <label>Message</label>
+        <textarea id="messageContent" rows="5" placeholder="Write your message here..."></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="messagePriority">
+          <option value="normal">🔵 Normal</option>
+          <option value="high">🔴 High</option>
+          <option value="urgent">⚠️ Urgent</option>
+        </select>
+      </div>
+      
+      <button class="save-btn" onclick="sendMessage()">
+        <i class="fas fa-paper-plane"></i> SEND MESSAGE
+      </button>
+      <button class="close-btn" onclick="closeMessageModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- ============ REPLY MESSAGE MODAL ============ -->
+  <div id="replyModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-reply"></i> REPLY TO MESSAGE</h3>
+      
+      <input type="hidden" id="replyMessageId">
+      
+      <div class="form-group">
+        <label>Reply to</label>
+        <input type="text" id="replyRecipient" class="filter-select" readonly style="background: #0a1a2a;">
+      </div>
+      
+      <div class="form-group">
+        <label>Original Message</label>
+        <div id="originalMessage" style="background: #0a1a2a; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; color: #aaa;">
+          <!-- Original message will be shown here -->
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Your Reply</label>
+        <textarea id="replyContent" rows="4" placeholder="Write your reply..."></textarea>
+      </div>
+      
+      <button class="save-btn" onclick="sendReply()">
+        <i class="fas fa-paper-plane"></i> SEND REPLY
+      </button>
+      <button class="close-btn" onclick="closeReplyModal()">CANCEL</button>
     </div>
   </div>
 
@@ -869,13 +1118,15 @@
   <script>
     // ============ GLOBAL VARIABLES ============
     let currentOrderId = null;
+    let currentUserId = null;
     let currentProductId = null;
     let currentAnnouncementId = null;
-    let currentEditUserId = null;
+    let currentMessageId = null;
     let orders = [];
-    let products = [];
-    let announcements = [];
     let users = [];
+    let products = [];
+    let messages = [];
+    let announcements = [];
 
     // ============ TAB SWITCHING ============
     function switchTab(tabName) {
@@ -893,6 +1144,7 @@
       if (tabName === 'orders') loadOrders();
       if (tabName === 'users') loadUsers();
       if (tabName === 'products') loadProducts();
+      if (tabName === 'messages') loadMessages();
       if (tabName === 'announcements') loadAnnouncements();
       if (tabName === 'logs') {
         loadOrderLogs();
@@ -905,26 +1157,23 @@
       loadOrders();
       loadUsers();
       loadProducts();
+      loadMessages();
       loadAnnouncements();
     });
 
     // ============ ORDER MANAGEMENT ============
-    function loadOrders() {
-      fetch('/api/admin/orders')
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to load orders');
-          return response.json();
-        })
-        .then(data => {
-          orders = data;
-          updateOrderStats(data);
-          displayOrders(data);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          document.getElementById('ordersTableBody').innerHTML = 
-            '<tr><td colspan="9" style="text-align: center; color: #ff3838;">Failed to load orders</td></tr>';
-        });
+    async function loadOrders() {
+      try {
+        const response = await fetch('/api/admin/orders');
+        if (!response.ok) throw new Error('Failed to load orders');
+        orders = await response.json();
+        
+        updateOrderStats(orders);
+        displayOrders(orders);
+      } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to load orders', 'error');
+      }
     }
 
     function updateOrderStats(orders) {
@@ -965,7 +1214,7 @@
         
         return `
           <tr>
-            <td style="color: #ffbe4d;">#${order.id}</td>
+            <td style="color: #4db8ff;">#${order.id}</td>
             <td>
               <strong>${escapeHtml(order.username || 'Unknown')}</strong><br>
               <small style="color: #aaa;">${escapeHtml(order.user_email || '')}</small>
@@ -991,6 +1240,9 @@
             <td>
               <button class="view-btn" onclick="viewOrderDetails(${order.id})">
                 <i class="fas fa-eye"></i>
+              </button>
+              <button class="message-send-btn" onclick="openOrderMessageModal(${order.id})">
+                <i class="fas fa-envelope"></i>
               </button>
               <button class="delete-btn" onclick="deleteOrder(${order.id})">
                 <i class="fas fa-trash"></i>
@@ -1033,19 +1285,10 @@
       
       currentOrderId = orderId;
       
-      const statusClass = {
-        'pending': 'status-pending',
-        'processing': 'status-processing',
-        'completed': 'status-completed',
-        'failed': 'status-failed',
-        'cancelled': 'status-cancelled'
-      }[order.status] || 'status-pending';
-      
-      const notes = order.notes || 'No notes provided';
-      
       const detailsHtml = `
         <div style="margin-bottom: 1.5rem;">
-          <span class="status-badge ${statusClass}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+          <span class="status-badge ${order.status === 'pending' ? 'status-pending' : order.status === 'completed' ? 'status-completed' : 'status-failed'}" 
+                style="font-size: 1rem; padding: 0.5rem 1rem;">
             ${order.status?.toUpperCase() || 'PENDING'}
           </span>
         </div>
@@ -1060,10 +1303,6 @@
         <div class="detail-row">
           <span class="detail-label">Email:</span>
           <span class="detail-value">${escapeHtml(order.user_email || 'N/A')}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">FF UID:</span>
-          <span class="detail-value">${order.ff_uid || 'Not set'}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Discord:</span>
@@ -1082,16 +1321,12 @@
           <span class="detail-value">$${parseFloat(order.total_price || order.price || 0).toFixed(2)}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Payment Method:</span>
-          <span class="detail-value"><i class="fab fa-discord"></i> Discord</span>
-        </div>
-        <div class="detail-row">
           <span class="detail-label">Order Date:</span>
           <span class="detail-value">${new Date(order.created_at).toLocaleString()}</span>
         </div>
         <div class="detail-row" style="border-bottom: none;">
           <span class="detail-label">Notes:</span>
-          <span class="detail-value" style="white-space: pre-wrap;">${escapeHtml(notes)}</span>
+          <span class="detail-value" style="white-space: pre-wrap;">${escapeHtml(order.notes || 'No notes')}</span>
         </div>
       `;
       
@@ -1099,52 +1334,87 @@
       document.getElementById('orderStatusSelect').value = order.status || 'pending';
       document.getElementById('paymentStatusSelect').value = order.payment_status || 'waiting';
       document.getElementById('adminNotes').value = order.admin_notes || '';
+      document.getElementById('orderMessage').value = '';
       document.getElementById('orderDetailsModal').style.display = 'flex';
     }
 
-    function updateOrderStatus() {
+    async function updateOrderStatus() {
       const newStatus = document.getElementById('orderStatusSelect').value;
       const newPaymentStatus = document.getElementById('paymentStatusSelect').value;
       const adminNotes = document.getElementById('adminNotes').value;
       
-      fetch('/api/admin/orders/update-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          orderId: currentOrderId, 
-          status: newStatus,
-          payment_status: newPaymentStatus,
-          admin_notes: adminNotes
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const response = await fetch('/api/admin/orders/update-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            orderId: currentOrderId, 
+            status: newStatus,
+            payment_status: newPaymentStatus,
+            admin_notes: adminNotes
+          })
+        });
+        
+        const data = await response.json();
         if (data.success) {
           showAlert(`Order #${currentOrderId} updated successfully!`, 'success');
           closeOrderModal();
           loadOrders();
         }
-      })
-      .catch(error => {
+      } catch (error) {
         showAlert('Error updating order status', 'error');
-      });
+      }
     }
 
-    function deleteOrder(orderId) {
+    async function sendOrderMessage() {
+      const message = document.getElementById('orderMessage').value;
+      if (!message.trim()) {
+        showAlert('Please enter a message', 'error');
+        return;
+      }
+      
+      const order = orders.find(o => o.id === currentOrderId);
+      
+      try {
+        const response = await fetch('/api/admin/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: order.user_id,
+            subject: `Regarding Order #${currentOrderId}`,
+            message: message,
+            order_id: currentOrderId
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          showAlert('Message sent to customer!', 'success');
+          document.getElementById('orderMessage').value = '';
+        }
+      } catch (error) {
+        showAlert('Failed to send message', 'error');
+      }
+    }
+
+    async function deleteOrder(orderId) {
       if (!confirm('⚠️ Delete this order? This cannot be undone!')) return;
       
-      fetch('/api/admin/orders/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId })
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const response = await fetch('/api/admin/orders/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId })
+        });
+        
+        const data = await response.json();
         if (data.success) {
           showAlert('Order deleted!', 'success');
           loadOrders();
         }
-      });
+      } catch (error) {
+        showAlert('Error deleting order', 'error');
+      }
     }
 
     function closeOrderModal() {
@@ -1153,34 +1423,37 @@
     }
 
     // ============ USER MANAGEMENT ============
-    function loadUsers() {
-      fetch('/api/admin/users')
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to load users');
-          return response.json();
-        })
-        .then(data => {
-          users = data;
-          document.getElementById('totalUsers').textContent = data.length;
-          displayUsers(data);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
+    async function loadUsers() {
+      try {
+        const response = await fetch('/api/admin/users');
+        if (!response.ok) throw new Error('Failed to load users');
+        users = await response.json();
+        
+        document.getElementById('totalUsers').textContent = users.length;
+        displayUsers(users);
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
 
     function filterUsers() {
       const searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
-      if (!searchTerm) {
-        displayUsers(users);
-        return;
+      const roleFilter = document.getElementById('userRoleFilter').value;
+      
+      let filteredUsers = users;
+      
+      if (roleFilter !== 'all') {
+        filteredUsers = filteredUsers.filter(u => u.role === roleFilter);
       }
       
-      const filtered = users.filter(u => 
-        u.username.toLowerCase().includes(searchTerm) ||
-        u.email.toLowerCase().includes(searchTerm)
-      );
-      displayUsers(filtered);
+      if (searchTerm) {
+        filteredUsers = filteredUsers.filter(u => 
+          u.username.toLowerCase().includes(searchTerm) ||
+          u.email.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      displayUsers(filteredUsers);
     }
 
     function displayUsers(users) {
@@ -1196,10 +1469,9 @@
         
         return `
           <tr>
-            <td style="color: #ffbe4d;">#${user.id}</td>
+            <td style="color: #4db8ff;">#${user.id}</td>
             <td><strong>${escapeHtml(user.username)}</strong></td>
             <td>${escapeHtml(user.email)}</td>
-            <td>${user.ff_uid || '—'}</td>
             <td>${user.discord_username || user.discord_id || '—'}</td>
             <td>
               <span class="role-badge ${user.role === 'admin' ? 'role-admin' : 'role-user'}">
@@ -1208,11 +1480,18 @@
             </td>
             <td style="text-align: center;">${userOrders}</td>
             <td>${formatDate(user.created_at)}</td>
+            <td>${user.last_login ? formatDate(user.last_login) : 'Never'}</td>
             <td>
-              <button class="edit-btn" onclick="openEditRoleModal('${user.id}', '${escapeHtml(user.username)}', '${user.role}')">
+              <button class="view-btn" onclick="viewUserDetails(${user.id})">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="message-send-btn" onclick="openUserMessageModal(${user.id}, '${escapeHtml(user.username)}')">
+                <i class="fas fa-envelope"></i>
+              </button>
+              <button class="edit-btn" onclick="openUserEditModal(${user.id}, '${escapeHtml(user.username)}', '${user.role}')">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="delete-btn" onclick="deleteUser('${user.id}')" ${user.role === 'admin' ? 'disabled' : ''}>
+              <button class="delete-btn" onclick="deleteUser(${user.id})" ${user.role === 'admin' ? 'disabled' : ''}>
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -1221,97 +1500,216 @@
       }).join('');
     }
 
-    function openEditRoleModal(userId, username, currentRole) {
-      currentEditUserId = userId;
+    function viewUserDetails(userId) {
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+      
+      currentUserId = userId;
+      
+      const userOrders = orders.filter(o => o.user_id === userId);
+      const totalSpent = userOrders.reduce((sum, order) => sum + (parseFloat(order.total_price) || 0), 0);
+      
+      const detailsHtml = `
+        <div class="detail-row">
+          <span class="detail-label">User ID:</span>
+          <span class="detail-value">#${user.id}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Username:</span>
+          <span class="detail-value">${escapeHtml(user.username)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email:</span>
+          <span class="detail-value">${escapeHtml(user.email)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Discord:</span>
+          <span class="detail-value">${user.discord_username || user.discord_id || 'Not linked'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Role:</span>
+          <span class="detail-value">${user.role?.toUpperCase() || 'USER'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Total Orders:</span>
+          <span class="detail-value">${userOrders.length}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Total Spent:</span>
+          <span class="detail-value">$${totalSpent.toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Joined:</span>
+          <span class="detail-value">${new Date(user.created_at).toLocaleString()}</span>
+        </div>
+        <div class="detail-row" style="border-bottom: none;">
+          <span class="detail-label">Last Login:</span>
+          <span class="detail-value">${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</span>
+        </div>
+      `;
+      
+      document.getElementById('userDetailsContent').innerHTML = detailsHtml;
+      document.getElementById('userRoleSelect').value = user.role || 'user';
+      document.getElementById('userMessage').value = '';
+      document.getElementById('userDetailsModal').style.display = 'flex';
+    }
+
+    async function updateUserRole() {
+      const newRole = document.getElementById('userRoleSelect').value;
+      
+      try {
+        const response = await fetch('/api/admin/update-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserId, role: newRole })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          showAlert('User role updated!', 'success');
+          closeUserModal();
+          loadUsers();
+        }
+      } catch (error) {
+        showAlert('Error updating role', 'error');
+      }
+    }
+
+    async function sendUserMessage() {
+      const message = document.getElementById('userMessage').value;
+      if (!message.trim()) {
+        showAlert('Please enter a message', 'error');
+        return;
+      }
+      
+      const user = users.find(u => u.id === currentUserId);
+      
+      try {
+        const response = await fetch('/api/admin/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentUserId,
+            subject: `Message from Admin`,
+            message: message
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          showAlert(`Message sent to ${user.username}!`, 'success');
+          document.getElementById('userMessage').value = '';
+        }
+      } catch (error) {
+        showAlert('Failed to send message', 'error');
+      }
+    }
+
+    function openUserEditModal(userId, username, currentRole) {
+      currentUserId = userId;
       const newRole = prompt(`Change role for ${username} (user/admin):`, currentRole);
       if (newRole && (newRole === 'user' || newRole === 'admin')) {
         updateUserRole(userId, newRole);
       }
     }
 
-    function updateUserRole(userId, role) {
-      fetch('/api/admin/update-role', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, role })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showAlert('User role updated!', 'success');
-          loadUsers();
-        }
-      });
-    }
-
-    function deleteUser(userId) {
+    async function deleteUser(userId) {
       if (!confirm('⚠️ Delete this user? This cannot be undone!')) return;
       
-      fetch('/api/admin/delete-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const response = await fetch('/api/admin/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        
+        const data = await response.json();
         if (data.success) {
           showAlert('User deleted!', 'success');
           loadUsers();
         }
-      });
+      } catch (error) {
+        showAlert('Error deleting user', 'error');
+      }
+    }
+
+    function closeUserModal() {
+      document.getElementById('userDetailsModal').style.display = 'none';
+      currentUserId = null;
     }
 
     // ============ PRODUCT MANAGEMENT ============
-    function loadProducts() {
-      fetch('/api/admin/products')
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to load products');
-          return response.json();
-        })
-        .then(data => {
-          products = data;
-          document.getElementById('totalProducts').textContent = data.length;
-          displayProducts(data);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
+    async function loadProducts() {
+      try {
+        const response = await fetch('/api/admin/products');
+        if (!response.ok) throw new Error('Failed to load products');
+        products = await response.json();
+        
+        displayProducts(products);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function filterProducts() {
+      const categoryFilter = document.getElementById('productCategoryFilter').value;
+      const statusFilter = document.getElementById('productStatusFilter').value;
+      
+      let filteredProducts = products;
+      
+      if (categoryFilter !== 'all') {
+        filteredProducts = filteredProducts.filter(p => p.category === categoryFilter);
+      }
+      
+      if (statusFilter !== 'all') {
+        filteredProducts = filteredProducts.filter(p => p.status === statusFilter);
+      }
+      
+      displayProducts(filteredProducts);
     }
 
     function displayProducts(products) {
       const tbody = document.getElementById('productsTableBody');
       
       if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No products found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No products found</td></tr>';
         return;
       }
 
-      tbody.innerHTML = products.map(product => `
-        <tr>
-          <td style="color: #ffbe4d;">#${product.id}</td>
-          <td><i class="fas ${product.icon || 'fa-bolt'}" style="color: #ff984f;"></i></td>
-          <td>
-            <strong>${escapeHtml(product.name)}</strong><br>
-            <small style="color: #aaa;">${product.subtitle || ''}</small>
-          </td>
-          <td>$${product.price} ${product.price_suffix || ''}</td>
-          <td>${Array.isArray(product.features) ? product.features.length : 0} features</td>
-          <td>
-            <span class="status-badge ${product.status === 'active' ? 'status-active' : 'status-inactive'}">
-              ${product.status?.toUpperCase() || 'INACTIVE'}
-            </span>
-          </td>
-          <td>${formatDate(product.created_at)}</td>
-          <td>
-            <button class="edit-btn" onclick="editProduct(${product.id})">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="delete-btn" onclick="deleteProduct(${product.id})">
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = products.map(product => {
+        const categoryNames = {
+          'discord': 'Discord Tools',
+          'code': 'Code/Apps',
+          'web': 'Web Dev',
+          'bot': 'Bots',
+          'other': 'Other'
+        };
+        
+        return `
+          <tr>
+            <td style="color: #4db8ff;">#${product.id}</td>
+            <td><i class="fas ${product.icon || 'fa-box'}" style="color: #4db8ff;"></i></td>
+            <td><strong>${escapeHtml(product.name)}</strong><br><small style="color: #aaa;">${product.subtitle || ''}</small></td>
+            <td>${categoryNames[product.category] || 'Other'}</td>
+            <td>$${product.price} ${product.price_suffix || ''}</td>
+            <td>${Array.isArray(product.features) ? product.features.length : 0} features</td>
+            <td>
+              <span class="status-badge ${product.status === 'active' ? 'status-active' : 'status-inactive'}">
+                ${product.status?.toUpperCase() || 'INACTIVE'}
+              </span>
+            </td>
+            <td>${formatDate(product.created_at)}</td>
+            <td>
+              <button class="edit-btn" onclick="editProduct(${product.id})">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="delete-btn" onclick="deleteProduct(${product.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function openProductModal() {
@@ -1320,6 +1718,7 @@
       document.getElementById('productId').value = '';
       document.getElementById('productName').value = '';
       document.getElementById('productSubtitle').value = '';
+      document.getElementById('productCategory').value = 'discord';
       document.getElementById('productPrice').value = '';
       document.getElementById('productPriceSuffix').value = '';
       document.getElementById('productIcon').value = 'fa-bolt';
@@ -1327,15 +1726,15 @@
       
       document.getElementById('featuresContainer').innerHTML = `
         <div class="feature-item">
-          <input type="text" class="feature-input" placeholder="Feature 1" value="98% headshot rate">
+          <input type="text" class="feature-input" placeholder="Feature 1" value="Instant delivery">
           <button class="remove-feature" onclick="removeFeature(this)">×</button>
         </div>
         <div class="feature-item">
-          <input type="text" class="feature-input" placeholder="Feature 2" value="Anti-ban shield">
+          <input type="text" class="feature-input" placeholder="Feature 2" value="24/7 support">
           <button class="remove-feature" onclick="removeFeature(this)">×</button>
         </div>
         <div class="feature-item">
-          <input type="text" class="feature-input" placeholder="Feature 3" value="24/7 support">
+          <input type="text" class="feature-input" placeholder="Feature 3" value="Lifetime access">
           <button class="remove-feature" onclick="removeFeature(this)">×</button>
         </div>
       `;
@@ -1352,6 +1751,7 @@
       document.getElementById('productId').value = product.id;
       document.getElementById('productName').value = product.name || '';
       document.getElementById('productSubtitle').value = product.subtitle || '';
+      document.getElementById('productCategory').value = product.category || 'discord';
       document.getElementById('productPrice').value = product.price || '';
       document.getElementById('productPriceSuffix').value = product.price_suffix || '';
       document.getElementById('productIcon').value = product.icon || 'fa-bolt';
@@ -1396,7 +1796,7 @@
       }
     }
 
-    function saveProduct() {
+    async function saveProduct() {
       const features = [];
       document.querySelectorAll('.feature-input').forEach(input => {
         if (input.value.trim()) {
@@ -1413,6 +1813,7 @@
         id: document.getElementById('productId').value || null,
         name: document.getElementById('productName').value,
         subtitle: document.getElementById('productSubtitle').value,
+        category: document.getElementById('productCategory').value,
         price: parseFloat(document.getElementById('productPrice').value),
         price_suffix: document.getElementById('productPriceSuffix').value,
         icon: document.getElementById('productIcon').value,
@@ -1425,39 +1826,42 @@
         return;
       }
       
-      fetch('/api/admin/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData)
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const response = await fetch('/api/admin/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        });
+        
+        const data = await response.json();
         if (data.success) {
           showAlert('Product saved successfully!', 'success');
           closeProductModal();
           loadProducts();
         }
-      })
-      .catch(error => {
+      } catch (error) {
         showAlert('Error saving product', 'error');
-      });
+      }
     }
 
-    function deleteProduct(productId) {
+    async function deleteProduct(productId) {
       if (!confirm('⚠️ Delete this product? This cannot be undone!')) return;
       
-      fetch('/api/admin/products/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId })
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const response = await fetch('/api/admin/products/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: productId })
+        });
+        
+        const data = await response.json();
         if (data.success) {
           showAlert('Product deleted!', 'success');
           loadProducts();
         }
-      });
+      } catch (error) {
+        showAlert('Error deleting product', 'error');
+      }
     }
 
     function closeProductModal() {
@@ -1465,20 +1869,240 @@
       currentProductId = null;
     }
 
-    // ============ ANNOUNCEMENT MANAGEMENT ============
-    function loadAnnouncements() {
-      fetch('/api/admin/announcements')
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to load announcements');
-          return response.json();
-        })
-        .then(data => {
-          announcements = data;
-          displayAnnouncements(data);
-        })
-        .catch(error => {
-          console.error('Error:', error);
+    // ============ MESSAGE MANAGEMENT ============
+    async function loadMessages() {
+      try {
+        const response = await fetch('/api/admin/messages');
+        if (!response.ok) throw new Error('Failed to load messages');
+        messages = await response.json();
+        
+        document.getElementById('totalMessages').textContent = messages.length;
+        displayMessages(messages);
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('messagesContainer').innerHTML = '<div style="text-align: center; padding: 2rem;">No messages found</div>';
+      }
+    }
+
+    function displayMessages(messages) {
+      const container = document.getElementById('messagesContainer');
+      
+      if (messages.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 2rem;">No messages found</div>';
+        return;
+      }
+
+      let html = '<div style="margin-bottom: 1rem;">';
+      
+      messages.forEach(msg => {
+        const priorityColor = {
+          'normal': '#4db8ff',
+          'high': '#ff4d4d',
+          'urgent': '#ff9900'
+        }[msg.priority] || '#4db8ff';
+        
+        html += `
+          <div class="message-card" style="border-left: 5px solid ${priorityColor};">
+            <div class="message-header">
+              <div class="message-sender">
+                <i class="fas fa-user-circle"></i>
+                <strong>${escapeHtml(msg.sender_name || 'System')}</strong>
+                <span style="color: #aaa; margin-left: 0.5rem;">→ ${escapeHtml(msg.recipient_name || 'All Users')}</span>
+                ${!msg.read ? '<span style="background: #0096ff; color: white; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.7rem; margin-left: 0.5rem;">NEW</span>' : ''}
+              </div>
+              <div class="message-time">${new Date(msg.created_at).toLocaleString()}</div>
+            </div>
+            <div style="font-weight: 700; color: #4db8ff; margin-bottom: 0.5rem;">
+              ${escapeHtml(msg.subject || 'No Subject')}
+            </div>
+            <div class="message-content">
+              ${escapeHtml(msg.message || '')}
+            </div>
+            ${msg.reply ? `
+              <div class="message-reply">
+                <strong style="color: #4db8ff;">Admin Reply:</strong>
+                <p style="margin-top: 0.3rem; color: #ddd;">${escapeHtml(msg.reply)}</p>
+              </div>
+            ` : ''}
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+              <button class="reply-btn" onclick="openReplyModal(${msg.id}, '${escapeHtml(msg.sender_name || 'User')}')">
+                <i class="fas fa-reply"></i> REPLY
+              </button>
+              <button class="delete-btn" onclick="deleteMessage(${msg.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function openMessageModal(recipientType = 'single') {
+      document.getElementById('messageModalTitle').textContent = 'SEND MESSAGE';
+      document.getElementById('messageRecipientId').value = '';
+      document.getElementById('messageSubject').value = '';
+      document.getElementById('messageContent').value = '';
+      document.getElementById('messagePriority').value = 'normal';
+      
+      if (recipientType === 'all') {
+        document.getElementById('messageRecipient').value = 'ALL USERS';
+        document.getElementById('messageRecipientType').value = 'all';
+      } else {
+        document.getElementById('messageRecipient').value = '';
+        document.getElementById('messageRecipientType').value = 'single';
+      }
+      
+      document.getElementById('messageModal').style.display = 'flex';
+    }
+
+    function openUserMessageModal(userId, username) {
+      document.getElementById('messageModalTitle').textContent = `SEND MESSAGE TO ${username}`;
+      document.getElementById('messageRecipientId').value = userId;
+      document.getElementById('messageRecipient').value = username;
+      document.getElementById('messageRecipientType').value = 'single';
+      document.getElementById('messageSubject').value = '';
+      document.getElementById('messageContent').value = '';
+      document.getElementById('messagePriority').value = 'normal';
+      document.getElementById('messageModal').style.display = 'flex';
+    }
+
+    function openOrderMessageModal(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+      
+      document.getElementById('messageModalTitle').textContent = `SEND MESSAGE ABOUT ORDER #${orderId}`;
+      document.getElementById('messageRecipientId').value = order.user_id;
+      document.getElementById('messageRecipient').value = order.username || 'Customer';
+      document.getElementById('messageRecipientType').value = 'single';
+      document.getElementById('messageSubject').value = `Regarding Your Order #${orderId}`;
+      document.getElementById('messageContent').value = '';
+      document.getElementById('messagePriority').value = 'normal';
+      document.getElementById('messageModal').style.display = 'flex';
+    }
+
+    async function sendMessage() {
+      const recipientId = document.getElementById('messageRecipientId').value;
+      const recipientType = document.getElementById('messageRecipientType').value;
+      const subject = document.getElementById('messageSubject').value;
+      const content = document.getElementById('messageContent').value;
+      const priority = document.getElementById('messagePriority').value;
+      
+      if (!content.trim()) {
+        showAlert('Please enter a message', 'error');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/admin/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: recipientType === 'all' ? null : recipientId,
+            send_to_all: recipientType === 'all',
+            subject: subject || 'New Message',
+            message: content,
+            priority: priority
+          })
         });
+        
+        const data = await response.json();
+        if (data.success) {
+          showAlert('Message sent successfully!', 'success');
+          closeMessageModal();
+          loadMessages();
+        }
+      } catch (error) {
+        showAlert('Failed to send message', 'error');
+      }
+    }
+
+    function openReplyModal(messageId, senderName) {
+      currentMessageId = messageId;
+      document.getElementById('replyRecipient').value = senderName;
+      
+      const message = messages.find(m => m.id === messageId);
+      if (message) {
+        document.getElementById('originalMessage').innerHTML = `
+          <strong>${escapeHtml(message.subject || 'No Subject')}</strong><br>
+          <p style="margin-top: 0.5rem;">${escapeHtml(message.message || '')}</p>
+        `;
+      }
+      
+      document.getElementById('replyContent').value = '';
+      document.getElementById('replyModal').style.display = 'flex';
+    }
+
+    async function sendReply() {
+      const reply = document.getElementById('replyContent').value;
+      if (!reply.trim()) {
+        showAlert('Please enter a reply', 'error');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/admin/messages/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message_id: currentMessageId,
+            reply: reply
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          showAlert('Reply sent!', 'success');
+          closeReplyModal();
+          loadMessages();
+        }
+      } catch (error) {
+        showAlert('Failed to send reply', 'error');
+      }
+    }
+
+    async function deleteMessage(messageId) {
+      if (!confirm('Delete this message?')) return;
+      
+      try {
+        const response = await fetch('/api/admin/messages/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: messageId })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          showAlert('Message deleted', 'success');
+          loadMessages();
+        }
+      } catch (error) {
+        showAlert('Error deleting message', 'error');
+      }
+    }
+
+    function closeMessageModal() {
+      document.getElementById('messageModal').style.display = 'none';
+    }
+
+    function closeReplyModal() {
+      document.getElementById('replyModal').style.display = 'none';
+      currentMessageId = null;
+    }
+
+    // ============ ANNOUNCEMENT MANAGEMENT ============
+    async function loadAnnouncements() {
+      try {
+        const response = await fetch('/api/admin/announcements');
+        if (!response.ok) throw new Error('Failed to load announcements');
+        announcements = await response.json();
+        
+        displayAnnouncements(announcements);
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
 
     function displayAnnouncements(announcements) {
@@ -1491,11 +2115,11 @@
 
       tbody.innerHTML = announcements.map(ann => `
         <tr>
-          <td style="color: #ffbe4d;">#${ann.id}</td>
+          <td style="color: #4db8ff;">#${ann.id}</td>
           <td><strong>${escapeHtml(ann.title)}</strong></td>
           <td>${escapeHtml(ann.message.substring(0, 50))}${ann.message.length > 50 ? '...' : ''}</td>
           <td>
-            <span style="color: ${ann.type === 'warning' ? '#ff3838' : ann.type === 'success' ? '#00b894' : ann.type === 'sale' ? '#ff8e4d' : '#ffbe4d'};">
+            <span style="color: ${ann.type === 'warning' ? '#ff4d4d' : ann.type === 'success' ? '#00b894' : ann.type === 'sale' ? '#ff9900' : '#4db8ff'};">
               ${ann.type?.toUpperCase() || 'INFO'}
             </span>
           </td>
@@ -1542,7 +2166,7 @@
       document.getElementById('announcementModal').style.display = 'flex';
     }
 
-    function saveAnnouncement() {
+    async function saveAnnouncement() {
       const announcementData = {
         id: document.getElementById('announcementId').value || null,
         title: document.getElementById('announcementTitle').value,
@@ -1558,36 +2182,42 @@
       
       const url = announcementData.id ? '/api/admin/announcements/update' : '/api/admin/announcements';
       
-      fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(announcementData)
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(announcementData)
+        });
+        
+        const data = await response.json();
         if (data.success) {
           showAlert('Announcement saved!', 'success');
           closeAnnouncementModal();
           loadAnnouncements();
         }
-      });
+      } catch (error) {
+        showAlert('Error saving announcement', 'error');
+      }
     }
 
-    function deleteAnnouncement(announcementId) {
+    async function deleteAnnouncement(announcementId) {
       if (!confirm('⚠️ Delete this announcement?')) return;
       
-      fetch('/api/admin/announcements/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: announcementId })
-      })
-      .then(res => res.json())
-      .then(data => {
+      try {
+        const response = await fetch('/api/admin/announcements/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: announcementId })
+        });
+        
+        const data = await response.json();
         if (data.success) {
           showAlert('Announcement deleted!', 'success');
           loadAnnouncements();
         }
-      });
+      } catch (error) {
+        showAlert('Error deleting announcement', 'error');
+      }
     }
 
     function closeAnnouncementModal() {
@@ -1596,64 +2226,64 @@
     }
 
     // ============ LOGS MANAGEMENT ============
-    function loadOrderLogs() {
-      fetch('/api/admin/order-logs')
-        .then(response => response.json())
-        .then(logs => {
-          const tbody = document.getElementById('orderLogsBody');
-          
-          if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No order logs found</td></tr>';
-            return;
-          }
-          
-          tbody.innerHTML = logs.map(log => `
-            <tr>
-              <td>${new Date(log.created_at).toLocaleString()}</td>
-              <td>${escapeHtml(log.username || 'System')}</td>
-              <td>
-                <span style="color: ${log.action === 'create' ? '#00b894' : log.action === 'status_update' ? '#ffbe4d' : '#ff8e4d'};">
-                  ${log.action?.toUpperCase()}
-                </span>
-              </td>
-              <td>${escapeHtml(log.details || '')}</td>
-              <td style="color: #ffbe4d;">#${log.order_id || ''}</td>
-            </tr>
-          `).join('');
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
+    async function loadOrderLogs() {
+      try {
+        const response = await fetch('/api/admin/order-logs');
+        const logs = await response.json();
+        
+        const tbody = document.getElementById('orderLogsBody');
+        
+        if (logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No order logs found</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = logs.slice(0, 50).map(log => `
+          <tr>
+            <td>${new Date(log.created_at).toLocaleString()}</td>
+            <td>${escapeHtml(log.username || 'System')}</td>
+            <td>
+              <span style="color: ${log.action === 'create' ? '#00b894' : log.action === 'status_update' ? '#4db8ff' : '#ff9900'};">
+                ${log.action?.toUpperCase()}
+              </span>
+            </td>
+            <td>${escapeHtml(log.details || '')}</td>
+            <td style="color: #4db8ff;">#${log.order_id || ''}</td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
 
-    function loadCartLogs() {
-      fetch('/api/admin/cart-logs')
-        .then(response => response.json())
-        .then(logs => {
-          const tbody = document.getElementById('cartLogsBody');
-          
-          if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No cart logs found</td></tr>';
-            return;
-          }
-          
-          tbody.innerHTML = logs.map(log => `
-            <tr>
-              <td>${new Date(log.created_at).toLocaleString()}</td>
-              <td>${escapeHtml(log.username || 'System')}</td>
-              <td>
-                <span style="color: ${log.action === 'add' ? '#00b894' : log.action === 'remove' ? '#ff3838' : log.action === 'clear' ? '#ff8e4d' : '#ffbe4d'};">
-                  ${log.action?.toUpperCase()}
-                </span>
-              </td>
-              <td>${escapeHtml(log.details || '')}</td>
-              <td>${log.product_name ? escapeHtml(log.product_name) : '—'}</td>
-            </tr>
-          `).join('');
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
+    async function loadCartLogs() {
+      try {
+        const response = await fetch('/api/admin/cart-logs');
+        const logs = await response.json();
+        
+        const tbody = document.getElementById('cartLogsBody');
+        
+        if (logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No cart logs found</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = logs.slice(0, 50).map(log => `
+          <tr>
+            <td>${new Date(log.created_at).toLocaleString()}</td>
+            <td>${escapeHtml(log.username || 'System')}</td>
+            <td>
+              <span style="color: ${log.action === 'add' ? '#00b894' : log.action === 'remove' ? '#ff4d4d' : '#4db8ff'};">
+                ${log.action?.toUpperCase()}
+              </span>
+            </td>
+            <td>${escapeHtml(log.details || '')}</td>
+            <td>${log.product_name ? escapeHtml(log.product_name) : '—'}</td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
 
     // ============ UTILITY FUNCTIONS ============
@@ -1680,13 +2310,26 @@
 
     // Close modals when clicking outside
     window.onclick = function(event) {
-      const orderModal = document.getElementById('orderDetailsModal');
-      const productModal = document.getElementById('productModal');
-      const announcementModal = document.getElementById('announcementModal');
+      const modals = [
+        'orderDetailsModal',
+        'userDetailsModal',
+        'productModal',
+        'messageModal',
+        'replyModal',
+        'announcementModal'
+      ];
       
-      if (event.target === orderModal) closeOrderModal();
-      if (event.target === productModal) closeProductModal();
-      if (event.target === announcementModal) closeAnnouncementModal();
+      modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+          if (modalId === 'orderDetailsModal') closeOrderModal();
+          if (modalId === 'userDetailsModal') closeUserModal();
+          if (modalId === 'productModal') closeProductModal();
+          if (modalId === 'messageModal') closeMessageModal();
+          if (modalId === 'replyModal') closeReplyModal();
+          if (modalId === 'announcementModal') closeAnnouncementModal();
+        }
+      });
     }
   </script>
 </body>
