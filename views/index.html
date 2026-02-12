@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IMP0STER · FREE FIRE PANEL STORE</title>
+  <title>IMP0STER · DIGITAL PRODUCTS STORE</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
   <style>
@@ -18,7 +18,7 @@
       line-height: 1.6;
     }
     .container { 
-      max-width: 1280px; 
+      max-width: 1400px; 
       margin: 0 auto; 
       padding: 1.5rem 2rem; 
     }
@@ -52,7 +52,7 @@
       0% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.5), -0.05em -0.025em 0 rgba(0,255,255,0.5); }
       100% { text-shadow: -0.05em 0.025em 0 rgba(255,0,0,0.6), 0.025em 0.05em 0 rgba(0,255,255,0.5); }
     }
-    .ff-badge {
+    .store-badge {
       background: #1e1e1e;
       padding: 0.2rem 0.9rem;
       border-radius: 30px;
@@ -122,6 +122,52 @@
       color: black;
     }
     
+    /* ============ CATEGORY FILTER ============ */
+    .category-section {
+      margin-bottom: 2rem;
+    }
+    .category-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .category-title h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .category-title i {
+      color: #ff6a4d;
+      font-size: 1.8rem;
+    }
+    .category-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .category-tab {
+      background: transparent;
+      border: 2px solid #ff6a4d;
+      color: #ffb347;
+      padding: 0.8rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .category-tab.active {
+      background: #ff6a4d;
+      color: black;
+    }
+    .category-tab:hover {
+      background: #ff6a4d;
+      color: black;
+    }
+    
     /* ============ ANNOUNCEMENT BANNER ============ */
     .announcement-banner {
       background: linear-gradient(145deg, rgba(255, 70, 70, 0.1), rgba(255, 100, 50, 0.1));
@@ -172,18 +218,11 @@
       color: #ff6a4d;
       font-size: 2rem;
     }
-    .store-badge {
-      background: #ff3a3a;
-      padding: 0.3rem 1rem;
-      border-radius: 30px;
-      color: black;
-      font-weight: 800;
-    }
     
     /* ============ PRODUCT GRID ============ */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 2rem;
       margin: 2rem 0;
     }
@@ -204,14 +243,17 @@
       border-color: #ff7575;
       box-shadow: 0 15px 25px -8px rgba(255, 78, 78, 0.4);
     }
-    .panel-card::after {
-      content: "⚡";
+    .product-badge {
       position: absolute;
       top: 15px;
       right: 20px;
-      font-size: 2rem;
-      opacity: 0.2;
-      color: #ffd966;
+      background: #ff3a3a;
+      color: black;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
     }
     .card-icon {
       font-size: 2.8rem;
@@ -231,6 +273,16 @@
       font-size: 0.9rem;
       margin-bottom: 0.5rem;
     }
+    .product-category {
+      display: inline-block;
+      background: rgba(255, 106, 77, 0.2);
+      color: #ffbe4d;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
     .price {
       font-size: 2rem;
       font-weight: 800;
@@ -241,6 +293,22 @@
       font-size: 1rem;
       color: #aaa;
       font-weight: 400;
+    }
+    .feature-list {
+      list-style: none;
+      margin: 1rem 0 1.5rem;
+      flex: 1;
+    }
+    .feature-list li {
+      padding: 0.5rem 0;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .feature-list i {
+      color: #ff8a5c;
+      width: 20px;
     }
     .btn-group {
       display: flex;
@@ -437,6 +505,7 @@
     }
     .alert-success { background: rgba(0, 184, 148, 0.9); border: 1px solid #00b894; color: white; }
     .alert-error { background: rgba(255, 56, 56, 0.9); border: 1px solid #ff3838; color: white; }
+    .alert-info { background: rgba(52, 152, 219, 0.9); border: 1px solid #3498db; color: white; }
     
     /* ============ RESPONSIVE ============ */
     @media (max-width: 768px) {
@@ -444,6 +513,7 @@
       .glitch-title { font-size: 1.5rem; }
       .section-title h2 { font-size: 1.5rem; }
       .user-menu { flex-wrap: wrap; }
+      .category-tabs { flex-direction: column; }
     }
   </style>
 </head>
@@ -453,10 +523,10 @@
     <header class="top-header">
       <div class="logo-area">
         <h1 class="glitch-title">IMP0STER</h1>
-        <span class="ff-badge"><i class="fas fa-mask"></i> FF PANEL</span>
+        <span class="store-badge"><i class="fas fa-code"></i> DIGITAL STORE</span>
       </div>
       
-      <!-- USER MENU - TOP RIGHT - ALL USER INFO HIDDEN INSIDE PROFILE BUTTON -->
+      <!-- USER MENU - TOP RIGHT -->
       <div class="user-menu">
         <a href="/profile" class="profile-btn">
           <i class="fas fa-user-secret"></i>
@@ -484,11 +554,39 @@
       </div>
     </div>
 
+    <!-- ============ CATEGORY FILTER ============ -->
+    <div class="category-section">
+      <div class="category-title">
+        <i class="fas fa-filter"></i>
+        <h2>PRODUCT CATEGORIES</h2>
+      </div>
+      <div class="category-tabs" id="categoryTabs">
+        <button class="category-tab active" onclick="filterByCategory('all')">
+          <i class="fas fa-layer-group"></i> ALL PRODUCTS
+        </button>
+        <button class="category-tab" onclick="filterByCategory('discord')">
+          <i class="fab fa-discord"></i> DISCORD TOOLS
+        </button>
+        <button class="category-tab" onclick="filterByCategory('code')">
+          <i class="fas fa-code"></i> CODE / APPLICATION
+        </button>
+        <button class="category-tab" onclick="filterByCategory('web')">
+          <i class="fas fa-globe"></i> WEBSITE DEV
+        </button>
+        <button class="category-tab" onclick="filterByCategory('bot')">
+          <i class="fas fa-robot"></i> BOTS
+        </button>
+        <button class="category-tab" onclick="filterByCategory('other')">
+          <i class="fas fa-cube"></i> OTHER
+        </button>
+      </div>
+    </div>
+
     <!-- ============ STORE TITLE ============ -->
     <div class="section-title">
       <i class="fas fa-store"></i>
-      <h2>IMPOSTER STORE</h2>
-      <span class="store-badge"><i class="fas fa-fire"></i> SELLING PANELS</span>
+      <h2 id="categoryTitle">ALL PRODUCTS</h2>
+      <span class="store-badge" id="productCount">0 ITEMS</span>
     </div>
 
     <!-- ============ PRODUCT GRID ============ -->
@@ -501,15 +599,15 @@
 
     <!-- ============ TRUST BANNER ============ -->
     <div class="trust-banner">
-      <div class="trust-item"><i class="fas fa-shield-alt"></i> UNDETECTED</div>
-      <div class="trust-item"><i class="fas fa-bolt"></i> 1.2M+ SALES</div>
-      <div class="trust-item"><i class="fas fa-mask"></i> IMPOSTER PROTOCOL</div>
-      <div class="trust-item"><i class="fas fa-headset"></i> 24/7 SUPPORT</div>
+      <div class="trust-item"><i class="fas fa-shield-alt"></i> INSTANT DELIVERY</div>
+      <div class="trust-item"><i class="fas fa-bolt"></i> 24/7 SUPPORT</div>
+      <div class="trust-item"><i class="fas fa-mask"></i> SECURE PAYMENT</div>
+      <div class="trust-item"><i class="fas fa-headset"></i> DISCORD SUPPORT</div>
     </div>
 
     <!-- ============ FOOTER ============ -->
     <footer class="footer">
-      <div><span style="font-weight: 800; color: #ff9f7e;">IMP0STER.FF</span> — Premium Free Fire Panel</div>
+      <div><span style="font-weight: 800; color: #ff9f7e;">IMP0STER.STORE</span> — Premium Digital Products</div>
       <div>
         <i class="fas fa-database"></i> imposter.db
       </div>
@@ -521,13 +619,14 @@
     <div class="modal-content">
       <span class="modal-close" onclick="closeModal()">&times;</span>
       <div class="modal-icon">
-        <i id="modalIcon" class="fas fa-bolt"></i>
+        <i id="modalIcon" class="fas fa-code"></i>
       </div>
       <h2 class="modal-title" id="modalTitle"></h2>
       <div class="modal-subtitle" id="modalSubtitle"></div>
+      <div class="modal-category" id="modalCategory" style="text-align: center; margin-bottom: 0.5rem; color: #ffbe4d;"></div>
       <div class="modal-price" id="modalPrice"></div>
       <div class="modal-features">
-        <h4><i class="fas fa-list"></i> FEATURES</h4>
+        <h4><i class="fas fa-list"></i> FEATURES / INCLUDES</h4>
         <ul id="modalFeaturesList"></ul>
       </div>
       <button class="modal-buy-btn" onclick="buyFromModal()">
@@ -545,7 +644,328 @@
     // ============ GLOBAL VARIABLES ============
     let currentProduct = null;
     let products = [];
+    let filteredProducts = [];
     let userData = null;
+    let currentCategory = 'all';
+
+    // ============ DEFAULT PRODUCTS ============
+    const defaultProducts = [
+      // DISCORD TOOLS
+      {
+        id: 1,
+        name: 'DISCORD NITRO GENERATOR',
+        subtitle: 'Working Discord Nitro Codes',
+        category: 'discord',
+        price: 9.99,
+        price_suffix: '/lifetime',
+        icon: 'fa-bolt',
+        features: [
+          'Working Discord Nitro codes',
+          'Monthly updated list',
+          'Lifetime access',
+          '24/7 support',
+          'Instant delivery',
+          'No ban risk'
+        ]
+      },
+      {
+        id: 2,
+        name: 'DISCORD TOKEN JOINER',
+        subtitle: 'Auto Join Servers',
+        category: 'discord',
+        price: 24.99,
+        price_suffix: '/lifetime',
+        icon: 'fa-robot',
+        features: [
+          'Join servers automatically',
+          'Proxy support',
+          'Multi-threaded',
+          'Captcha bypass',
+          'User-friendly GUI',
+          'Free updates'
+        ]
+      },
+      {
+        id: 3,
+        name: 'DISCORD MASS DM BOT',
+        subtitle: 'Promote Your Server',
+        category: 'discord',
+        price: 34.99,
+        price_suffix: '/lifetime',
+        icon: 'fa-envelope',
+        features: [
+          'Send DMs to thousands',
+          'Customizable messages',
+          'Delay settings',
+          'Proxy support',
+          'Safe mode',
+          'Scrape members'
+        ]
+      },
+      {
+        id: 4,
+        name: 'DISCORD ACCOUNT CREATOR',
+        subtitle: 'Create Bulk Accounts',
+        category: 'discord',
+        price: 44.99,
+        price_suffix: '/lifetime',
+        icon: 'fa-user-plus',
+        features: [
+          'Auto email verification',
+          'Captcha solver',
+          'Proxy support',
+          'Custom usernames',
+          'Save accounts to file',
+          'High success rate'
+        ]
+      },
+      
+      // CODE / APPLICATION
+      {
+        id: 5,
+        name: 'PYTHON CHEAT ENGINE',
+        subtitle: 'Memory Scanner / Hacker Tool',
+        category: 'code',
+        price: 49.99,
+        price_suffix: '/source code',
+        icon: 'fa-code',
+        features: [
+          'Full source code included',
+          'Memory scanner',
+          'Value finder',
+          'Address pointer',
+          'Speed hack module',
+          'Undetected methods'
+        ]
+      },
+      {
+        id: 6,
+        name: 'AUTO CLICKER PRO',
+        subtitle: 'Advanced Automation',
+        category: 'code',
+        price: 14.99,
+        price_suffix: '/lifetime',
+        icon: 'fa-mouse-pointer',
+        features: [
+          'Record & playback',
+          'Custom hotkeys',
+          'Random delays',
+          'Multiple profiles',
+          'Stealth mode',
+          'Portable executable'
+        ]
+      },
+      {
+        id: 7,
+        name: 'MINECRAFT ALTS GENERATOR',
+        subtitle: 'Premium Accounts',
+        category: 'code',
+        price: 19.99,
+        price_suffix: '/month',
+        icon: 'fa-cube',
+        features: [
+          'Working Minecraft accounts',
+          'Daily updates',
+          'Email:pass format',
+          'No launcher required',
+          'Instant delivery',
+          'Replacements included'
+        ]
+      },
+      {
+        id: 8,
+        name: 'SPOTIFY PREMIUM GEN',
+        subtitle: 'Account Generator',
+        category: 'code',
+        price: 12.99,
+        price_suffix: '/month',
+        icon: 'fa-spotify',
+        features: [
+          'Working Spotify Premium',
+          'Email:pass included',
+          'Works on all devices',
+          'Monthly refresh',
+          'No app required',
+          '24/7 support'
+        ]
+      },
+      
+      // WEBSITE DEVELOPMENT
+      {
+        id: 9,
+        name: 'E-COMMERCE WEBSITE',
+        subtitle: 'Complete HTML/CSS/JS Template',
+        category: 'web',
+        price: 79.99,
+        price_suffix: '/full source',
+        icon: 'fa-shopping-cart',
+        features: [
+          'Responsive design',
+          'Product catalog',
+          'Shopping cart',
+          'Checkout page',
+          'Admin panel',
+          'SQLite database included'
+        ]
+      },
+      {
+        id: 10,
+        name: 'ADMIN DASHBOARD',
+        subtitle: 'Bootstrap 5 Template',
+        category: 'web',
+        price: 39.99,
+        price_suffix: '/full source',
+        icon: 'fa-chart-line',
+        features: [
+          'Dark theme',
+          'Charts & graphs',
+          'User management',
+          'Analytics dashboard',
+          'Fully responsive',
+          'Easy to customize'
+        ]
+      },
+      {
+        id: 11,
+        name: 'NODE.JS BOT BASE',
+        subtitle: 'Discord Bot Template',
+        category: 'web',
+        price: 29.99,
+        price_suffix: '/source code',
+        icon: 'fa-node',
+        features: [
+          'Slash commands',
+          'Database setup',
+          'Moderation features',
+          'Economy system',
+          'Music player',
+          'Hosting ready'
+        ]
+      },
+      {
+        id: 12,
+        name: 'LOGIN SYSTEM',
+        subtitle: 'PHP/MySQL Authentication',
+        category: 'web',
+        price: 24.99,
+        price_suffix: '/source code',
+        icon: 'fa-lock',
+        features: [
+          'Register/Login',
+          'Password hashing',
+          'Session management',
+          'Remember me',
+          'Reset password',
+          'Admin panel'
+        ]
+      },
+      
+      // BOTS
+      {
+        id: 13,
+        name: 'DISCORD MUSIC BOT',
+        subtitle: '24/7 Music Player',
+        category: 'bot',
+        price: 34.99,
+        price_suffix: '/hosted',
+        icon: 'fa-music',
+        features: [
+          'Play from YouTube',
+          'Queue system',
+          'Loop & shuffle',
+          'Volume control',
+          '24/7 uptime',
+          'Free hosting included'
+        ]
+      },
+      {
+        id: 14,
+        name: 'TELEGRAM AUTO POSTER',
+        subtitle: 'Content Automation',
+        category: 'bot',
+        price: 19.99,
+        price_suffix: '/lifetime',
+        icon: 'fa-paper-plane',
+        features: [
+          'Auto post to channels',
+          'RSS feeds',
+          'Schedule posts',
+          'Multiple channels',
+          'Custom formatting',
+          'Free updates'
+        ]
+      },
+      {
+        id: 15,
+        name: 'TWITCH DROP FARMER',
+        subtitle: 'Auto Claim Drops',
+        category: 'bot',
+        price: 22.99,
+        price_suffix: '/lifetime',
+        icon: 'fa-twitch',
+        features: [
+          'Auto watch streams',
+          'Claim drops',
+          'Multi-account',
+          'Proxy support',
+          'Stealth mode',
+          'Free updates'
+        ]
+      },
+      
+      // OTHER
+      {
+        id: 16,
+        name: 'VPN ACCOUNTS',
+        subtitle: 'Premium VPN Access',
+        category: 'other',
+        price: 8.99,
+        price_suffix: '/month',
+        icon: 'fa-shield',
+        features: [
+          '1Gbps speed',
+          'No logs policy',
+          '10 countries',
+          'Works with Netflix',
+          'Windows/Mac/Android',
+          'Instant delivery'
+        ]
+      },
+      {
+        id: 17,
+        name: 'NETFLIX ACCOUNT',
+        subtitle: 'Premium 4K',
+        category: 'other',
+        price: 6.99,
+        price_suffix: '/month',
+        icon: 'fa-film',
+        features: [
+          '4K UHD streaming',
+          '4 screens',
+          'No ads',
+          'Download movies',
+          'Profile support',
+          'Replacement warranty'
+        ]
+      },
+      {
+        id: 18,
+        name: 'CANVA PRO',
+        subtitle: 'Premium Design Tools',
+        category: 'other',
+        price: 5.99,
+        price_suffix: '/month',
+        icon: 'fa-paint-brush',
+        features: [
+          'All premium templates',
+          'Background remover',
+          'Brand kit',
+          'Content planner',
+          'Magic resize',
+          'Team collaboration'
+        ]
+      }
+    ];
 
     // ============ LOAD ALL DATA ============
     document.addEventListener('DOMContentLoaded', function() {
@@ -555,29 +975,24 @@
       loadCartCount();
     });
 
-    // ============ LOAD USER DATA (HIDDEN - ONLY FOR PROFILE BUTTON) ============
+    // ============ LOAD USER DATA ============
     async function loadUserData() {
       try {
         const response = await fetch('/api/user');
         if (!response.ok) throw new Error('Not logged in');
         userData = await response.json();
         
-        // Update profile button with username (subtle)
         if (userData.username) {
           document.getElementById('profileButtonText').innerHTML = `<i class="fas fa-user-secret"></i> ${userData.username}`;
           
-          // Show admin badge if admin
           if (userData.role === 'admin') {
             document.getElementById('profileBadge').style.display = 'inline-block';
             document.getElementById('profileBadge').textContent = 'ADMIN';
           }
         }
-        
-        return userData;
       } catch (error) {
         console.error('Error loading user:', error);
         window.location.href = '/login';
-        return null;
       }
     }
 
@@ -598,60 +1013,131 @@
     // ============ LOAD PRODUCTS ============
     async function loadProducts() {
       try {
+        // Try to fetch from API first
         const response = await fetch('/api/products');
-        if (!response.ok) throw new Error('Failed to load products');
-        products = await response.json();
+        if (response.ok) {
+          products = await response.json();
+        } else {
+          // Fallback to default products
+          products = defaultProducts;
+        }
+        
+        // If no products in DB, use defaults
+        if (products.length === 0) {
+          products = defaultProducts;
+        }
+        
+        filteredProducts = products;
         displayProducts(products);
+        updateProductCount(products.length);
+        
       } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('productsContainer').innerHTML = `
-          <div style="text-align: center; padding: 3rem; grid-column: 1/-1;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ff3838;"></i>
-            <p style="margin-top: 1rem; color: #ff3838;">Failed to load products</p>
-          </div>
-        `;
+        console.error('Error loading products, using defaults:', error);
+        products = defaultProducts;
+        filteredProducts = products;
+        displayProducts(products);
+        updateProductCount(products.length);
       }
     }
 
     // ============ DISPLAY PRODUCTS ============
-    function displayProducts(products) {
+    function displayProducts(productsToShow) {
       const container = document.getElementById('productsContainer');
       
-      if (products.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 3rem; grid-column: 1/-1;">No products available</div>';
+      if (productsToShow.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 3rem; grid-column: 1/-1;"><i class="fas fa-box-open" style="font-size: 3rem; color: #ffbe4d;"></i><p style="margin-top: 1rem; color: #aaa;">No products in this category</p></div>';
         return;
       }
 
-      container.innerHTML = products.map(product => `
-        <div class="panel-card">
-          <div class="card-icon"><i class="fas ${product.icon || 'fa-bolt'}"></i></div>
-          <h3>${product.name}</h3>
-          <div class="product-subtitle">${product.subtitle || ''}</div>
-          <div class="price">$${product.price} <span>${product.price_suffix || ''}</span></div>
-          <div class="btn-group">
-            <button class="btn btn-details" onclick="showProductDetails(${product.id})">
-              <i class="fas fa-info-circle"></i> DETAILS
-            </button>
-            <button class="btn" onclick="addToCart(${product.id})">
-              <i class="fas fa-cart-plus"></i> BUY
-            </button>
+      container.innerHTML = productsToShow.map(product => {
+        const categoryIcon = {
+          'discord': 'fab fa-discord',
+          'code': 'fas fa-code',
+          'web': 'fas fa-globe',
+          'bot': 'fas fa-robot',
+          'other': 'fas fa-cube'
+        }[product.category] || 'fas fa-box';
+        
+        const categoryName = {
+          'discord': 'DISCORD',
+          'code': 'CODE/APP',
+          'web': 'WEB DEV',
+          'bot': 'BOT',
+          'other': 'OTHER'
+        }[product.category] || 'DIGITAL';
+        
+        return `
+          <div class="panel-card" data-category="${product.category}">
+            <span class="product-badge">${categoryName}</span>
+            <div class="card-icon"><i class="fas ${product.icon || 'fa-box'}"></i></div>
+            <h3>${product.name}</h3>
+            <div class="product-subtitle">${product.subtitle || ''}</div>
+            <div class="price">$${product.price} <span>${product.price_suffix || ''}</span></div>
+            <ul class="feature-list">
+              ${product.features && Array.isArray(product.features) ? 
+                product.features.slice(0, 3).map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('') : 
+                '<li><i class="fas fa-check-circle"></i> Digital product</li>'}
+            </ul>
+            <div class="btn-group">
+              <button class="btn btn-details" onclick="showProductDetails(${product.id})">
+                <i class="fas fa-info-circle"></i> DETAILS
+              </button>
+              <button class="btn" onclick="addToCart(${product.id})">
+                <i class="fas fa-cart-plus"></i> BUY
+              </button>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+    }
+
+    // ============ FILTER BY CATEGORY ============
+    function filterByCategory(category) {
+      currentCategory = category;
+      
+      // Update active tab
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // Filter products
+      if (category === 'all') {
+        filteredProducts = products;
+        document.getElementById('categoryTitle').textContent = 'ALL PRODUCTS';
+      } else {
+        filteredProducts = products.filter(p => p.category === category);
+        const categoryNames = {
+          'discord': 'DISCORD TOOLS',
+          'code': 'CODE / APPLICATIONS',
+          'web': 'WEBSITE DEV',
+          'bot': 'BOTS',
+          'other': 'OTHER PRODUCTS'
+        };
+        document.getElementById('categoryTitle').textContent = categoryNames[category] || category.toUpperCase();
+      }
+      
+      displayProducts(filteredProducts);
+      updateProductCount(filteredProducts.length);
+    }
+
+    // ============ UPDATE PRODUCT COUNT ============
+    function updateProductCount(count) {
+      document.getElementById('productCount').textContent = `${count} ITEMS`;
     }
 
     // ============ LOAD ANNOUNCEMENTS ============
     async function loadAnnouncements() {
       try {
         const response = await fetch('/api/announcements');
-        if (!response.ok) throw new Error('Failed to load announcements');
-        const announcements = await response.json();
-        
-        if (announcements && announcements.length > 0) {
-          const latest = announcements[0];
-          document.getElementById('announcementTitle').textContent = latest.title || 'ANNOUNCEMENT';
-          document.getElementById('announcementMessage').textContent = latest.message;
-          document.getElementById('announcementContainer').style.display = 'flex';
+        if (response.ok) {
+          const announcements = await response.json();
+          if (announcements && announcements.length > 0) {
+            const latest = announcements[0];
+            document.getElementById('announcementTitle').textContent = latest.title || 'ANNOUNCEMENT';
+            document.getElementById('announcementMessage').textContent = latest.message;
+            document.getElementById('announcementContainer').style.display = 'flex';
+          }
         }
       } catch (error) {
         console.error('Error loading announcements:', error);
@@ -684,9 +1170,26 @@
       
       currentProduct = product;
       
-      document.getElementById('modalIcon').className = `fas ${product.icon || 'fa-bolt'}`;
+      const categoryIcon = {
+        'discord': 'fab fa-discord',
+        'code': 'fas fa-code',
+        'web': 'fas fa-globe',
+        'bot': 'fas fa-robot',
+        'other': 'fas fa-cube'
+      }[product.category] || 'fas fa-box';
+      
+      const categoryName = {
+        'discord': 'DISCORD TOOL',
+        'code': 'CODE / APPLICATION',
+        'web': 'WEBSITE DEV',
+        'bot': 'BOT',
+        'other': 'DIGITAL PRODUCT'
+      }[product.category] || 'DIGITAL';
+      
+      document.getElementById('modalIcon').className = `fas ${product.icon || 'fa-box'}`;
       document.getElementById('modalTitle').textContent = product.name;
       document.getElementById('modalSubtitle').textContent = product.subtitle || '';
+      document.getElementById('modalCategory').innerHTML = `<i class="${categoryIcon}"></i> ${categoryName}`;
       document.getElementById('modalPrice').innerHTML = `$${product.price} <span style="font-size: 1rem;">${product.price_suffix || ''}</span>`;
       
       const featuresList = document.getElementById('modalFeaturesList');
