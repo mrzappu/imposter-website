@@ -74,11 +74,6 @@ async function verifyChannels() {
             console.log(`✅ ${channel.name} channel found: #${ch.name} (${ch.id})`);
         } catch (error) {
             console.error(`❌ ${channel.name} channel not found (ID: ${channel.id})`);
-            if (error.code === 50001) {
-                console.error('   → Bot lacks permissions to view this channel');
-            } else if (error.code === 10003) {
-                console.error('   → Channel does not exist');
-            }
         }
     }
 }
@@ -131,13 +126,12 @@ async function sendLog(type, data) {
                     { name: 'Username', value: data.username, inline: true },
                     { name: 'Order ID', value: `#${data.orderId}`, inline: true },
                     { name: 'Items', value: data.items || 'N/A', inline: false },
-                    { name: 'Total', value: `$${data.total?.toFixed(2) || '0.00'}`, inline: true },
+                    { name: 'Total', value: `₹${data.total?.toFixed(2) || '0.00'}`, inline: true },
                     { name: 'Time', value: new Date().toLocaleString(), inline: false }
                 )
                 .setFooter({ text: `IMPOSTER Network` })
                 .setTimestamp();
 
-            // Attach proof image if available
             if (data.proofFilename) {
                 const proofPath = path.join(__dirname, 'public/uploads', data.proofFilename);
                 if (fs.existsSync(proofPath)) {
@@ -145,9 +139,6 @@ async function sendLog(type, data) {
                         attachment: proofPath,
                         name: data.proofFilename
                     });
-                    console.log(`📎 Attaching proof file: ${data.proofFilename}`);
-                } else {
-                    console.warn(`⚠️ Proof file not found: ${proofPath}`);
                 }
             }
             break;
@@ -174,57 +165,27 @@ async function sendLog(type, data) {
                 .setFooter({ text: `IMPOSTER Network` })
                 .setTimestamp();
             break;
-
-        default:
-            console.error(`❌ Unknown log type: ${type}`);
-            return false;
     }
 
     try {
         const channel = await client.channels.fetch(channelId);
-        
-        if (!channel) {
-            console.error(`❌ Channel not found: ${channelId}`);
-            return false;
-        }
-
         if (files.length > 0) {
             await channel.send({ embeds: [embed], files });
-            console.log(`✅ ${type} log sent with attachment to #${channel.name}`);
         } else {
             await channel.send({ embeds: [embed] });
-            console.log(`✅ ${type} log sent to #${channel.name}`);
         }
         return true;
     } catch (error) {
         console.error(`❌ Failed to send ${type} log:`, error.message);
-        
-        // Specific error handling
-        if (error.code === 50001) {
-            console.error('   → Bot lacks permissions in that channel');
-            console.error('   → Required: Send Messages, Embed Links, Attach Files');
-        } else if (error.code === 10003) {
-            console.error('   → Channel not found');
-        } else if (error.code === 50013) {
-            console.error('   → Bot missing permissions');
-        }
         return false;
     }
 }
 
 async function giveRole(userId, roleId) {
-    if (!client || !isReady) {
-        console.error('❌ Cannot give role - Discord bot not ready');
-        return false;
-    }
-
-    if (!roleId) {
-        console.error('❌ AUTO_ROLE_ID not set');
-        return false;
-    }
+    if (!client || !isReady) return false;
+    if (!roleId) return false;
 
     try {
-        // Find the guild where the bot and user are
         for (const guild of client.guilds.cache.values()) {
             try {
                 const member = await guild.members.fetch(userId).catch(() => null);
@@ -232,30 +193,13 @@ async function giveRole(userId, roleId) {
                     const role = await guild.roles.fetch(roleId).catch(() => null);
                     if (role) {
                         await member.roles.add(role);
-                        console.log(`✅ Role ${role.name} given to ${member.user.tag}`);
-                        
-                        // Send confirmation DM to user
-                        try {
-                            await member.send(`✅ Your payment has been approved! You have received the **${role.name}** role in **${guild.name}**.`);
-                            console.log(`📨 DM sent to ${member.user.tag}`);
-                        } catch (dmError) {
-                            console.log(`⚠️ Could not DM user ${member.user.tag} (DMs disabled)`);
-                        }
-                        
                         return true;
-                    } else {
-                        console.error(`❌ Role ${roleId} not found in guild ${guild.name}`);
                     }
                 }
-            } catch (err) {
-                console.error(`Error checking guild ${guild.name}:`, err.message);
-            }
+            } catch (err) {}
         }
-        
-        console.error(`❌ Could not give role to user ${userId} - user not found in any guild`);
         return false;
     } catch (error) {
-        console.error('Role error:', error.message);
         return false;
     }
 }
@@ -264,7 +208,6 @@ function getBotStatus() {
     return {
         connected: isReady,
         botTag: client?.user?.tag || null,
-        botId: client?.user?.id || null,
         servers: client?.guilds.cache.size || 0
     };
 }
