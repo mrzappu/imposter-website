@@ -1,4 +1,4 @@
-// bot.js – Discord bot for logging and auto-role
+// bot.js – Discord bot for logging and auto-role with ADVANCED EMBEDS
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const config = require('./config');
 const path = require('path');
@@ -81,6 +81,7 @@ async function verifyChannels() {
 
 async function sendLog(type, data) {
     if (!client || !isReady) {
+        console.log(`⚠️ Discord bot not ready, skipping ${type} log`);
         return false;
     }
 
@@ -94,16 +95,17 @@ async function sendLog(type, data) {
             if (!channelId) return false;
 
             embed = new EmbedBuilder()
-                .setTitle('🔐 New Login')
+                .setTitle('🔐 **NEW USER LOGIN**')
                 .setColor(0x00ff00)
                 .setThumbnail(data.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png')
+                .setDescription(`**${data.username}** has logged into the website`)
                 .addFields(
-                    { name: 'User', value: `<@${data.userId}>`, inline: true },
-                    { name: 'Username', value: data.username, inline: true },
-                    { name: 'User ID', value: data.userId, inline: true },
-                    { name: 'Time', value: new Date().toLocaleString(), inline: false }
+                    { name: '👤 User', value: `<@${data.userId}>`, inline: true },
+                    { name: '📛 Username', value: data.username, inline: true },
+                    { name: '🆔 User ID', value: `\`${data.userId}\``, inline: true },
+                    { name: '📅 Time', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
                 )
-                .setFooter({ text: `IMPOSTER Network` })
+                .setFooter({ text: `IMPOSTER Network • Login Log` })
                 .setTimestamp();
             break;
 
@@ -111,25 +113,32 @@ async function sendLog(type, data) {
             channelId = config.discord.paymentLogChannel;
             if (!channelId) return false;
 
+            // Create advanced payment embed
             embed = new EmbedBuilder()
-                .setTitle('💰 Payment Proof Uploaded')
+                .setTitle('💰 **NEW PAYMENT RECEIVED**')
                 .setColor(0xffaa00)
                 .setThumbnail(data.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png')
+                .setDescription(`**${data.username}** has submitted payment proof for order **#${data.orderId}**`)
                 .addFields(
-                    { name: 'User', value: `<@${data.userId}>`, inline: true },
-                    { name: 'Username', value: data.username, inline: true },
-                    { name: 'Order ID', value: `#${data.orderId}`, inline: true },
-                    { name: 'Items', value: data.items || 'N/A', inline: false },
-                    { name: 'Total', value: `₹${data.total?.toFixed(2) || '0.00'}`, inline: true },
-                    { name: 'Time', value: new Date().toLocaleString(), inline: false }
+                    { name: '👤 Customer', value: `<@${data.userId}>`, inline: true },
+                    { name: '📛 Username', value: data.username, inline: true },
+                    { name: '🆔 Order ID', value: `#${data.orderId}`, inline: true },
+                    { name: '📦 Items', value: data.items || 'N/A', inline: false },
+                    { name: '💰 Subtotal', value: `₹${(data.total + (data.discount || 0)).toFixed(2)}`, inline: true },
+                    { name: '🎟️ Discount', value: `-₹${(data.discount || 0).toFixed(2)}`, inline: true },
+                    { name: '💵 **TOTAL**', value: `**₹${data.total.toFixed(2)}**`, inline: true },
+                    { name: '📎 Proof', value: `[View Screenshot](https://imposter-website-cde3.onrender.com/uploads/${data.proofFilename})`, inline: false },
+                    { name: '📅 Time', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
                 )
-                .setFooter({ text: `IMPOSTER Network` })
+                .setFooter({ text: `IMPOSTER Network • Payment Log • Order #${data.orderId}` })
                 .setTimestamp();
 
+            // Add proof image if exists
             if (data.proofFilename) {
                 const proofPath = path.join(__dirname, 'public/uploads', data.proofFilename);
                 if (fs.existsSync(proofPath)) {
                     files.push({ attachment: proofPath, name: data.proofFilename });
+                    embed.setImage(`attachment://${data.proofFilename}`);
                 }
             }
             break;
@@ -139,31 +148,63 @@ async function sendLog(type, data) {
             if (!channelId) return false;
 
             embed = new EmbedBuilder()
-                .setTitle('✅ Payment Approved')
+                .setTitle('✅ **PAYMENT APPROVED**')
                 .setColor(0x00ff00)
                 .setThumbnail(data.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png')
+                .setDescription(`Payment for **${data.username}** has been **APPROVED**! Role has been granted.`)
                 .addFields(
-                    { name: 'User', value: `<@${data.userId}>`, inline: true },
-                    { name: 'Username', value: data.username, inline: true },
-                    { name: 'Order ID', value: `#${data.orderId}`, inline: true },
-                    { name: 'Items', value: data.items || 'N/A', inline: false },
-                    { name: 'Role Given', value: config.discord.autoRoleId ? `<@&${config.discord.autoRoleId}>` : 'Not Set', inline: true },
-                    { name: 'Time', value: new Date().toLocaleString(), inline: false }
+                    { name: '👤 User', value: `<@${data.userId}>`, inline: true },
+                    { name: '📛 Username', value: data.username, inline: true },
+                    { name: '🆔 Order ID', value: `#${data.orderId}`, inline: true },
+                    { name: '📦 Items', value: data.items || 'N/A', inline: false },
+                    { name: '🎭 Role Given', value: config.discord.autoRoleId ? `<@&${config.discord.autoRoleId}>` : 'Not Set', inline: true },
+                    { name: '✅ Status', value: '**APPROVED**', inline: true },
+                    { name: '📅 Time', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
                 )
-                .setFooter({ text: `IMPOSTER Network` })
+                .setFooter({ text: `IMPOSTER Network • Approval Log • Order #${data.orderId}` })
+                .setTimestamp();
+            break;
+
+        case 'rejected':
+            channelId = config.discord.approvedLogChannel;
+            if (!channelId) return false;
+
+            embed = new EmbedBuilder()
+                .setTitle('❌ **PAYMENT REJECTED**')
+                .setColor(0xff0000)
+                .setThumbnail(data.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png')
+                .setDescription(`Payment for **${data.username}** has been **REJECTED**.`)
+                .addFields(
+                    { name: '👤 User', value: `<@${data.userId}>`, inline: true },
+                    { name: '📛 Username', value: data.username, inline: true },
+                    { name: '🆔 Order ID', value: `#${data.orderId}`, inline: true },
+                    { name: '📦 Items', value: data.items || 'N/A', inline: false },
+                    { name: '❌ Status', value: '**REJECTED**', inline: true },
+                    { name: '📝 Reason', value: data.reason || 'Payment proof invalid', inline: false },
+                    { name: '📅 Time', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+                )
+                .setFooter({ text: `IMPOSTER Network • Rejection Log • Order #${data.orderId}` })
                 .setTimestamp();
             break;
     }
 
     try {
         const channel = await client.channels.fetch(channelId);
+        if (!channel) {
+            console.error(`❌ Channel not found: ${channelId}`);
+            return false;
+        }
+
         if (files.length > 0) {
             await channel.send({ embeds: [embed], files });
+            console.log(`✅ ${type} log sent with attachment to #${channel.name}`);
         } else {
             await channel.send({ embeds: [embed] });
+            console.log(`✅ ${type} log sent to #${channel.name}`);
         }
         return true;
     } catch (error) {
+        console.error(`❌ Failed to send ${type} log:`, error.message);
         return false;
     }
 }
@@ -180,14 +221,34 @@ async function giveRole(userId, roleId) {
                     const role = await guild.roles.fetch(roleId).catch(() => null);
                     if (role) {
                         await member.roles.add(role);
-                        console.log(`✅ Role given to ${member.user.tag}`);
+                        console.log(`✅ Role ${role.name} given to ${member.user.tag}`);
+                        
+                        // Send DM to user
+                        try {
+                            await member.send({
+                                embeds: [new EmbedBuilder()
+                                    .setTitle('✅ Payment Approved!')
+                                    .setColor(0x00ff00)
+                                    .setDescription(`Your payment has been **approved**! You have received the **${role.name}** role in **${guild.name}**.`)
+                                    .setFooter({ text: 'IMPOSTER Network' })
+                                    .setTimestamp()
+                                ]
+                            });
+                        } catch (dmError) {
+                            console.log(`⚠️ Could not DM user ${member.user.tag} (DMs disabled)`);
+                        }
+                        
                         return true;
+                    } else {
+                        console.error(`❌ Role ${roleId} not found in guild ${guild.name}`);
                     }
                 }
             } catch (err) {}
         }
+        console.error(`❌ Could not give role to user ${userId} - user not found in any guild`);
         return false;
     } catch (error) {
+        console.error('Role error:', error.message);
         return false;
     }
 }
