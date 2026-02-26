@@ -88,7 +88,6 @@ try {
     
     if (hasApproved) {
         console.log('🔄 Migrating orders table - removing deprecated columns...');
-        // This is a complex migration - we'll recreate the table
         db.exec(`
             CREATE TABLE orders_new (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -301,43 +300,48 @@ app.get('/', (req, res) => {
 
 // ==================== SHOP PAGE ====================
 app.get('/shop', (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 9;
-    const offset = (page - 1) * limit;
-    const category = req.query.category || 'all';
-    const search = req.query.search || '';
-    
-    let query = 'SELECT * FROM products WHERE 1=1';
-    const params = [];
-    
-    if (category !== 'all') {
-        query += ' AND category = ?';
-        params.push(category);
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 9;
+        const offset = (page - 1) * limit;
+        const category = req.query.category || 'all';
+        const search = req.query.search || '';
+        
+        let query = 'SELECT * FROM products WHERE 1=1';
+        const params = [];
+        
+        if (category !== 'all') {
+            query += ' AND category = ?';
+            params.push(category);
+        }
+        
+        if (search) {
+            query += ' AND (name LIKE ? OR description LIKE ?)';
+            params.push(`%${search}%`, `%${search}%`);
+        }
+        
+        const totalQuery = query.replace('SELECT *', 'SELECT COUNT(*) as count');
+        const total = db.prepare(totalQuery).get(...params).count;
+        
+        query += ' ORDER BY featured DESC, created_at DESC LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+        
+        const products = db.prepare(query).all(...params);
+        const categories = db.prepare('SELECT DISTINCT category FROM products WHERE category IS NOT NULL').all();
+        
+        res.render('shop', {
+            title: 'Shop',
+            products,
+            categories,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            category,
+            search
+        });
+    } catch (error) {
+        console.error('Shop error:', error);
+        res.status(500).send('Error loading shop');
     }
-    
-    if (search) {
-        query += ' AND (name LIKE ? OR description LIKE ?)';
-        params.push(`%${search}%`, `%${search}%`);
-    }
-    
-    const totalQuery = query.replace('SELECT *', 'SELECT COUNT(*) as count');
-    const total = db.prepare(totalQuery).get(...params).count;
-    
-    query += ' ORDER BY featured DESC, created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
-    
-    const products = db.prepare(query).all(...params);
-    const categories = db.prepare('SELECT DISTINCT category FROM products WHERE category IS NOT NULL').all();
-    
-    res.render('shop', {
-        title: 'Shop',
-        products,
-        categories,
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        category,
-        search
-    });
 });
 
 // ==================== CART SYSTEM ====================
@@ -346,12 +350,16 @@ app.post('/cart/add/:productId', (req, res) => {
     const { productId } = req.params;
     const userId = req.session.user.id;
     
-    const existing = db.prepare('SELECT * FROM cart WHERE userId = ? AND productId = ?').get(userId, productId);
-    
-    if (existing) {
-        db.prepare('UPDATE cart SET quantity = quantity + 1 WHERE id = ?').run(existing.id);
-    } else {
-        db.prepare('INSERT INTO cart (userId, productId) VALUES (?, ?)').run(userId, productId);
+    try {
+        const existing = db.prepare('SELECT * FROM cart WHERE userId = ? AND productId = ?').get(userId, productId);
+        
+        if (existing) {
+            db.prepare('UPDATE cart SET quantity = quantity + 1 WHERE id = ?').run(existing.id);
+        } else {
+            db.prepare('INSERT INTO cart (userId, productId) VALUES (?, ?)').run(userId, productId);
+        }
+    } catch (error) {
+        console.error('Cart add error:', error);
     }
     
     res.redirect(req.get('referer') || '/shop');
@@ -360,29 +368,38 @@ app.post('/cart/add/:productId', (req, res) => {
 app.get('/cart', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     
-    const items = db.prepare(`
-        SELECT c.id as cartId, c.quantity, p.* FROM cart c
-        JOIN products p ON c.productId = p.id
-        WHERE c.userId = ?
-    `).all(req.session.user.id);
-    
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    res.render('cart', { 
-        title: 'Cart', 
-        items, 
-        subtotal
-    });
+    try {
+        const items = db.prepare(`
+            SELECT c.id as cartId, c.quantity, p.* FROM cart c
+            JOIN products p ON c.productId = p.id
+            WHERE c.userId = ?
+        `).all(req.session.user.id);
+        
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        res.render('cart', { 
+            title: 'Cart', 
+            items, 
+            subtotal
+        });
+    } catch (error) {
+        console.error('Cart error:', error);
+        res.status(500).send('Error loading cart');
+    }
 });
 
 app.post('/cart/update/:cartId', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     const { quantity } = req.body;
     
-    if (quantity < 1) {
-        db.prepare('DELETE FROM cart WHERE id = ? AND userId = ?').run(req.params.cartId, req.session.user.id);
-    } else {
-        db.prepare('UPDATE cart SET quantity = ? WHERE id = ? AND userId = ?').run(quantity, req.params.cartId, req.session.user.id);
+    try {
+        if (quantity < 1) {
+            db.prepare('DELETE FROM cart WHERE id = ? AND userId = ?').run(req.params.cartId, req.session.user.id);
+        } else {
+            db.prepare('UPDATE cart SET quantity = ? WHERE id = ? AND userId = ?').run(quantity, req.params.cartId, req.session.user.id);
+        }
+    } catch (error) {
+        console.error('Cart update error:', error);
     }
     
     res.redirect('/cart');
@@ -390,7 +407,13 @@ app.post('/cart/update/:cartId', (req, res) => {
 
 app.post('/cart/remove/:cartId', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
-    db.prepare('DELETE FROM cart WHERE id = ? AND userId = ?').run(req.params.cartId, req.session.user.id);
+    
+    try {
+        db.prepare('DELETE FROM cart WHERE id = ? AND userId = ?').run(req.params.cartId, req.session.user.id);
+    } catch (error) {
+        console.error('Cart remove error:', error);
+    }
+    
     res.redirect('/cart');
 });
 
@@ -398,24 +421,29 @@ app.post('/cart/remove/:cartId', (req, res) => {
 app.get('/checkout', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     
-    const items = db.prepare(`
-        SELECT c.quantity, p.* FROM cart c
-        JOIN products p ON c.productId = p.id
-        WHERE c.userId = ?
-    `).all(req.session.user.id);
-    
-    if (items.length === 0) return res.redirect('/shop');
-    
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    res.render('checkout', { 
-        title: 'Checkout', 
-        items, 
-        subtotal,
-        discount: 0,
-        total: subtotal,
-        couponCode: null
-    });
+    try {
+        const items = db.prepare(`
+            SELECT c.quantity, p.* FROM cart c
+            JOIN products p ON c.productId = p.id
+            WHERE c.userId = ?
+        `).all(req.session.user.id);
+        
+        if (items.length === 0) return res.redirect('/shop');
+        
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        res.render('checkout', { 
+            title: 'Checkout', 
+            items, 
+            subtotal,
+            discount: 0,
+            total: subtotal,
+            couponCode: null
+        });
+    } catch (error) {
+        console.error('Checkout error:', error);
+        res.status(500).send('Error loading checkout');
+    }
 });
 
 app.post('/checkout/apply-coupon', (req, res) => {
@@ -423,24 +451,29 @@ app.post('/checkout/apply-coupon', (req, res) => {
     
     const { code } = req.body;
     
-    const coupon = db.prepare(`
-        SELECT * FROM coupons 
-        WHERE code = ? AND (expires_at IS NULL OR expires_at > datetime('now'))
-        AND (max_uses IS NULL OR used_count < max_uses)
-    `).get(code);
-    
-    if (!coupon) {
-        return res.json({ valid: false, error: 'Invalid or expired coupon' });
+    try {
+        const coupon = db.prepare(`
+            SELECT * FROM coupons 
+            WHERE code = ? AND (expires_at IS NULL OR expires_at > datetime('now'))
+            AND (max_uses IS NULL OR used_count < max_uses)
+        `).get(code);
+        
+        if (!coupon) {
+            return res.json({ valid: false, error: 'Invalid or expired coupon' });
+        }
+        
+        // Store in session
+        req.session.coupon = coupon;
+        
+        res.json({ 
+            valid: true, 
+            discount: coupon.discount_value,
+            type: coupon.discount_type
+        });
+    } catch (error) {
+        console.error('Coupon error:', error);
+        res.json({ valid: false, error: 'Error applying coupon' });
     }
-    
-    // Store in session
-    req.session.coupon = coupon;
-    
-    res.json({ 
-        valid: true, 
-        discount: coupon.discount_value,
-        type: coupon.discount_type
-    });
 });
 
 app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) => {
@@ -448,90 +481,101 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
     if (!req.file) return res.redirect('/checkout');
     
     const userId = req.session.user.id;
-    const items = db.prepare(`
-        SELECT c.quantity, p.* FROM cart c
-        JOIN products p ON c.productId = p.id
-        WHERE c.userId = ?
-    `).all(userId);
     
-    if (items.length === 0) return res.redirect('/shop');
-    
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let discount = 0;
-    let couponCode = null;
-    
-    if (req.session.coupon) {
-        const coupon = req.session.coupon;
-        if (coupon.discount_type === 'percentage') {
-            discount = subtotal * (coupon.discount_value / 100);
-        } else {
-            discount = coupon.discount_value;
+    try {
+        const items = db.prepare(`
+            SELECT c.quantity, p.* FROM cart c
+            JOIN products p ON c.productId = p.id
+            WHERE c.userId = ?
+        `).all(userId);
+        
+        if (items.length === 0) return res.redirect('/shop');
+        
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        let discount = 0;
+        let couponCode = null;
+        
+        if (req.session.coupon) {
+            const coupon = req.session.coupon;
+            if (coupon.discount_type === 'percentage') {
+                discount = subtotal * (coupon.discount_value / 100);
+            } else {
+                discount = coupon.discount_value;
+            }
+            
+            // Update coupon usage
+            db.prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?').run(coupon.id);
+            couponCode = coupon.code;
+            
+            // Clear coupon from session
+            delete req.session.coupon;
         }
         
-        // Update coupon usage
-        db.prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?').run(coupon.id);
-        couponCode = coupon.code;
+        const total = Math.max(0, subtotal - discount);
+        const filename = req.file.filename;
         
-        // Clear coupon from session
-        delete req.session.coupon;
+        const itemsJson = JSON.stringify(items.map(i => ({
+            id: i.id,
+            name: i.name,
+            price: i.price,
+            quantity: i.quantity
+        })));
+        
+        const orderStmt = db.prepare(`
+            INSERT INTO orders (userId, items, subtotal, discount, total, coupon, proof, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+        `);
+        
+        const orderResult = orderStmt.run(userId, itemsJson, subtotal, discount, total, couponCode, filename);
+        
+        // Clear cart
+        db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
+        
+        // Send payment log to Discord
+        await sendLog('payment', {
+            userId,
+            username: req.session.user.username,
+            items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
+            total,
+            proofFilename: filename,
+            orderId: orderResult.lastInsertRowid
+        });
+        
+        res.redirect('/history');
+    } catch (error) {
+        console.error('Order placement error:', error);
+        res.status(500).send('Error placing order');
     }
-    
-    const total = Math.max(0, subtotal - discount);
-    const filename = req.file.filename;
-    
-    const itemsJson = JSON.stringify(items.map(i => ({
-        id: i.id,
-        name: i.name,
-        price: i.price,
-        quantity: i.quantity
-    })));
-    
-    const orderStmt = db.prepare(`
-        INSERT INTO orders (userId, items, subtotal, discount, total, coupon, proof, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
-    `);
-    
-    const orderResult = orderStmt.run(userId, itemsJson, subtotal, discount, total, couponCode, filename);
-    
-    // Clear cart
-    db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
-    
-    // Send payment log to Discord
-    await sendLog('payment', {
-        userId,
-        username: req.session.user.username,
-        items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
-        total,
-        proofFilename: filename,
-        orderId: orderResult.lastInsertRowid
-    });
-    
-    res.redirect('/history');
 });
 
 // ==================== ORDER HISTORY ====================
 app.get('/history', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     
-    const orders = db.prepare(`
-        SELECT * FROM orders
-        WHERE userId = ?
-        ORDER BY created_at DESC
-    `).all(req.session.user.id);
-    
-    // Parse items JSON for display
-    orders.forEach(order => {
-        try {
-            order.itemsParsed = JSON.parse(order.items);
-        } catch (e) {
-            order.itemsParsed = [];
-        }
-    });
-    
-    res.render('history', { 
-        title: 'Order History', 
-        orders
-    });
+    try {
+        const orders = db.prepare(`
+            SELECT * FROM orders
+            WHERE userId = ?
+            ORDER BY created_at DESC
+        `).all(req.session.user.id);
+        
+        // Parse items JSON for display
+        orders.forEach(order => {
+            try {
+                order.itemsParsed = JSON.parse(order.items);
+            } catch (e) {
+                order.itemsParsed = [];
+            }
+        });
+        
+        res.render('history', { 
+            title: 'Order History', 
+            orders
+        });
+    } catch (error) {
+        console.error('History error:', error);
+        res.status(500).send('Error loading history');
+    }
 });
 
 // ==================== TERMS PAGE ====================
@@ -549,58 +593,68 @@ const adminOnly = (req, res, next) => {
 
 // Admin Dashboard
 app.get('/admin', adminOnly, (req, res) => {
-    // Get counts with error handling
-    let usersCount = 0, productsCount = 0, ordersCount = 0, pendingCount = 0, approvedCount = 0, couponsCount = 0;
-    
-    try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
-    try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count; } catch (e) {}
-    try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders').get().count; } catch (e) {}
-    try { pendingCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count; } catch (e) {}
-    try { approvedCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
-    try { couponsCount = db.prepare('SELECT COUNT(*) as count FROM coupons').get().count; } catch (e) {}
-    
-    const stats = {
-        users: usersCount,
-        products: productsCount,
-        orders: ordersCount,
-        pendingOrders: pendingCount,
-        approvedOrders: approvedCount,
-        coupons: couponsCount
-    };
-    
-    const recentOrders = db.prepare(`
-        SELECT o.*, u.username FROM orders o
-        JOIN users u ON o.userId = u.id
-        ORDER BY o.created_at DESC
-        LIMIT 10
-    `).all();
-    
-    // Parse items JSON for display
-    recentOrders.forEach(order => {
-        try {
-            order.itemsParsed = JSON.parse(order.items);
-            order.itemCount = order.itemsParsed.length;
-        } catch (e) {
-            order.itemCount = 0;
-        }
-    });
-    
-    res.render('admin', { 
-        title: 'Admin Dashboard', 
-        stats,
-        recentOrders,
-        section: 'dashboard'
-    });
+    try {
+        // Get counts with error handling
+        let usersCount = 0, productsCount = 0, ordersCount = 0, pendingCount = 0, approvedCount = 0, couponsCount = 0;
+        
+        try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+        try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count; } catch (e) {}
+        try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders').get().count; } catch (e) {}
+        try { pendingCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count; } catch (e) {}
+        try { approvedCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+        try { couponsCount = db.prepare('SELECT COUNT(*) as count FROM coupons').get().count; } catch (e) {}
+        
+        const stats = {
+            users: usersCount,
+            products: productsCount,
+            orders: ordersCount,
+            pendingOrders: pendingCount,
+            approvedOrders: approvedCount,
+            coupons: couponsCount
+        };
+        
+        const recentOrders = db.prepare(`
+            SELECT o.*, u.username FROM orders o
+            JOIN users u ON o.userId = u.id
+            ORDER BY o.created_at DESC
+            LIMIT 10
+        `).all();
+        
+        // Parse items JSON for display
+        recentOrders.forEach(order => {
+            try {
+                order.itemsParsed = JSON.parse(order.items);
+                order.itemCount = order.itemsParsed.length;
+            } catch (e) {
+                order.itemCount = 0;
+            }
+        });
+        
+        res.render('admin', { 
+            title: 'Admin Dashboard', 
+            stats,
+            recentOrders,
+            section: 'dashboard'
+        });
+    } catch (error) {
+        console.error('Admin error:', error);
+        res.status(500).send('Error loading admin dashboard');
+    }
 });
 
 // ==================== ADMIN PRODUCT MANAGEMENT ====================
 app.get('/admin/products', adminOnly, (req, res) => {
-    const products = db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
-    res.render('admin', { 
-        title: 'Manage Products', 
-        products,
-        section: 'products'
-    });
+    try {
+        const products = db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
+        res.render('admin', { 
+            title: 'Manage Products', 
+            products,
+            section: 'products'
+        });
+    } catch (error) {
+        console.error('Admin products error:', error);
+        res.status(500).send('Error loading products');
+    }
 });
 
 app.get('/admin/products/add', adminOnly, (req, res) => {
@@ -612,91 +666,116 @@ app.get('/admin/products/add', adminOnly, (req, res) => {
 });
 
 app.post('/admin/products/add', adminOnly, uploadProductImage.single('image'), (req, res) => {
-    const { name, price, description, category, stock, featured } = req.body;
-    const image = req.file ? `/product-images/${req.file.filename}` : null;
-    
-    const stmt = db.prepare(`
-        INSERT INTO products (name, price, description, category, stock, featured, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    stmt.run(
-        name, 
-        parseFloat(price), 
-        description, 
-        category || 'general', 
-        parseInt(stock) || 999, 
-        featured ? 1 : 0,
-        image
-    );
-    
-    res.redirect('/admin/products');
+    try {
+        const { name, price, description, category, stock, featured } = req.body;
+        const image = req.file ? `/product-images/${req.file.filename}` : null;
+        
+        const stmt = db.prepare(`
+            INSERT INTO products (name, price, description, category, stock, featured, image)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        
+        stmt.run(
+            name, 
+            parseFloat(price), 
+            description, 
+            category || 'general', 
+            parseInt(stock) || 999, 
+            featured ? 1 : 0,
+            image
+        );
+        
+        res.redirect('/admin/products');
+    } catch (error) {
+        console.error('Add product error:', error);
+        res.status(500).send('Error adding product');
+    }
 });
 
 app.get('/admin/products/edit/:id', adminOnly, (req, res) => {
-    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
-    if (!product) return res.redirect('/admin/products');
-    
-    res.render('admin', { 
-        title: 'Edit Product', 
-        product,
-        section: 'product-form'
-    });
+    try {
+        const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+        if (!product) return res.redirect('/admin/products');
+        
+        res.render('admin', { 
+            title: 'Edit Product', 
+            product,
+            section: 'product-form'
+        });
+    } catch (error) {
+        console.error('Edit product error:', error);
+        res.status(500).send('Error loading product');
+    }
 });
 
 app.post('/admin/products/edit/:id', adminOnly, uploadProductImage.single('image'), (req, res) => {
-    const { name, price, description, category, stock, featured } = req.body;
-    const id = req.params.id;
-    
-    let image = null;
-    if (req.file) {
-        image = `/product-images/${req.file.filename}`;
+    try {
+        const { name, price, description, category, stock, featured } = req.body;
+        const id = req.params.id;
         
-        // Delete old image if exists
-        const old = db.prepare('SELECT image FROM products WHERE id = ?').get(id);
-        if (old?.image) {
-            const oldPath = path.join(__dirname, 'public', old.image);
-            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        let image = null;
+        if (req.file) {
+            image = `/product-images/${req.file.filename}`;
+            
+            // Delete old image if exists
+            const old = db.prepare('SELECT image FROM products WHERE id = ?').get(id);
+            if (old?.image) {
+                const oldPath = path.join(__dirname, 'public', old.image);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
         }
+        
+        if (image) {
+            db.prepare(`
+                UPDATE products SET name = ?, price = ?, description = ?, category = ?, stock = ?, featured = ?, image = ?
+                WHERE id = ?
+            `).run(name, parseFloat(price), description, category, parseInt(stock), featured ? 1 : 0, image, id);
+        } else {
+            db.prepare(`
+                UPDATE products SET name = ?, price = ?, description = ?, category = ?, stock = ?, featured = ?
+                WHERE id = ?
+            `).run(name, parseFloat(price), description, category, parseInt(stock), featured ? 1 : 0, id);
+        }
+        
+        res.redirect('/admin/products');
+    } catch (error) {
+        console.error('Update product error:', error);
+        res.status(500).send('Error updating product');
     }
-    
-    if (image) {
-        db.prepare(`
-            UPDATE products SET name = ?, price = ?, description = ?, category = ?, stock = ?, featured = ?, image = ?
-            WHERE id = ?
-        `).run(name, parseFloat(price), description, category, parseInt(stock), featured ? 1 : 0, image, id);
-    } else {
-        db.prepare(`
-            UPDATE products SET name = ?, price = ?, description = ?, category = ?, stock = ?, featured = ?
-            WHERE id = ?
-        `).run(name, parseFloat(price), description, category, parseInt(stock), featured ? 1 : 0, id);
-    }
-    
-    res.redirect('/admin/products');
 });
 
 app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
-    const id = req.params.id;
-    
-    // Delete product image
-    const product = db.prepare('SELECT image FROM products WHERE id = ?').get(id);
-    if (product?.image) {
-        const imagePath = path.join(__dirname, 'public', product.image);
-        if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+    try {
+        const id = req.params.id;
+        
+        // Delete product image
+        const product = db.prepare('SELECT image FROM products WHERE id = ?').get(id);
+        if (product?.image) {
+            const imagePath = path.join(__dirname, 'public', product.image);
+            if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+        }
+        
+        db.prepare('DELETE FROM products WHERE id = ?').run(id);
+        res.redirect('/admin/products');
+    } catch (error) {
+        console.error('Delete product error:', error);
+        res.status(500).send('Error deleting product');
     }
-    
-    db.prepare('DELETE FROM products WHERE id = ?').run(id);
-    res.redirect('/admin/products');
 });
 
 // ==================== ADMIN COUPON MANAGEMENT ====================
 app.get('/admin/coupons', adminOnly, (req, res) => {
-    const coupons = db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
-    res.render('admin', { 
-        title: 'Manage Coupons', 
-        coupons,
-        section: 'coupons'
-    });
+    try {
+        const coupons = db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
+        res.render('admin', { 
+            title: 'Manage Coupons', 
+            coupons,
+            section: 'coupons'
+        });
+    } catch (error) {
+        console.error('Admin coupons error:', error);
+        res.status(500).send('Error loading coupons');
+    }
 });
 
 app.get('/admin/coupons/generate', adminOnly, (req, res) => {
@@ -718,120 +797,140 @@ function generateCouponCode(prefix = '', length = 8) {
 }
 
 app.post('/admin/coupons/generate', adminOnly, (req, res) => {
-    const { 
-        discount_type, 
-        discount_value, 
-        min_order, 
-        max_uses, 
-        expires_days,
-        custom_code,
-        code_prefix
-    } = req.body;
-    
-    let code = custom_code;
-    if (!code) {
-        code = generateCouponCode(code_prefix, 8);
+    try {
+        const { 
+            discount_type, 
+            discount_value, 
+            min_order, 
+            max_uses, 
+            expires_days,
+            custom_code,
+            code_prefix
+        } = req.body;
+        
+        let code = custom_code;
+        if (!code) {
+            code = generateCouponCode(code_prefix, 8);
+        }
+        
+        const expires_at = expires_days ? new Date(Date.now() + expires_days * 24 * 60 * 60 * 1000).toISOString() : null;
+        
+        const stmt = db.prepare(`
+            INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        
+        stmt.run(
+            code,
+            discount_type,
+            parseFloat(discount_value),
+            parseFloat(min_order) || 0,
+            parseInt(max_uses) || 1,
+            expires_at
+        );
+        
+        res.redirect('/admin/coupons');
+    } catch (error) {
+        console.error('Generate coupon error:', error);
+        res.status(500).send('Error generating coupon');
     }
-    
-    const expires_at = expires_days ? new Date(Date.now() + expires_days * 24 * 60 * 60 * 1000).toISOString() : null;
-    
-    const stmt = db.prepare(`
-        INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    
-    stmt.run(
-        code,
-        discount_type,
-        parseFloat(discount_value),
-        parseFloat(min_order) || 0,
-        parseInt(max_uses) || 1,
-        expires_at
-    );
-    
-    res.redirect('/admin/coupons');
 });
 
 app.post('/admin/coupons/delete/:id', adminOnly, (req, res) => {
-    db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
-    res.redirect('/admin/coupons');
+    try {
+        db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
+        res.redirect('/admin/coupons');
+    } catch (error) {
+        console.error('Delete coupon error:', error);
+        res.status(500).send('Error deleting coupon');
+    }
 });
 
 // ==================== ADMIN ORDER MANAGEMENT ====================
 app.get('/admin/orders', adminOnly, (req, res) => {
-    const status = req.query.status || 'all';
-    
-    let query = `
-        SELECT o.*, u.username FROM orders o
-        JOIN users u ON o.userId = u.id
-    `;
-    const params = [];
-    
-    if (status !== 'all') {
-        query += ' WHERE o.status = ?';
-        params.push(status);
-    }
-    
-    query += ' ORDER BY o.created_at DESC';
-    
-    const orders = params.length > 0 
-        ? db.prepare(query).all(...params)
-        : db.prepare(query).all();
-    
-    // Parse items JSON for display
-    orders.forEach(order => {
-        try {
-            order.itemsParsed = JSON.parse(order.items);
-            order.itemCount = order.itemsParsed.length;
-        } catch (e) {
-            order.itemCount = 0;
+    try {
+        const status = req.query.status || 'all';
+        
+        let query = `
+            SELECT o.*, u.username FROM orders o
+            JOIN users u ON o.userId = u.id
+        `;
+        const params = [];
+        
+        if (status !== 'all') {
+            query += ' WHERE o.status = ?';
+            params.push(status);
         }
-    });
-    
-    res.render('admin', { 
-        title: 'Manage Orders', 
-        orders,
-        currentStatus: status,
-        section: 'orders'
-    });
+        
+        query += ' ORDER BY o.created_at DESC';
+        
+        const orders = params.length > 0 
+            ? db.prepare(query).all(...params)
+            : db.prepare(query).all();
+        
+        // Parse items JSON for display
+        orders.forEach(order => {
+            try {
+                order.itemsParsed = JSON.parse(order.items);
+                order.itemCount = order.itemsParsed.length;
+            } catch (e) {
+                order.itemCount = 0;
+            }
+        });
+        
+        res.render('admin', { 
+            title: 'Manage Orders', 
+            orders,
+            currentStatus: status,
+            section: 'orders'
+        });
+    } catch (error) {
+        console.error('Admin orders error:', error);
+        res.status(500).send('Error loading orders');
+    }
 });
 
 app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
-    const { orderId, action } = req.params;
-    if (!['approved', 'rejected'].includes(action)) return res.redirect('/admin/orders');
-    
-    // Update status
-    db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(action, orderId);
-    
-    // Get order details
-    const order = db.prepare(`
-        SELECT o.*, u.username, u.id as userId FROM orders o
-        JOIN users u ON o.userId = u.id
-        WHERE o.id = ?
-    `).get(orderId);
-    
-    if (action === 'approved' && order) {
-        // Give Discord role
-        await giveRole(order.userId, config.discord.autoRoleId);
+    try {
+        const { orderId, action } = req.params;
+        if (!['approved', 'rejected'].includes(action)) return res.redirect('/admin/orders');
         
-        // Parse items for log
-        let itemsText = '';
-        try {
-            const items = JSON.parse(order.items);
-            itemsText = items.map(i => `${i.quantity}x ${i.name}`).join(', ');
-        } catch (e) {
-            itemsText = order.items;
+        // Update status
+        db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(action, orderId);
+        
+        // Get order details
+        const order = db.prepare(`
+            SELECT o.*, u.username, u.id as userId FROM orders o
+            JOIN users u ON o.userId = u.id
+            WHERE o.id = ?
+        `).get(orderId);
+        
+        if (action === 'approved' && order) {
+            // Give Discord role
+            await giveRole(order.userId, config.discord.autoRoleId);
+            
+            // Parse items for log
+            let itemsText = '';
+            try {
+                const items = JSON.parse(order.items);
+                itemsText = items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+            } catch (e) {
+                itemsText = order.items;
+            }
+            
+            await sendLog('approved', {
+                userId: order.userId,
+                username: order.username,
+                items: itemsText,
+                orderId
+            });
         }
         
-        await sendLog('approved', {
-            userId: order.userId,
-            username: order.username,
-            items: itemsText,
-            orderId
-        });
+        res.redirect('/admin/orders');
+    } catch (error) {
+        console.error('Order action error:', error);
+        res.status(500).send('Error processing order');
     }
-    
-    res.redirect('/admin/orders');
 });
 
 // ==================== API ENDPOINTS ====================
@@ -848,66 +947,7 @@ app.get('/api/cart/count', (req, res) => {
 
 // ==================== 404 HANDLER ====================
 app.use((req, res) => {
-    res.status(404).send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>404 - Page Not Found</title>
-            <style>
-                body {
-                    font-family: 'Inter', sans-serif;
-                    background: #0a0a0a;
-                    color: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                    margin: 0;
-                    text-align: center;
-                }
-                .container {
-                    max-width: 600px;
-                    padding: 2rem;
-                }
-                h1 {
-                    font-size: 6rem;
-                    color: #ff0000;
-                    margin: 0;
-                    text-shadow: 0 0 20px rgba(255,0,0,0.5);
-                }
-                h2 {
-                    font-size: 2rem;
-                    margin: 1rem 0;
-                }
-                p {
-                    color: #b0b0b0;
-                    margin-bottom: 2rem;
-                }
-                a {
-                    display: inline-block;
-                    padding: 1rem 2rem;
-                    background: #ff0000;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 30px;
-                    font-weight: 600;
-                    transition: background 0.3s;
-                }
-                a:hover {
-                    background: #cc0000;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>404</h1>
-                <h2>Page Not Found</h2>
-                <p>The page you're looking for doesn't exist or has been moved.</p>
-                <a href="/">Return Home</a>
-            </div>
-        </body>
-        </html>
-    `);
+    res.status(404).render('404', { title: 'Page Not Found' });
 });
 
 // ==================== START SERVER & BOT ====================
@@ -924,8 +964,8 @@ initBot().then(() => {
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${config.server.port}
 ║   🌐 URL: http://localhost:${config.server.port}
-║   🔥 IMPOSTER Network v2.0 – Advanced Shop
-║   📊 Features: Coupons • Product Management • Admin Panel
+║   🔥 IMPOSTER Network v2.0 – Fully Fixed
+║   📊 Features: Cart • History • Terms • All Working
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
@@ -946,8 +986,8 @@ initBot().then(() => {
 ║   📍 Port: ${config.server.port}
 ║   🌐 URL: http://localhost:${config.server.port}
 ║   🔥 IMPOSTER Network v2.0 – Web Server Only
-║   ⚠️ Discord Bot Failed to Connect
-║   📊 Features: Shop • Cart • Admin • Coupons
+║   📊 Features: Cart • History • Terms • All Working
+║   ⚠️ Discord Bot: Disconnected
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
         `);
