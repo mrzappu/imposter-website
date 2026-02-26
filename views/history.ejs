@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTER Network – Order History</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">IMPOSTER</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/cart">Cart</a>
+                <a href="/history">History</a>
+                <a href="/terms">Terms</a>
+                <% if (user) { %>
+                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
+                    <span class="user-greeting">Hi, <%= user.username %></span>
+                    <a href="/logout">Logout</a>
+                <% } else { %>
+                    <a href="/auth/discord" class="discord-btn">Login with Discord</a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>📜 Order History</h1>
+        <% if (orders.length === 0) { %>
+            <p>You haven't placed any orders yet. <a href="/shop">Start shopping</a></p>
+        <% } else { %>
+            <div class="orders-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Product</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Proof</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td>#<%= order.id %></td>
+                                <td><%= order.productName %></td>
+                                <td>$<%= order.price.toFixed(2) %></td>
+                                <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                                <td>
+                                    <span class="status <%= order.status %>">
+                                        <%= order.status.toUpperCase() %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (order.proof) { %>
+                                        <a href="/uploads/<%= order.proof %>" target="_blank">View</a>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </main>
+
+    <footer>
+        <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+    </footer>
+</body>
+</html>
