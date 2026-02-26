@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network Complete Website (Optimized)
+// server.js – IMPOSTER Network Complete Website (FIXED)
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -8,7 +8,6 @@ const multer = require('multer');
 const Database = require('better-sqlite3');
 const axios = require('axios');
 const QRCode = require('qrcode');
-const crypto = require('crypto');
 const config = require('./config');
 const { initBot, sendLog, giveRole, getBotStatus } = require('./bot');
 
@@ -192,7 +191,7 @@ app.get('/auth/discord/callback', async (req, res) => {
         
         req.session.save(() => {
             sendLog('login', { userId: id, username, avatar: avatarUrl }).catch(() => {});
-            res.redirect('/');
+            res.redirect('/?login=success');
         });
 
     } catch (error) {
@@ -226,13 +225,26 @@ app.get('/api/cart/count', (req, res) => {
 });
 
 // ==================== PUBLIC ROUTES ====================
+// FIXED HOME PAGE WITH LOGIN VARIABLES
 app.get('/', (req, res) => {
     const featured = db.prepare('SELECT * FROM products WHERE featured = 1 AND (deleted = 0 OR deleted IS NULL) LIMIT 6').all();
-    let users = 0, products = 0, orders = 0;
-    try { users = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
-    try { products = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
-    try { orders = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
-    res.render('index', { title: 'Home', featured, stats: { users, products, orders } });
+    
+    let usersCount = 0, productsCount = 0, ordersCount = 0;
+    try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+    try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
+    try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+    
+    // Get login status from query parameters
+    const loginSuccess = req.query.login === 'success';
+    const loginError = req.query.error;
+    
+    res.render('index', { 
+        title: 'Home', 
+        featured,
+        stats: { users: usersCount, products: productsCount, orders: ordersCount },
+        loginSuccess: loginSuccess,
+        loginError: loginError
+    });
 });
 
 app.get('/shop', (req, res) => {
