@@ -355,7 +355,7 @@
                                         <td>#<%= order.id %></td>
                                         <td><%= order.username %></td>
                                         <td>
-                                            <button class="btn-view-items" onclick="showOrderItems('<%= order.items.replace(/'/g, "\\'") %>')">
+                                            <button class="btn-view-items" onclick="showOrderItems('<%= JSON.stringify(order.itemsParsed).replace(/'/g, "\\'") %>')">
                                                 View Items (<%= order.itemCount || 0 %>)
                                             </button>
                                         </td>
@@ -415,15 +415,27 @@
                 <% } %>
                 
                 <!-- Error Messages -->
-                <% if (query && query.error === 'generate_failed') { %>
+                <% if (query && query.error === 'database_error') { %>
                     <div class="alert alert-error">
-                        ❌ Failed to generate coupon. Please try again.
+                        ❌ Database error. Please check logs.
                     </div>
                 <% } %>
                 
                 <% if (query && query.error === 'delete_failed') { %>
                     <div class="alert alert-error">
                         ❌ Failed to delete coupon. Please try again.
+                    </div>
+                <% } %>
+                
+                <% if (query && query.error === 'page_error') { %>
+                    <div class="alert alert-error">
+                        ❌ Error loading page. Please try again.
+                    </div>
+                <% } %>
+                
+                <% if (locals.error_message) { %>
+                    <div class="alert alert-error">
+                        ❌ <%= error_message %>
                     </div>
                 <% } %>
                 
@@ -443,7 +455,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% if (coupons.length === 0) { %>
+                            <% if (!coupons || coupons.length === 0) { %>
                                 <tr>
                                     <td colspan="9" style="text-align: center; padding: 2rem;">
                                         No coupons found. <a href="/admin/coupons/generate">Generate your first coupon</a>
@@ -483,6 +495,25 @@
             <% if (section === 'coupon-form') { %>
                 <div class="admin-form glass-card">
                     <h2>Generate New Coupon</h2>
+                    
+                    <!-- Error Messages -->
+                    <% if (query && query.error === 'missing_fields') { %>
+                        <div class="alert alert-error">
+                            ❌ Please fill in all required fields.
+                        </div>
+                    <% } %>
+                    
+                    <% if (query && query.error === 'code_exists') { %>
+                        <div class="alert alert-error">
+                            ❌ Coupon code already exists. Please use a different code.
+                        </div>
+                    <% } %>
+                    
+                    <% if (query && query.error === 'generate_failed') { %>
+                        <div class="alert alert-error">
+                            ❌ Failed to generate coupon. Please try again.
+                        </div>
+                    <% } %>
                     
                     <form action="/admin/coupons/generate" method="POST" onsubmit="return validateCouponForm()">
                         <div class="form-grid">
@@ -981,6 +1012,11 @@
             }
         }
         
+        .btn-delete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .admin-nav {
@@ -1129,9 +1165,13 @@
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(alert => {
-                    alert.style.opacity = '0';
                     alert.style.transition = 'opacity 0.5s';
-                    setTimeout(() => alert.remove(), 500);
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        if (alert.parentNode) {
+                            alert.remove();
+                        }
+                    }, 500);
                 });
             }, 5000);
         });
