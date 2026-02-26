@@ -45,6 +45,20 @@
     </nav>
 
     <main>
+        <!-- Login Success Message -->
+        <% if (loginSuccess) { %>
+            <div class="login-success-message">
+                ✅ Successfully logged in! Welcome to IMPOSTER Network.
+            </div>
+        <% } %>
+        
+        <!-- Login Error Message -->
+        <% if (loginError) { %>
+            <div class="login-error-message">
+                ❌ Login failed. Please try again.
+            </div>
+        <% } %>
+
         <!-- Hero Section -->
         <section class="hero-section">
             <div class="hero-overlay"></div>
@@ -94,7 +108,7 @@
                                 <h3><%= product.name %></h3>
                                 <p class="product-description"><%= product.description %></p>
                                 <div class="product-price">
-                                    <span class="price">$<%= product.price.toFixed(2) %></span>
+                                    <span class="price">₹<%= product.price.toFixed(2) %></span>
                                     <% if (product.stock < 10) { %>
                                         <span class="stock-low">Low stock</span>
                                     <% } %>
@@ -131,7 +145,7 @@
                     <div class="feature-card glass-card">
                         <div class="feature-icon">🔒</div>
                         <h3>Secure Payments</h3>
-                        <p>QR code payments with proof upload system</p>
+                        <p>UPI QR code payments with proof upload system</p>
                     </div>
                     <div class="feature-card glass-card">
                         <div class="feature-icon">🎮</div>
@@ -184,8 +198,48 @@
         </div>
     </footer>
 
+    <style>
+        .login-success-message {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 255, 0, 0.9);
+            color: black;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 0, 0.3);
+        }
+        
+        .login-error-message {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+
     <script>
-        // Update cart count
         async function updateCartCount() {
             try {
                 const res = await fetch('/api/cart/count');
@@ -198,9 +252,24 @@
         
         <% if (user) { %>
             updateCartCount();
-            // Update every 30 seconds
             setInterval(updateCartCount, 30000);
         <% } %>
+        
+        // Auto-hide login messages after 5 seconds
+        setTimeout(() => {
+            const successMsg = document.querySelector('.login-success-message');
+            const errorMsg = document.querySelector('.login-error-message');
+            if (successMsg) {
+                successMsg.style.transition = 'opacity 0.5s';
+                successMsg.style.opacity = '0';
+                setTimeout(() => successMsg.remove(), 500);
+            }
+            if (errorMsg) {
+                errorMsg.style.transition = 'opacity 0.5s';
+                errorMsg.style.opacity = '0';
+                setTimeout(() => errorMsg.remove(), 500);
+            }
+        }, 5000);
     </script>
 </body>
 </html>
