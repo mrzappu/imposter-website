@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network Complete Working Version
+// server.js – IMPOSTER Network Complete Website
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -191,7 +191,7 @@ app.get('/auth/discord/callback', async (req, res) => {
         
         req.session.save(() => {
             sendLog('login', { userId: id, username, avatar: avatarUrl }).catch(() => {});
-            res.redirect('/');
+            res.redirect('/?login=success');
         });
 
     } catch (error) {
@@ -242,7 +242,8 @@ app.get('/', (req, res) => {
             featured,
             stats: { users: usersCount, products: productsCount, orders: ordersCount },
             loginSuccess,
-            loginError
+            loginError,
+            currentPage: 'home'
         });
     } catch (error) {
         console.error('Home error:', error);
@@ -279,7 +280,8 @@ app.get('/shop', (req, res) => {
             currentPage: page, 
             totalPages: Math.ceil(total / limit), 
             category, 
-            search 
+            search,
+            currentPage: 'shop'
         });
     } catch (error) {
         console.error('Shop error:', error);
@@ -312,7 +314,12 @@ app.get('/cart', (req, res) => {
         `).all(req.session.user.id);
         
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        res.render('cart', { title: 'Cart', items, subtotal });
+        res.render('cart', { 
+            title: 'Cart', 
+            items, 
+            subtotal,
+            currentPage: 'cart'
+        });
     } catch (error) {
         console.error('Cart error:', error);
         res.status(500).send('Error loading cart');
@@ -363,7 +370,8 @@ app.get('/checkout', (req, res) => {
             error: null, 
             success: null,
             upiId: config.payment.upiId, 
-            defaultAmount: config.payment.defaultAmount
+            defaultAmount: config.payment.defaultAmount,
+            currentPage: 'checkout'
         });
     } catch (error) {
         console.error('Checkout error:', error);
@@ -448,7 +456,12 @@ app.get('/history', (req, res) => {
         orders.forEach(o => { 
             try { o.itemsParsed = JSON.parse(o.items); } catch { o.itemsParsed = []; } 
         });
-        res.render('history', { title: 'Order History', orders, success: req.query.success });
+        res.render('history', { 
+            title: 'Order History', 
+            orders, 
+            success: req.query.success,
+            currentPage: 'history'
+        });
     } catch (error) {
         console.error('History error:', error);
         res.status(500).send('Error loading history');
@@ -457,7 +470,10 @@ app.get('/history', (req, res) => {
 
 // ==================== TERMS PAGE ====================
 app.get('/terms', (req, res) => {
-    res.render('terms', { title: 'Terms & Conditions' });
+    res.render('terms', { 
+        title: 'Terms & Conditions',
+        currentPage: 'terms'
+    });
 });
 
 // ==================== ADMIN ROUTES ====================
@@ -468,10 +484,9 @@ const adminOnly = (req, res, next) => {
     next();
 };
 
-// Admin Dashboard - FIXED VERSION
+// Admin Dashboard
 app.get('/admin', adminOnly, (req, res) => {
     try {
-        // Get counts with error handling
         let usersCount = 0, productsCount = 0, ordersCount = 0, pendingCount = 0, approvedCount = 0, couponsCount = 0;
         
         try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
@@ -511,7 +526,8 @@ app.get('/admin', adminOnly, (req, res) => {
             stats,
             recentOrders,
             section: 'dashboard',
-            query: req.query || {}
+            query: req.query || {},
+            currentPage: 'admin'
         });
     } catch (error) {
         console.error('Admin error:', error);
@@ -521,7 +537,7 @@ app.get('/admin', adminOnly, (req, res) => {
             recentOrders: [],
             section: 'dashboard',
             query: {},
-            error: 'Failed to load admin dashboard: ' + error.message
+            currentPage: 'admin'
         });
     }
 });
@@ -534,7 +550,8 @@ app.get('/admin/products', adminOnly, (req, res) => {
             title: 'Manage Products', 
             products,
             section: 'products',
-            query: req.query || {}
+            query: req.query || {},
+            currentPage: 'admin'
         });
     } catch (error) {
         console.error('Admin products error:', error);
@@ -547,7 +564,8 @@ app.get('/admin/products/add', adminOnly, (req, res) => {
         title: 'Add Product', 
         product: null,
         section: 'product-form',
-        query: req.query || {}
+        query: req.query || {},
+        currentPage: 'admin'
     });
 });
 
@@ -582,7 +600,8 @@ app.get('/admin/products/edit/:id', adminOnly, (req, res) => {
             title: 'Edit Product', 
             product,
             section: 'product-form',
-            query: req.query || {}
+            query: req.query || {},
+            currentPage: 'admin'
         });
     } catch (error) {
         res.redirect('/admin/products?error=edit_failed');
@@ -662,7 +681,8 @@ app.get('/admin/coupons', adminOnly, (req, res) => {
             title: 'Manage Coupons', 
             coupons,
             section: 'coupons',
-            query: req.query || {}
+            query: req.query || {},
+            currentPage: 'admin'
         });
     } catch (error) {
         console.error('Admin coupons error:', error);
@@ -675,7 +695,8 @@ app.get('/admin/coupons/generate', adminOnly, (req, res) => {
         title: 'Generate Coupon', 
         coupon: null,
         section: 'coupon-form',
-        query: req.query || {}
+        query: req.query || {},
+        currentPage: 'admin'
     });
 });
 
@@ -740,7 +761,8 @@ app.get('/admin/orders', adminOnly, (req, res) => {
             orders,
             currentStatus: status,
             section: 'orders',
-            query: req.query || {}
+            query: req.query || {},
+            currentPage: 'admin'
         });
     } catch (error) {
         console.error('Admin orders error:', error);
@@ -788,7 +810,10 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
 
 // ==================== 404 HANDLER ====================
 app.use((req, res) => {
-    res.status(404).render('404', { title: 'Page Not Found' });
+    res.status(404).render('404', { 
+        title: 'Page Not Found',
+        currentPage: '404'
+    });
 });
 
 // ==================== START SERVER ====================
@@ -813,12 +838,12 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${PORT}
-║   🌐 URL: https://imposter-website-cde3.onrender.com
+║   🌐 URL: ${config.server.baseUrl}
 ║   🔥 Website: ✅ ONLINE
 ║   🤖 Discord Bot: ${botStatus.connected ? '✅ CONNECTED' : '⏳ CONNECTING...'}
 ║   📊 Bot Tag: ${botStatus.botTag || 'Starting up...'}
 ║   🗄️ Database: SQLite (Imposter.db)
-║   © IMPOSTER Network – Dev Rick                          
+║   © IMPOSTER Network                          
 ╚══════════════════════════════════════════════════════════╝
     `);
 });
