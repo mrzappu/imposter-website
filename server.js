@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network Complete Website
+// server.js – IMPOSTER Network Complete Fixed Version
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -243,7 +243,9 @@ app.get('/', (req, res) => {
             stats: { users: usersCount, products: productsCount, orders: ordersCount },
             loginSuccess,
             loginError,
-            currentPage: 'home'
+            currentPage: 'home',
+            user: req.session.user,
+            isAdmin: req.session.user?.id === config.admin.discordId
         });
     } catch (error) {
         console.error('Home error:', error);
@@ -281,7 +283,9 @@ app.get('/shop', (req, res) => {
             totalPages: Math.ceil(total / limit), 
             category, 
             search,
-            currentPage: 'shop'
+            currentPage: 'shop',
+            user: req.session.user,
+            isAdmin: req.session.user?.id === config.admin.discordId
         });
     } catch (error) {
         console.error('Shop error:', error);
@@ -318,7 +322,9 @@ app.get('/cart', (req, res) => {
             title: 'Cart', 
             items, 
             subtotal,
-            currentPage: 'cart'
+            currentPage: 'cart',
+            user: req.session.user,
+            isAdmin: req.session.user?.id === config.admin.discordId
         });
     } catch (error) {
         console.error('Cart error:', error);
@@ -371,7 +377,9 @@ app.get('/checkout', (req, res) => {
             success: null,
             upiId: config.payment.upiId, 
             defaultAmount: config.payment.defaultAmount,
-            currentPage: 'checkout'
+            currentPage: 'checkout',
+            user: req.session.user,
+            isAdmin: req.session.user?.id === config.admin.discordId
         });
     } catch (error) {
         console.error('Checkout error:', error);
@@ -396,55 +404,197 @@ app.post('/checkout/apply-coupon', (req, res) => {
     }
 });
 
+// ==================== FIXED CHECKOUT PLACE ORDER ====================
 app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) => {
-    if (!req.session.user || !req.file) return res.redirect('/checkout');
+    if (!req.session.user) {
+        console.log('❌ Order failed: User not logged in');
+        return res.redirect('/auth/discord');
+    }
+    
+    if (!req.file) {
+        console.log('❌ Order failed: No proof file uploaded');
+        const items = db.prepare(`
+            SELECT c.id as cartId, c.quantity, p.* FROM cart c
+            JOIN products p ON c.productId = p.id
+            WHERE c.userId = ?
+        `).all(req.session.user.id);
+        
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        return res.render('checkout', { 
+            title: 'Checkout', 
+            items, 
+            subtotal, 
+            discount: 0, 
+            total: subtotal,
+            couponCode: null, 
+            error: 'Please upload payment proof',
+            success: null,
+            upiId: config.payment.upiId, 
+            defaultAmount: config.payment.defaultAmount,
+            currentPage: 'checkout',
+            user: req.session.user,
+            isAdmin: req.session.user?.id === config.admin.discordId
+        });
+    }
     
     const userId = req.session.user.id;
+    const username = req.session.user.username;
+    const avatar = req.session.user.avatar;
+    
     try {
+        console.log(`📦 Processing order for user: ${username} (${userId})`);
+        
+        // Get cart items
         const items = db.prepare(`
             SELECT c.quantity, p.* FROM cart c
             JOIN products p ON c.productId = p.id
             WHERE c.userId = ?
         `).all(userId);
         
-        if (items.length === 0) return res.redirect('/shop');
+        if (items.length === 0) {
+            console.log('❌ Order failed: Cart empty');
+            return res.redirect('/shop');
+        }
         
+        // Calculate totals
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        let discount = 0, couponCode = null;
+        let discount = 0;
+        let couponCode = null;
         
         if (req.session.coupon) {
             const coupon = req.session.coupon;
-            discount = coupon.discount_type === 'percentage' ? subtotal * (coupon.discount_value / 100) : coupon.discount_value;
+            if (coupon.discount_type === 'percentage') {
+                discount = subtotal * (coupon.discount_value / 100);
+            } else {
+                discount = coupon.discount_value;
+            }
+            
+            // Update coupon usage
             db.prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?').run(coupon.id);
             couponCode = coupon.code;
+            console.log(`🎟️ Coupon applied: ${coupon.code} (discount: ₹${discount.toFixed(2)})`);
+            
+            // Clear coupon from session
             delete req.session.coupon;
         }
         
         const total = Math.max(0, subtotal - discount);
-        const itemsJson = JSON.stringify(items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })));
+        const filename = req.file.filename;
         
-        const orderResult = db.prepare(`
+        // Prepare items JSON
+        const itemsJson = JSON.stringify(items.map(i => ({
+            id: i.id,
+            name: i.name,
+            price: i.price,
+            quantity: i.quantity
+        })));
+        
+        console.log(`💰 Order total: ₹${total.toFixed(2)} (subtotal: ₹${subtotal.toFixed(2)}, discount: ₹${discount.toFixed(2)})`);
+        
+        // Insert order into database
+        const orderStmt = db.prepare(`
             INSERT INTO orders (userId, items, subtotal, discount, total, coupon, proof, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
-        `).run(userId, itemsJson, subtotal, discount, total, couponCode, req.file.filename);
+        `);
         
-        db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
-        
-        sendLog('payment', {
+        const orderResult = orderStmt.run(
             userId, 
-            username: req.session.user.username, 
-            avatar: req.session.user.avatar,
-            items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
+            itemsJson, 
+            subtotal, 
+            discount, 
             total, 
-            proofFilename: req.file.filename, 
-            orderId: orderResult.lastInsertRowid
-        }).catch(() => {});
+            couponCode, 
+            filename
+        );
         
+        const orderId = orderResult.lastInsertRowid;
+        console.log(`✅ Order #${orderId} created successfully`);
+        
+        // Clear cart
+        db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
+        console.log('🛒 Cart cleared');
+        
+        // Format items for Discord log
+        const itemsList = items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+        
+        // Send payment log to Discord (with error handling)
+        try {
+            console.log('📤 Sending payment log to Discord...');
+            
+            const logResult = await sendLog('payment', {
+                userId,
+                username,
+                avatar,
+                items: itemsList,
+                subtotal,
+                discount,
+                total,
+                proofFilename: filename,
+                orderId
+            });
+            
+            if (logResult) {
+                console.log('✅ Payment log sent to Discord');
+            } else {
+                console.log('⚠️ Payment log not sent (Discord bot not ready)');
+            }
+        } catch (discordError) {
+            console.error('❌ Discord log error (non-critical):', discordError.message);
+            // Don't fail the order if Discord logging fails
+        }
+        
+        // Redirect to history with success message
+        console.log(`✅ Order #${orderId} completed successfully for ${username}`);
         res.redirect('/history?success=order_placed');
         
     } catch (error) {
-        console.error('Order error:', error);
-        res.redirect('/checkout?error=order_failed');
+        console.error('❌ Order placement error:', error);
+        console.error('Error details:', error.message);
+        console.error('Stack trace:', error.stack);
+        
+        // Try to get cart items again for error page
+        let items = [];
+        let subtotal = 0;
+        try {
+            items = db.prepare(`
+                SELECT c.id as cartId, c.quantity, p.* FROM cart c
+                JOIN products p ON c.productId = p.id
+                WHERE c.userId = ?
+            `).all(userId);
+            subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        } catch (e) {
+            console.error('Could not reload cart for error page:', e.message);
+        }
+        
+        // Send error log to Discord
+        try {
+            await sendLog('rejected', {
+                userId,
+                username,
+                avatar,
+                items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
+                total: subtotal,
+                orderId: 'ERROR',
+                reason: error.message
+            });
+        } catch (e) {}
+        
+        res.render('checkout', { 
+            title: 'Checkout', 
+            items, 
+            subtotal, 
+            discount: 0, 
+            total: subtotal,
+            couponCode: null, 
+            error: 'Error placing order: ' + error.message,
+            success: null,
+            upiId: config.payment.upiId, 
+            defaultAmount: config.payment.defaultAmount,
+            currentPage: 'checkout',
+            user: req.session.user,
+            isAdmin: req.session.user?.id === config.admin.discordId
+        });
     }
 });
 
@@ -460,7 +610,9 @@ app.get('/history', (req, res) => {
             title: 'Order History', 
             orders, 
             success: req.query.success,
-            currentPage: 'history'
+            currentPage: 'history',
+            user: req.session.user,
+            isAdmin: req.session.user?.id === config.admin.discordId
         });
     } catch (error) {
         console.error('History error:', error);
@@ -472,7 +624,9 @@ app.get('/history', (req, res) => {
 app.get('/terms', (req, res) => {
     res.render('terms', { 
         title: 'Terms & Conditions',
-        currentPage: 'terms'
+        currentPage: 'terms',
+        user: req.session.user,
+        isAdmin: req.session.user?.id === config.admin.discordId
     });
 });
 
@@ -527,7 +681,9 @@ app.get('/admin', adminOnly, (req, res) => {
             recentOrders,
             section: 'dashboard',
             query: req.query || {},
-            currentPage: 'admin'
+            currentPage: 'admin',
+            user: req.session.user,
+            isAdmin: true
         });
     } catch (error) {
         console.error('Admin error:', error);
@@ -537,7 +693,9 @@ app.get('/admin', adminOnly, (req, res) => {
             recentOrders: [],
             section: 'dashboard',
             query: {},
-            currentPage: 'admin'
+            currentPage: 'admin',
+            user: req.session.user,
+            isAdmin: true
         });
     }
 });
@@ -551,7 +709,9 @@ app.get('/admin/products', adminOnly, (req, res) => {
             products,
             section: 'products',
             query: req.query || {},
-            currentPage: 'admin'
+            currentPage: 'admin',
+            user: req.session.user,
+            isAdmin: true
         });
     } catch (error) {
         console.error('Admin products error:', error);
@@ -565,7 +725,9 @@ app.get('/admin/products/add', adminOnly, (req, res) => {
         product: null,
         section: 'product-form',
         query: req.query || {},
-        currentPage: 'admin'
+        currentPage: 'admin',
+        user: req.session.user,
+        isAdmin: true
     });
 });
 
@@ -601,7 +763,9 @@ app.get('/admin/products/edit/:id', adminOnly, (req, res) => {
             product,
             section: 'product-form',
             query: req.query || {},
-            currentPage: 'admin'
+            currentPage: 'admin',
+            user: req.session.user,
+            isAdmin: true
         });
     } catch (error) {
         res.redirect('/admin/products?error=edit_failed');
@@ -682,7 +846,9 @@ app.get('/admin/coupons', adminOnly, (req, res) => {
             coupons,
             section: 'coupons',
             query: req.query || {},
-            currentPage: 'admin'
+            currentPage: 'admin',
+            user: req.session.user,
+            isAdmin: true
         });
     } catch (error) {
         console.error('Admin coupons error:', error);
@@ -696,7 +862,9 @@ app.get('/admin/coupons/generate', adminOnly, (req, res) => {
         coupon: null,
         section: 'coupon-form',
         query: req.query || {},
-        currentPage: 'admin'
+        currentPage: 'admin',
+        user: req.session.user,
+        isAdmin: true
     });
 });
 
@@ -762,7 +930,9 @@ app.get('/admin/orders', adminOnly, (req, res) => {
             currentStatus: status,
             section: 'orders',
             query: req.query || {},
-            currentPage: 'admin'
+            currentPage: 'admin',
+            user: req.session.user,
+            isAdmin: true
         });
     } catch (error) {
         console.error('Admin orders error:', error);
@@ -770,41 +940,89 @@ app.get('/admin/orders', adminOnly, (req, res) => {
     }
 });
 
+// ==================== FIXED ADMIN ORDER APPROVE/REJECT ====================
 app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
     try {
         const { orderId, action } = req.params;
-        if (!['approved', 'rejected'].includes(action)) return res.redirect('/admin/orders');
+        if (!['approved', 'rejected'].includes(action)) {
+            return res.redirect('/admin/orders?error=invalid_action');
+        }
+
+        console.log(`🔧 Admin ${action} order #${orderId}`);
         
+        // Get order details before updating
+        const order = db.prepare(`
+            SELECT o.*, u.username, u.avatar, u.id as userId FROM orders o
+            JOIN users u ON o.userId = u.id
+            WHERE o.id = ?
+        `).get(orderId);
+        
+        if (!order) {
+            console.error(`❌ Order #${orderId} not found`);
+            return res.redirect('/admin/orders?error=order_not_found');
+        }
+
+        // Update order status
         db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(action, orderId);
-        
+        console.log(`✅ Order #${orderId} status updated to ${action}`);
+
+        // Parse items for log
+        let itemsText = '';
+        try {
+            const items = JSON.parse(order.items);
+            itemsText = items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+        } catch (e) {
+            itemsText = order.items;
+        }
+
         if (action === 'approved') {
-            const order = db.prepare(`
-                SELECT o.*, u.username, u.avatar, u.id as userId FROM orders o
-                JOIN users u ON o.userId = u.id WHERE o.id = ?
-            `).get(orderId);
+            // Give Discord role
+            const roleGiven = await giveRole(order.userId, config.discord.autoRoleId);
             
-            if (order) {
-                await giveRole(order.userId, config.discord.autoRoleId);
-                let itemsText = '';
-                try { 
-                    itemsText = JSON.parse(order.items).map(i => `${i.quantity}x ${i.name}`).join(', '); 
-                } catch { 
-                    itemsText = order.items; 
-                }
-                sendLog('approved', { 
-                    userId: order.userId, 
-                    username: order.username, 
-                    avatar: order.avatar, 
-                    items: itemsText, 
-                    orderId 
-                }).catch(() => {});
+            if (roleGiven) {
+                console.log(`✅ Role given to user ${order.username} for order #${orderId}`);
+            } else {
+                console.log(`⚠️ Could not give role to user ${order.username}`);
             }
+            
+            // Send approval log
+            try {
+                await sendLog('approved', {
+                    userId: order.userId,
+                    username: order.username,
+                    avatar: order.avatar,
+                    items: itemsText,
+                    orderId
+                });
+                console.log(`✅ Approval log sent for order #${orderId}`);
+            } catch (discordError) {
+                console.error('Approval log error:', discordError.message);
+            }
+            
+            res.redirect('/admin/orders?success=approved');
+            
+        } else if (action === 'rejected') {
+            // Send rejection log
+            try {
+                await sendLog('rejected', {
+                    userId: order.userId,
+                    username: order.username,
+                    avatar: order.avatar,
+                    items: itemsText,
+                    orderId,
+                    reason: 'Payment proof rejected by admin'
+                });
+                console.log(`✅ Rejection log sent for order #${orderId}`);
+            } catch (discordError) {
+                console.error('Rejection log error:', discordError.message);
+            }
+            
+            res.redirect('/admin/orders?success=rejected');
         }
         
-        res.redirect('/admin/orders');
     } catch (error) {
-        console.error('Order action error:', error);
-        res.status(500).send('Error processing order');
+        console.error('❌ Order action error:', error);
+        res.redirect('/admin/orders?error=processing_failed');
     }
 });
 
@@ -812,7 +1030,9 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
 app.use((req, res) => {
     res.status(404).render('404', { 
         title: 'Page Not Found',
-        currentPage: '404'
+        currentPage: '404',
+        user: req.session.user,
+        isAdmin: req.session.user?.id === config.admin.discordId
     });
 });
 
@@ -838,7 +1058,7 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${PORT}
-║   🌐 URL: ${config.server.baseUrl}
+║   🌐 URL: https://imposter-website-cde3.onrender.com
 ║   🔥 Website: ✅ ONLINE
 ║   🤖 Discord Bot: ${botStatus.connected ? '✅ CONNECTED' : '⏳ CONNECTING...'}
 ║   📊 Bot Tag: ${botStatus.botTag || 'Starting up...'}
