@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IMPOSTER Network – Admin Panel</title>
     <link rel="stylesheet" href="/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="glass-nav">
+    <nav>
         <div class="nav-container">
             <div class="logo">
                 <span class="logo-imposter">IMPOSTER</span>
@@ -35,1146 +33,337 @@
         </div>
     </nav>
 
-    <main>
-        <div class="container">
-            <h1 class="page-title">Admin Panel</h1>
-            
-            <!-- Admin Navigation -->
-            <div class="admin-nav glass-card">
-                <a href="/admin" class="admin-nav-link <%= section === 'dashboard' ? 'active' : '' %>">Dashboard</a>
-                <a href="/admin/products" class="admin-nav-link <%= section === 'products' ? 'active' : '' %>">Products</a>
-                <a href="/admin/orders" class="admin-nav-link <%= section === 'orders' ? 'active' : '' %>">Orders</a>
-                <a href="/admin/coupons" class="admin-nav-link <%= section === 'coupons' ? 'active' : '' %>">Coupons</a>
+    <div class="container">
+        <h1 class="page-title">Admin Panel</h1>
+        
+        <!-- Admin Navigation -->
+        <div class="admin-nav">
+            <a href="/admin" class="admin-nav-link <%= section === 'dashboard' ? 'active' : '' %>">Dashboard</a>
+            <a href="/admin/products" class="admin-nav-link <%= section === 'products' ? 'active' : '' %>">Products</a>
+            <a href="/admin/orders" class="admin-nav-link <%= section === 'orders' ? 'active' : '' %>">Orders</a>
+            <a href="/admin/coupons" class="admin-nav-link <%= section === 'coupons' ? 'active' : '' %>">Coupons</a>
+        </div>
+
+        <!-- Dashboard Section -->
+        <% if (section === 'dashboard') { %>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <span class="stat-value"><%= stats.users %></span>
+                    <span class="stat-label">Total Users</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <span class="stat-value"><%= stats.products %></span>
+                    <span class="stat-label">Products</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <span class="stat-value"><%= stats.orders %></span>
+                    <span class="stat-label">Total Orders</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <span class="stat-value"><%= stats.pendingOrders %></span>
+                    <span class="stat-label">Pending</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <span class="stat-value"><%= stats.approvedOrders %></span>
+                    <span class="stat-label">Approved</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏷️</div>
+                    <span class="stat-value"><%= stats.coupons %></span>
+                    <span class="stat-label">Coupons</span>
+                </div>
             </div>
 
-            <!-- ==================== DASHBOARD SECTION ==================== -->
-            <% if (section === 'dashboard') { %>
-                <div class="stats-grid">
-                    <div class="stat-card glass-card">
-                        <span class="stat-icon">👥</span>
-                        <span class="stat-value"><%= stats.users %></span>
-                        <span class="stat-label">Total Users</span>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <span class="stat-icon">📦</span>
-                        <span class="stat-value"><%= stats.products %></span>
-                        <span class="stat-label">Products</span>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <span class="stat-icon">📊</span>
-                        <span class="stat-value"><%= stats.orders %></span>
-                        <span class="stat-label">Total Orders</span>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <span class="stat-icon">⏳</span>
-                        <span class="stat-value"><%= stats.pendingOrders %></span>
-                        <span class="stat-label">Pending Orders</span>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <span class="stat-icon">✅</span>
-                        <span class="stat-value"><%= stats.approvedOrders %></span>
-                        <span class="stat-label">Approved Orders</span>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <span class="stat-icon">🏷️</span>
-                        <span class="stat-value"><%= stats.coupons %></span>
-                        <span class="stat-label">Active Coupons</span>
-                    </div>
-                </div>
-
-                <h2>Recent Orders</h2>
-                <div class="admin-table glass-card">
-                    <table>
-                        <thead>
+            <h2 style="color: var(--primary); margin: 2rem 0 1rem;">Recent Orders</h2>
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>User</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (recentOrders.length === 0) { %>
                             <tr>
-                                <th>Order #</th>
-                                <th>User</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">No orders yet</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <% if (recentOrders.length === 0) { %>
+                        <% } else { %>
+                            <% recentOrders.forEach(order => { %>
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 2rem;">
-                                        No orders yet
+                                    <td>#<%= order.id %></td>
+                                    <td><%= order.username %></td>
+                                    <td><%= order.itemCount || 0 %> items</td>
+                                    <td>₹<%= order.total.toFixed(2) %></td>
+                                    <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                                    <td>
+                                        <span class="status-badge status-<%= order.status %>">
+                                            <%= order.status.toUpperCase() %>
+                                        </span>
                                     </td>
                                 </tr>
-                            <% } else { %>
-                                <% recentOrders.forEach(order => { %>
-                                    <tr>
-                                        <td>#<%= order.id %></td>
-                                        <td><%= order.username %></td>
-                                        <td><%= order.itemCount || 0 %> items</td>
-                                        <td>₹<%= order.total.toFixed(2) %></td>
-                                        <td><%= new Date(order.created_at).toLocaleString() %></td>
-                                        <td>
-                                            <span class="status-badge status-<%= order.status %>">
-                                                <%= order.status.toUpperCase() %>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a href="/admin/orders?status=<%= order.status %>" class="btn-view">View</a>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } %>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
 
-            <!-- ==================== PRODUCTS SECTION ==================== -->
-            <% if (section === 'products') { %>
-                <div class="admin-header">
-                    <h2>Manage Products</h2>
-                    <a href="/admin/products/add" class="btn-add">+ Add New Product</a>
-                </div>
-                
-                <!-- Success Messages -->
-                <% if (query && query.success === 'deleted') { %>
-                    <div class="alert alert-success">
-                        ✅ Product permanently deleted successfully!
-                    </div>
-                <% } %>
-                
-                <% if (query && query.success === 'deleted_soft') { %>
-                    <div class="alert alert-info">
-                        ℹ️ Product hidden from shop (exists in order history)
-                    </div>
-                <% } %>
-                
-                <% if (query && query.success === 'added') { %>
-                    <div class="alert alert-success">
-                        ✅ Product added successfully!
-                    </div>
-                <% } %>
-                
-                <% if (query && query.success === 'updated') { %>
-                    <div class="alert alert-success">
-                        ✅ Product updated successfully!
-                    </div>
-                <% } %>
-                
-                <!-- Error Messages -->
-                <% if (query && query.error === 'not_found') { %>
-                    <div class="alert alert-error">
-                        ❌ Product not found!
-                    </div>
-                <% } %>
-                
-                <% if (query && query.error === 'delete_failed') { %>
-                    <div class="alert alert-error">
-                        ❌ Failed to delete product. Please try again.
-                    </div>
-                <% } %>
-                
-                <% if (query && query.error === 'add_failed') { %>
-                    <div class="alert alert-error">
-                        ❌ Failed to add product. Please try again.
-                    </div>
-                <% } %>
-                
-                <% if (query && query.error === 'update_failed') { %>
-                    <div class="alert alert-error">
-                        ❌ Failed to update product. Please try again.
-                    </div>
-                <% } %>
-                
-                <div class="admin-table glass-card">
-                    <table>
-                        <thead>
+        <!-- Products Section -->
+        <% if (section === 'products') { %>
+            <div class="admin-header">
+                <h2 style="color: var(--primary);">Manage Products</h2>
+                <a href="/admin/products/add" class="btn-add">+ Add Product</a>
+            </div>
+            
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Featured</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (products.length === 0) { %>
                             <tr>
-                                <th>ID</th>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Category</th>
-                                <th>Stock</th>
-                                <th>Featured</th>
-                                <th>Actions</th>
+                                <td colspan="8" style="text-align: center; padding: 2rem;">No products found</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <% if (products.length === 0) { %>
+                        <% } else { %>
+                            <% products.forEach(product => { %>
                                 <tr>
-                                    <td colspan="8" style="text-align: center; padding: 2rem;">
-                                        No products found. <a href="/admin/products/add">Add your first product</a>
+                                    <td>#<%= product.id %></td>
+                                    <td>
+                                        <% if (product.image) { %>
+                                            <img src="<%= product.image %>" alt="<%= product.name %>" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;">
+                                        <% } else { %>
+                                            📦
+                                        <% } %>
+                                    </td>
+                                    <td><%= product.name %></td>
+                                    <td>₹<%= product.price.toFixed(2) %></td>
+                                    <td><%= product.category %></td>
+                                    <td><%= product.stock %></td>
+                                    <td><%= product.featured ? '⭐' : '' %></td>
+                                    <td>
+                                        <a href="/admin/products/edit/<%= product.id %>" style="color: var(--primary); margin-right: 0.5rem;">Edit</a>
+                                        <form action="/admin/products/delete/<%= product.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this product?')">
+                                            <button type="submit" style="background: none; border: none; color: var(--danger); cursor: pointer;">Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
-                            <% } else { %>
-                                <% products.forEach(product => { %>
-                                    <tr id="product-<%= product.id %>">
-                                        <td>#<%= product.id %></td>
-                                        <td>
-                                            <% if (product.image) { %>
-                                                <img src="<%= product.image %>" alt="<%= product.name %>" class="product-thumb">
-                                            <% } else { %>
-                                                <span class="no-image">📦</span>
-                                            <% } %>
-                                        </td>
-                                        <td><%= product.name %></td>
-                                        <td>₹<%= product.price.toFixed(2) %></td>
-                                        <td><span class="category-badge"><%= product.category %></span></td>
-                                        <td><%= product.stock %></td>
-                                        <td>
-                                            <% if (product.featured) { %>
-                                                <span class="featured-badge">⭐</span>
-                                            <% } %>
-                                        </td>
-                                        <td class="actions">
-                                            <a href="/admin/products/edit/<%= product.id %>" class="btn-edit">Edit</a>
-                                            
-                                            <!-- Delete Form with Confirmation -->
-                                            <form action="/admin/products/delete/<%= product.id %>" 
-                                                  method="POST" 
-                                                  style="display:inline;" 
-                                                  onsubmit="return confirmDelete('<%= product.name.replace(/'/g, "\\'") %>', <%= product.id %>)">
-                                                <button type="submit" class="btn-delete" id="delete-btn-<%= product.id %>">Delete</button>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+
+        <!-- Orders Section -->
+        <% if (section === 'orders') { %>
+            <div class="admin-header">
+                <h2 style="color: var(--primary);">Manage Orders</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="/admin/orders?status=all" style="color: <%= currentStatus === 'all' ? 'var(--primary)' : '#999' %>;">All</a>
+                    <a href="/admin/orders?status=pending" style="color: <%= currentStatus === 'pending' ? 'var(--primary)' : '#999' %>;">Pending</a>
+                    <a href="/admin/orders?status=approved" style="color: <%= currentStatus === 'approved' ? 'var(--primary)' : '#999' %>;">Approved</a>
+                    <a href="/admin/orders?status=rejected" style="color: <%= currentStatus === 'rejected' ? 'var(--primary)' : '#999' %>;">Rejected</a>
+                </div>
+            </div>
+            
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>User</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (orders.length === 0) { %>
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 2rem;">No orders found</td>
+                            </tr>
+                        <% } else { %>
+                            <% orders.forEach(order => { %>
+                                <tr>
+                                    <td>#<%= order.id %></td>
+                                    <td><%= order.username %></td>
+                                    <td><%= order.itemCount || 0 %> items</td>
+                                    <td>₹<%= order.total.toFixed(2) %></td>
+                                    <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                                    <td>
+                                        <span class="status-badge status-<%= order.status %>">
+                                            <%= order.status.toUpperCase() %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (order.status === 'pending') { %>
+                                            <form action="/admin/orders/<%= order.id %>/approved" method="POST" style="display:inline;">
+                                                <button type="submit" style="background: #00ff00; color: black; border: none; padding: 0.3rem 0.8rem; border-radius: 3px; cursor: pointer; margin-right: 0.3rem;">✓</button>
                                             </form>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } %>
-
-            <!-- ==================== PRODUCT FORM SECTION (ADD/EDIT) ==================== -->
-            <% if (section === 'product-form') { %>
-                <div class="admin-form glass-card">
-                    <h2><%= product ? 'Edit Product' : 'Add New Product' %></h2>
-                    
-                    <form action="<%= product ? '/admin/products/edit/' + product.id : '/admin/products/add' %>" 
-                          method="POST" 
-                          enctype="multipart/form-data"
-                          onsubmit="return validateProductForm()">
-                        
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="name">Product Name *</label>
-                                <input type="text" id="name" name="name" value="<%= product ? product.name : '' %>" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="price">Price (₹) *</label>
-                                <input type="number" id="price" name="price" step="0.01" min="0" value="<%= product ? product.price : '' %>" required>
-                            </div>
-                            
-                            <div class="form-group full-width">
-                                <label for="description">Description</label>
-                                <textarea id="description" name="description" rows="4"><%= product ? product.description : '' %></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="category">Category</label>
-                                <select id="category" name="category">
-                                    <option value="general" <%= product && product.category === 'general' ? 'selected' : '' %>>General</option>
-                                    <option value="membership" <%= product && product.category === 'membership' ? 'selected' : '' %>>Membership</option>
-                                    <option value="digital" <%= product && product.category === 'digital' ? 'selected' : '' %>>Digital</option>
-                                    <option value="service" <%= product && product.category === 'service' ? 'selected' : '' %>>Service</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="stock">Stock</label>
-                                <input type="number" id="stock" name="stock" min="0" value="<%= product ? product.stock : 999 %>">
-                            </div>
-                            
-                            <div class="form-group checkbox-group">
-                                <label>
-                                    <input type="checkbox" name="featured" <%= product && product.featured ? 'checked' : '' %>>
-                                    Featured Product
-                                </label>
-                            </div>
-                            
-                            <div class="form-group full-width">
-                                <label for="image">Product Image</label>
-                                <input type="file" id="image" name="image" accept="image/png,image/jpeg,image/jpg">
-                                <% if (product && product.image) { %>
-                                    <div class="current-image">
-                                        <p>Current Image:</p>
-                                        <img src="<%= product.image %>" alt="<%= product.name %>" class="current-image-preview">
-                                    </div>
-                                <% } %>
-                                <small>Accepted formats: PNG, JPG, JPEG (Max 5MB)</small>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn-save"><%= product ? 'Update' : 'Save' %> Product</button>
-                            <a href="/admin/products" class="btn-cancel">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            <% } %>
-
-            <!-- ==================== ORDERS SECTION ==================== -->
-            <% if (section === 'orders') { %>
-                <div class="admin-header">
-                    <h2>Manage Orders</h2>
-                    <div class="order-filters">
-                        <a href="/admin/orders?status=all" class="filter-link <%= currentStatus === 'all' ? 'active' : '' %>">All</a>
-                        <a href="/admin/orders?status=pending" class="filter-link <%= currentStatus === 'pending' ? 'active' : '' %>">Pending</a>
-                        <a href="/admin/orders?status=approved" class="filter-link <%= currentStatus === 'approved' ? 'active' : '' %>">Approved</a>
-                        <a href="/admin/orders?status=rejected" class="filter-link <%= currentStatus === 'rejected' ? 'active' : '' %>">Rejected</a>
-                    </div>
-                </div>
-                
-                <div class="admin-table glass-card">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Order #</th>
-                                <th>User</th>
-                                <th>Items</th>
-                                <th>Subtotal</th>
-                                <th>Discount</th>
-                                <th>Total</th>
-                                <th>Coupon</th>
-                                <th>Proof</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (orders.length === 0) { %>
-                                <tr>
-                                    <td colspan="11" style="text-align: center; padding: 2rem;">
-                                        No orders found
-                                    </td>
-                                </tr>
-                            <% } else { %>
-                                <% orders.forEach(order => { %>
-                                    <tr>
-                                        <td>#<%= order.id %></td>
-                                        <td><%= order.username %></td>
-                                        <td>
-                                            <button class="btn-view-items" onclick="showOrderItems('<%= JSON.stringify(order.itemsParsed).replace(/'/g, "\\'") %>')">
-                                                View Items (<%= order.itemCount || 0 %>)
-                                            </button>
-                                        </td>
-                                        <td>₹<%= order.subtotal.toFixed(2) %></td>
-                                        <td>₹<%= order.discount.toFixed(2) %></td>
-                                        <td><strong>₹<%= order.total.toFixed(2) %></strong></td>
-                                        <td><%= order.coupon || '-' %></td>
-                                        <td>
-                                            <% if (order.proof) { %>
-                                                <a href="/uploads/<%= order.proof %>" target="_blank" class="btn-view-proof">View</a>
-                                            <% } else { %>
-                                                <span class="no-proof">No proof</span>
-                                            <% } %>
-                                        </td>
-                                        <td><%= new Date(order.created_at).toLocaleDateString() %></td>
-                                        <td>
-                                            <span class="status-badge status-<%= order.status %>">
-                                                <%= order.status.toUpperCase() %>
-                                            </span>
-                                        </td>
-                                        <td class="actions">
-                                            <% if (order.status === 'pending') { %>
-                                                <form action="/admin/orders/<%= order.id %>/approved" method="POST" style="display:inline;">
-                                                    <button type="submit" class="btn-approve" onclick="return confirmApprove()">Approve</button>
-                                                </form>
-                                                <form action="/admin/orders/<%= order.id %>/rejected" method="POST" style="display:inline;">
-                                                    <button type="submit" class="btn-reject" onclick="return confirmReject()">Reject</button>
-                                                </form>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } %>
-
-            <!-- ==================== COUPONS SECTION ==================== -->
-            <% if (section === 'coupons') { %>
-                <div class="admin-header">
-                    <h2>Manage Coupons</h2>
-                    <a href="/admin/coupons/generate" class="btn-add">+ Generate New Coupon</a>
-                </div>
-                
-                <!-- Success Messages -->
-                <% if (query && query.success === 'generated') { %>
-                    <div class="alert alert-success">
-                        ✅ Coupon generated successfully!
-                    </div>
-                <% } %>
-                
-                <% if (query && query.success === 'deleted') { %>
-                    <div class="alert alert-success">
-                        ✅ Coupon deleted successfully!
-                    </div>
-                <% } %>
-                
-                <!-- Error Messages -->
-                <% if (query && query.error === 'database_error') { %>
-                    <div class="alert alert-error">
-                        ❌ Database error. Please check logs.
-                    </div>
-                <% } %>
-                
-                <% if (query && query.error === 'delete_failed') { %>
-                    <div class="alert alert-error">
-                        ❌ Failed to delete coupon. Please try again.
-                    </div>
-                <% } %>
-                
-                <% if (query && query.error === 'page_error') { %>
-                    <div class="alert alert-error">
-                        ❌ Error loading page. Please try again.
-                    </div>
-                <% } %>
-                
-                <% if (locals.error_message) { %>
-                    <div class="alert alert-error">
-                        ❌ <%= error_message %>
-                    </div>
-                <% } %>
-                
-                <div class="admin-table glass-card">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Code</th>
-                                <th>Type</th>
-                                <th>Value</th>
-                                <th>Min Order</th>
-                                <th>Used</th>
-                                <th>Max Uses</th>
-                                <th>Expires</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (!coupons || coupons.length === 0) { %>
-                                <tr>
-                                    <td colspan="9" style="text-align: center; padding: 2rem;">
-                                        No coupons found. <a href="/admin/coupons/generate">Generate your first coupon</a>
-                                    </td>
-                                </tr>
-                            <% } else { %>
-                                <% coupons.forEach(coupon => { %>
-                                    <tr>
-                                        <td><strong class="coupon-code"><%= coupon.code %></strong></td>
-                                        <td><%= coupon.discount_type === 'percentage' ? '%' : '₹' %></td>
-                                        <td><%= coupon.discount_value %><%= coupon.discount_type === 'percentage' ? '%' : '' %></td>
-                                        <td>₹<%= coupon.min_order.toFixed(2) %></td>
-                                        <td><%= coupon.used_count %>/<%= coupon.max_uses %></td>
-                                        <td><%= coupon.max_uses %></td>
-                                        <td>
-                                            <% if (coupon.expires_at) { %>
-                                                <%= new Date(coupon.expires_at).toLocaleDateString() %>
-                                            <% } else { %>
-                                                Never
-                                            <% } %>
-                                        </td>
-                                        <td><%= new Date(coupon.created_at).toLocaleDateString() %></td>
-                                        <td class="actions">
-                                            <form action="/admin/coupons/delete/<%= coupon.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this coupon?');">
-                                                <button type="submit" class="btn-delete">Delete</button>
+                                            <form action="/admin/orders/<%= order.id %>/rejected" method="POST" style="display:inline;">
+                                                <button type="submit" style="background: #ff0000; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 3px; cursor: pointer;">✗</button>
                                             </form>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } %>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
 
-            <!-- ==================== COUPON FORM SECTION ==================== -->
-            <% if (section === 'coupon-form') { %>
-                <div class="admin-form glass-card">
-                    <h2>Generate New Coupon</h2>
-                    
-                    <!-- Error Messages -->
-                    <% if (query && query.error === 'missing_fields') { %>
-                        <div class="alert alert-error">
-                            ❌ Please fill in all required fields.
-                        </div>
-                    <% } %>
-                    
-                    <% if (query && query.error === 'code_exists') { %>
-                        <div class="alert alert-error">
-                            ❌ Coupon code already exists. Please use a different code.
-                        </div>
-                    <% } %>
-                    
-                    <% if (query && query.error === 'generate_failed') { %>
-                        <div class="alert alert-error">
-                            ❌ Failed to generate coupon. Please try again.
-                        </div>
-                    <% } %>
-                    
-                    <form action="/admin/coupons/generate" method="POST" onsubmit="return validateCouponForm()">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="custom_code">Custom Code (optional)</label>
-                                <input type="text" id="custom_code" name="custom_code" placeholder="e.g., SUMMER2026">
-                                <small>Leave empty for auto-generated</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="code_prefix">Code Prefix (if auto-generate)</label>
-                                <input type="text" id="code_prefix" name="code_prefix" placeholder="e.g., SAVE">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="discount_type">Discount Type *</label>
-                                <select id="discount_type" name="discount_type" required>
-                                    <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed Amount (₹)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="discount_value">Discount Value *</label>
-                                <input type="number" id="discount_value" name="discount_value" step="0.01" min="0" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="min_order">Minimum Order (₹)</label>
-                                <input type="number" id="min_order" name="min_order" step="0.01" min="0" value="0">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="max_uses">Maximum Uses</label>
-                                <input type="number" id="max_uses" name="max_uses" min="1" value="1">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="expires_days">Expires After (days)</label>
-                                <input type="number" id="expires_days" name="expires_days" min="1" placeholder="Leave empty for no expiry">
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn-save">Generate Coupon</button>
-                            <a href="/admin/coupons" class="btn-cancel">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            <% } %>
-        </div>
-    </main>
+        <!-- Coupons Section -->
+        <% if (section === 'coupons') { %>
+            <div class="admin-header">
+                <h2 style="color: var(--primary);">Manage Coupons</h2>
+                <a href="/admin/coupons/generate" class="btn-add">+ Generate</a>
+            </div>
+            
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th>Min Order</th>
+                            <th>Uses</th>
+                            <th>Expires</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (coupons.length === 0) { %>
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 2rem;">No coupons found</td>
+                            </tr>
+                        <% } else { %>
+                            <% coupons.forEach(coupon => { %>
+                                <tr>
+                                    <td><strong style="color: var(--primary);"><%= coupon.code %></strong></td>
+                                    <td><%= coupon.discount_type === 'percentage' ? '%' : '₹' %></td>
+                                    <td><%= coupon.discount_value %><%= coupon.discount_type === 'percentage' ? '%' : '' %></td>
+                                    <td>₹<%= coupon.min_order.toFixed(2) %></td>
+                                    <td><%= coupon.used_count %>/<%= coupon.max_uses %></td>
+                                    <td><%= coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString() : 'Never' %></td>
+                                    <td>
+                                        <form action="/admin/coupons/delete/<%= coupon.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this coupon?')">
+                                            <button type="submit" style="background: none; border: none; color: var(--danger); cursor: pointer;">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
 
-    <footer class="glass-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <span class="logo-imposter">IMPOSTER</span>
-                    <span class="logo-network">NETWORK</span>
-                    <p>Premium digital marketplace</p>
-                </div>
-                <div class="footer-links">
-                    <a href="/">Home</a>
-                    <a href="/shop">Shop</a>
-                    <a href="/terms">Terms</a>
-                    <a href="/history">History</a>
-                </div>
-                <div class="footer-copyright">
-                    <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
-                </div>
+        <!-- Coupon Form -->
+        <% if (section === 'coupon-form') { %>
+            <div style="background: #111; border: 1px solid #333; border-radius: 8px; padding: 2rem; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: var(--primary); margin-bottom: 1.5rem;">Generate Coupon</h2>
+                <form action="/admin/coupons/generate" method="POST">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.3rem; color: #999;">Code (optional)</label>
+                        <input type="text" name="custom_code" style="width: 100%; padding: 0.8rem; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.3rem; color: #999;">Prefix</label>
+                        <input type="text" name="code_prefix" style="width: 100%; padding: 0.8rem; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.3rem; color: #999;">Discount Type</label>
+                        <select name="discount_type" style="width: 100%; padding: 0.8rem; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white;">
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed (₹)</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.3rem; color: #999;">Discount Value</label>
+                        <input type="number" name="discount_value" step="0.01" required style="width: 100%; padding: 0.8rem; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.3rem; color: #999;">Minimum Order</label>
+                        <input type="number" name="min_order" step="0.01" value="0" style="width: 100%; padding: 0.8rem; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.3rem; color: #999;">Max Uses</label>
+                        <input type="number" name="max_uses" value="1" style="width: 100%; padding: 0.8rem; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.3rem; color: #999;">Expires After (days)</label>
+                        <input type="number" name="expires_days" style="width: 100%; padding: 0.8rem; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white;">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width: 100%;">Generate</button>
+                    <a href="/admin/coupons" style="display: block; text-align: center; margin-top: 1rem; color: #999;">Cancel</a>
+                </form>
+            </div>
+        <% } %>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="logo-imposter">IMPOSTER</span>
+                <span class="logo-network">NETWORK</span>
+                <p>Premium digital marketplace</p>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/terms">Terms</a>
+                <a href="/history">History</a>
+            </div>
+            <div class="footer-copyright">
+                <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
             </div>
         </div>
     </footer>
 
-    <style>
-        /* Admin Panel Specific Styles */
-        .admin-nav {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-        
-        .admin-nav-link {
-            padding: 0.5rem 1.5rem;
-            border-radius: 30px;
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        
-        .admin-nav-link:hover,
-        .admin-nav-link.active {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.3s;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-value {
-            display: block;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        
-        .btn-add {
-            padding: 0.6rem 1.2rem;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background 0.3s;
-        }
-        
-        .btn-add:hover {
-            background: var(--primary-dark);
-        }
-        
-        .admin-table {
-            overflow-x: auto;
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .admin-table table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-        
-        .admin-table th {
-            background: rgba(255, 0, 0, 0.1);
-            color: var(--primary);
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-        }
-        
-        .admin-table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .product-thumb {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .no-image {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 0, 0, 0.1);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-        
-        .category-badge {
-            background: rgba(255, 0, 0, 0.1);
-            color: var(--primary);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            text-transform: capitalize;
-        }
-        
-        .featured-badge {
-            color: gold;
-            font-size: 1.2rem;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .btn-edit, .btn-delete, .btn-view, .btn-approve, .btn-reject, .btn-view-items {
-            padding: 0.4rem 0.8rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            transition: opacity 0.3s;
-        }
-        
-        .btn-edit, .btn-view {
-            background: var(--warning);
-            color: black;
-        }
-        
-        .btn-delete, .btn-reject {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-approve {
-            background: var(--success);
-            color: black;
-        }
-        
-        .btn-view-items {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-edit:hover, .btn-delete:hover, .btn-view:hover, .btn-approve:hover, .btn-reject:hover, .btn-view-items:hover {
-            opacity: 0.8;
-        }
-        
-        .order-filters {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .filter-link {
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            color: var(--text-primary);
-            text-decoration: none;
-            background: rgba(255, 0, 0, 0.1);
-            transition: all 0.3s;
-        }
-        
-        .filter-link.active,
-        .filter-link:hover {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-pending {
-            background: rgba(255, 170, 0, 0.2);
-            color: #ffaa00;
-            border: 1px solid #ffaa00;
-        }
-        
-        .status-approved {
-            background: rgba(0, 255, 0, 0.2);
-            color: #00ff00;
-            border: 1px solid #00ff00;
-        }
-        
-        .status-rejected {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff0000;
-            border: 1px solid #ff0000;
-        }
-        
-        .btn-view-proof {
-            padding: 0.3rem 0.6rem;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 0.8rem;
-        }
-        
-        .no-proof {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            font-style: italic;
-        }
-        
-        .coupon-code {
-            color: var(--primary);
-            font-family: monospace;
-            font-size: 1.1rem;
-        }
-        
-        /* Admin Form Styles */
-        .admin-form {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin: 1.5rem 0;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group.full-width {
-            grid-column: span 2;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-        
-        .form-group input[type="text"],
-        .form-group input[type="number"],
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.8rem;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: white;
-            font-size: 0.9rem;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .form-group small {
-            display: block;
-            margin-top: 0.3rem;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-        }
-        
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-        
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            accent-color: var(--primary);
-        }
-        
-        .current-image {
-            margin-top: 0.5rem;
-            padding: 0.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-        
-        .current-image p {
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-        
-        .current-image-preview {
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2rem;
-        }
-        
-        .btn-save {
-            padding: 0.8rem 2rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .btn-save:hover {
-            background: var(--primary-dark);
-        }
-        
-        .btn-cancel {
-            padding: 0.8rem 2rem;
-            background: transparent;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-cancel:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        
-        /* Alert Messages */
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            animation: slideDown 0.3s ease;
-        }
-        
-        .alert-success {
-            background: rgba(0, 255, 0, 0.1);
-            border: 1px solid #00ff00;
-            color: #00ff00;
-        }
-        
-        .alert-info {
-            background: rgba(0, 150, 255, 0.1);
-            border: 1px solid #0099ff;
-            color: #0099ff;
-        }
-        
-        .alert-error {
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid #ff0000;
-            color: #ff0000;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .btn-delete:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .admin-nav {
-                flex-direction: column;
-            }
-            
-            .admin-nav-link {
-                text-align: center;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .admin-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .order-filters {
-                justify-content: center;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-group.full-width {
-                grid-column: span 1;
-            }
-            
-            .actions {
-                flex-direction: column;
-            }
-            
-            .btn-edit, .btn-delete, .btn-view, .btn-approve, .btn-reject {
-                width: 100%;
-                text-align: center;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-
     <script>
-        // Update cart count
         async function updateCartCount() {
             try {
                 const res = await fetch('/api/cart/count');
                 const data = await res.json();
                 document.getElementById('cartCount').textContent = data.count;
-            } catch (e) {
-                console.error('Failed to update cart count');
-            }
+            } catch (e) {}
         }
         
-        // Product delete confirmation
-        function confirmDelete(productName, productId) {
-            const userConfirmed = confirm(`⚠️ Are you sure you want to delete "${productName}"?\n\nThis action cannot be undone!`);
-            
-            if (userConfirmed) {
-                // Show loading state
-                const deleteBtn = document.getElementById(`delete-btn-${productId}`);
-                if (deleteBtn) {
-                    deleteBtn.disabled = true;
-                    deleteBtn.textContent = 'Deleting...';
-                    deleteBtn.style.opacity = '0.5';
-                }
-                return true;
-            }
-            return false;
-        }
-        
-        // Order approval confirmation
-        function confirmApprove() {
-            return confirm('✅ Approve this order?\n\nThis will give the user their role.');
-        }
-        
-        // Order rejection confirmation
-        function confirmReject() {
-            return confirm('❌ Reject this order?\n\nThis cannot be undone.');
-        }
-        
-        // Show order items in popup
-        function showOrderItems(itemsJson) {
-            try {
-                const items = JSON.parse(itemsJson);
-                let message = '📦 Order Items:\n\n';
-                items.forEach(item => {
-                    message += `${item.quantity}x ${item.name} - ₹${(item.price * item.quantity).toFixed(2)}\n`;
-                });
-                alert(message);
-            } catch (e) {
-                alert('Could not parse order items');
-            }
-        }
-        
-        // Validate product form
-        function validateProductForm() {
-            const name = document.getElementById('name').value.trim();
-            const price = document.getElementById('price').value;
-            
-            if (!name) {
-                alert('Please enter a product name');
-                return false;
-            }
-            
-            if (!price || price <= 0) {
-                alert('Please enter a valid price');
-                return false;
-            }
-            
-            return true;
-        }
-        
-        // Validate coupon form
-        function validateCouponForm() {
-            const discountValue = document.getElementById('discount_value').value;
-            const discountType = document.getElementById('discount_type').value;
-            
-            if (!discountValue || discountValue <= 0) {
-                alert('Please enter a valid discount value');
-                return false;
-            }
-            
-            if (discountType === 'percentage' && discountValue > 100) {
-                alert('Percentage discount cannot exceed 100%');
-                return false;
-            }
-            
-            return true;
-        }
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            <% if (user) { %>
-                updateCartCount();
-                setInterval(updateCartCount, 30000);
-            <% } %>
-            
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(alert => {
-                    alert.style.transition = 'opacity 0.5s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => {
-                        if (alert.parentNode) {
-                            alert.remove();
-                        }
-                    }, 500);
-                });
-            }, 5000);
-        });
+        <% if (user) { %>
+            updateCartCount();
+            setInterval(updateCartCount, 30000);
+        <% } %>
     </script>
 </body>
 </html>
