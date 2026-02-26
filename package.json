@@ -1,7 +1,7 @@
 {
   "name": "imposter-network",
-  "version": "1.0.0",
-  "description": "IMPOSTER Network – Shop, Discord Auth, Payment System",
+  "version": "2.0.0",
+  "description": "IMPOSTER Network – Advanced Shop, Coupons, Discord Auth",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -17,7 +17,8 @@
     "multer": "^1.4.5-lts.1",
     "dotenv": "^16.3.1",
     "path": "^0.12.7",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "crypto": "^1.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
