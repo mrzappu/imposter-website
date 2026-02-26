@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IMPOSTER Network – Checkout</title>
     <link rel="stylesheet" href="/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -17,7 +19,10 @@
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/shop">Shop</a>
-                <a href="/cart">Cart</a>
+                <a href="/cart" class="cart-link">
+                    Cart
+                    <span class="cart-badge" id="cartCount">0</span>
+                </a>
                 <a href="/history">History</a>
                 <a href="/terms">Terms</a>
                 <% if (user) { %>
@@ -28,16 +33,32 @@
                         <a href="/logout" class="logout-btn">Logout</a>
                     </div>
                 <% } else { %>
-                    <a href="/auth/discord" class="discord-btn">Login with Discord</a>
+                    <a href="/auth/discord" class="discord-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515c-.209.377-.456.885-.624 1.3a18.277 18.277 0 0 0-5.487 0 12.64 12.64 0 0 0-.633-1.3 19.736 19.736 0 0 0-4.885 1.515c-2.86 4.27-3.636 8.432-3.208 12.502a20.11 20.11 0 0 0 6.066 2.98c.49-.664.926-1.383 1.302-2.14a13.193 13.193 0 0 1-2.052-.991c.173-.126.342-.258.506-.39a14.545 14.545 0 0 0 12.436 0c.165.132.334.264.507.39-.65.38-1.336.714-2.053.991.376.757.812 1.476 1.302 2.14a20.05 20.05 0 0 0 6.065-2.98c.506-4.587-.79-8.7-3.208-12.502zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419z"/>
+                        </svg>
+                        Login with Discord
+                    </a>
                 <% } %>
             </div>
         </div>
     </nav>
 
     <main>
+        <div class="shop-header">
+            <div class="container">
+                <h1 class="page-title">Checkout</h1>
+                <p class="page-subtitle">Complete your payment via UPI / FamPay</p>
+            </div>
+        </div>
+
         <div class="container">
-            <h1 class="page-title">Checkout</h1>
-            
+            <% if (error) { %>
+                <div class="error-message glass-card">
+                    <p><%= error %></p>
+                </div>
+            <% } %>
+
             <div class="checkout-layout">
                 <!-- Order Summary -->
                 <div class="order-summary glass-card">
@@ -46,7 +67,7 @@
                         <% items.forEach(item => { %>
                             <div class="order-item">
                                 <span class="item-name"><%= item.quantity %>x <%= item.name %></span>
-                                <span class="item-price">$<%= (item.price * item.quantity).toFixed(2) %></span>
+                                <span class="item-price">₹<%= (item.price * item.quantity).toFixed(2) %></span>
                             </div>
                         <% }) %>
                     </div>
@@ -54,15 +75,15 @@
                     <div class="order-totals">
                         <div class="total-row">
                             <span>Subtotal:</span>
-                            <span>$<%= subtotal.toFixed(2) %></span>
+                            <span>₹<%= subtotal.toFixed(2) %></span>
                         </div>
                         <div class="total-row discount-row" id="discountRow" style="display: none;">
                             <span>Discount:</span>
-                            <span>-$<span id="discountAmount">0.00</span></span>
+                            <span>-₹<span id="discountAmount">0.00</span></span>
                         </div>
                         <div class="total-row grand-total">
                             <span>Total:</span>
-                            <span>$<span id="totalAmount"><%= subtotal.toFixed(2) %></span></span>
+                            <span>₹<span id="totalAmount"><%= subtotal.toFixed(2) %></span></span>
                         </div>
                     </div>
 
@@ -77,17 +98,35 @@
                     </div>
                 </div>
 
-                <!-- Payment Section -->
+                <!-- UPI Payment Section -->
                 <div class="payment-section glass-card">
-                    <h2>Payment Instructions</h2>
-                    <div class="qr-container">
-                        <img src="/qr.png" alt="Payment QR Code" class="qr-img">
-                        <p class="qr-instruction">Scan the QR code to make payment</p>
+                    <h2>UPI / FamPay Payment</h2>
+                    
+                    <!-- Dynamic QR Code -->
+                    <div class="qr-container" id="qrContainer">
+                        <div class="qr-loading">Generating QR Code...</div>
+                    </div>
+                    
+                    <div class="upi-details">
+                        <p><strong>UPI ID:</strong> <span id="upiId"><%= upiId %></span></p>
+                        <p><strong>Amount to Pay:</strong> ₹<span id="paymentAmount"><%= total.toFixed(2) %></span></p>
+                    </div>
+
+                    <div class="payment-instructions">
+                        <h3>📱 How to Pay</h3>
+                        <ol>
+                            <li>Open any UPI app (Google Pay, PhonePe, Paytm, FamPay)</li>
+                            <li>Scan the QR code above</li>
+                            <li>Verify amount and UPI ID: <strong><%= upiId %></strong></li>
+                            <li>Complete the payment</li>
+                            <li>Take a screenshot of the payment confirmation</li>
+                            <li>Upload the screenshot below</li>
+                        </ol>
                     </div>
                     
                     <form action="/checkout/place-order" method="POST" enctype="multipart/form-data" id="paymentForm">
                         <div class="form-group">
-                            <label for="proof">Upload Payment Proof</label>
+                            <label for="proof">Upload Payment Screenshot</label>
                             <input type="file" name="proof" id="proof" accept="image/png,image/jpeg,image/jpg" required>
                             <small>Accepted formats: PNG, JPG, JPEG (Max 5MB)</small>
                         </div>
@@ -120,8 +159,242 @@
         </div>
     </footer>
 
+    <style>
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .qr-container {
+            text-align: center;
+            margin: 2rem 0;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-loading {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        .qr-code-img {
+            max-width: 300px;
+            border-radius: 10px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+        
+        .upi-details {
+            background: rgba(255, 0, 0, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        .upi-details p {
+            margin: 0.5rem 0;
+        }
+        
+        .upi-details strong {
+            color: var(--primary);
+        }
+        
+        .payment-instructions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .payment-instructions h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .payment-instructions ol {
+            margin-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .payment-instructions li {
+            margin: 0.5rem 0;
+        }
+        
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .order-summary, .payment-section {
+            padding: 2rem;
+        }
+        
+        .order-summary h2, .payment-section h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .order-items {
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .order-totals {
+            margin-top: 1.5rem;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+        
+        .grand-total {
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-top: 2px solid var(--primary);
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .coupon-section {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .coupon-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .coupon-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .coupon-input-group input {
+            flex: 1;
+            padding: 0.8rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .btn-apply {
+            padding: 0.8rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .coupon-message {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .coupon-message.success {
+            color: var(--success);
+        }
+        
+        .coupon-message.error {
+            color: var(--danger);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 0.3rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        
+        .btn-submit-payment {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-submit-payment:hover {
+            background: var(--primary-dark);
+        }
+        
+        @media (max-width: 768px) {
+            .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
     <script>
         let currentSubtotal = <%= subtotal %>;
+        let currentTotal = <%= total %>;
+        
+        async function generateQRCode(amount) {
+            const qrContainer = document.getElementById('qrContainer');
+            qrContainer.innerHTML = '<div class="qr-loading">Generating QR Code...</div>';
+            
+            try {
+                const response = await fetch(`/api/generate-upi-qr?amount=${amount}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    qrContainer.innerHTML = `<img src="${data.qrDataUrl}" alt="UPI QR Code" class="qr-code-img">`;
+                    document.getElementById('upiId').textContent = data.upiId;
+                } else {
+                    qrContainer.innerHTML = '<div class="qr-loading error">Failed to generate QR code</div>';
+                }
+            } catch (error) {
+                qrContainer.innerHTML = '<div class="qr-loading error">Error generating QR code</div>';
+            }
+        }
+        
+        // Generate QR on page load
+        generateQRCode(currentTotal);
         
         async function applyCoupon() {
             const code = document.getElementById('couponCode').value;
@@ -151,12 +424,17 @@
                     }
                     
                     const total = Math.max(0, currentSubtotal - discount);
+                    currentTotal = total;
                     
                     document.getElementById('discountRow').style.display = 'flex';
                     document.getElementById('discountAmount').textContent = discount.toFixed(2);
                     document.getElementById('totalAmount').textContent = total.toFixed(2);
+                    document.getElementById('paymentAmount').textContent = total.toFixed(2);
                     
-                    messageDiv.textContent = `Coupon applied! You saved $${discount.toFixed(2)}`;
+                    // Regenerate QR with new total
+                    generateQRCode(total);
+                    
+                    messageDiv.textContent = `Coupon applied! You saved ₹${discount.toFixed(2)}`;
                     messageDiv.className = 'coupon-message success';
                 } else {
                     messageDiv.textContent = data.error || 'Invalid coupon code';
@@ -167,6 +445,22 @@
                 messageDiv.className = 'coupon-message error';
             }
         }
+        
+        // Update cart count
+        async function updateCartCount() {
+            try {
+                const res = await fetch('/api/cart/count');
+                const data = await res.json();
+                document.getElementById('cartCount').textContent = data.count;
+            } catch (e) {
+                console.error('Failed to update cart count');
+            }
+        }
+        
+        <% if (user) { %>
+            updateCartCount();
+            setInterval(updateCartCount, 30000);
+        <% } %>
     </script>
 </body>
 </html>
