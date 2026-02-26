@@ -25,9 +25,6 @@ async function testBot() {
     
     try {
         await client.login(token);
-        setTimeout(() => {
-            console.log('⏳ Waiting for connection...');
-        }, 5000);
     } catch (err) {
         console.error('❌ Login failed:', err.message);
     }
