@@ -161,12 +161,20 @@ if (couponCount === 0) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-app.use(session(config.session));
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'imposter-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: false,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 
 // Session user helper
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
-    res.locals.isAdmin = req.session.user?.id === config.admin.discordId;
+    res.locals.isAdmin = req.session.user?.id === process.env.ADMIN_DISCORD_ID;
     next();
 });
 
@@ -202,9 +210,10 @@ const productStorage = multer.diskStorage({
 
 const uploadProof = multer({
     storage: proofStorage,
-    limits: { fileSize: config.upload.maxSize },
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: (req, file, cb) => {
-        if (config.upload.allowedTypes.includes(file.mimetype)) {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+        if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
             cb(new Error('Only PNG, JPG, JPEG allowed'));
@@ -214,9 +223,10 @@ const uploadProof = multer({
 
 const uploadProductImage = multer({
     storage: productStorage,
-    limits: { fileSize: config.upload.maxSize },
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-        if (config.upload.allowedTypes.includes(file.mimetype)) {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+        if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
             cb(new Error('Only PNG, JPG, JPEG allowed'));
@@ -226,7 +236,7 @@ const uploadProductImage = multer({
 
 // ==================== DISCORD OAUTH ====================
 app.get('/auth/discord', (req, res) => {
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
     res.redirect(url);
 });
 
@@ -236,11 +246,11 @@ app.get('/auth/discord/callback', async (req, res) => {
 
     try {
         const tokenRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
-            client_id: config.discord.clientId,
-            client_secret: config.discord.clientSecret,
+            client_id: process.env.DISCORD_CLIENT_ID,
+            client_secret: process.env.DISCORD_CLIENT_SECRET,
             grant_type: 'authorization_code',
             code,
-            redirect_uri: config.discord.redirectUri
+            redirect_uri: process.env.DISCORD_REDIRECT_URI
         }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
 
         const { access_token } = tokenRes.data;
@@ -257,11 +267,15 @@ app.get('/auth/discord/callback', async (req, res) => {
 
         req.session.user = { id, username, avatar: avatarUrl };
 
-        await sendLog('login', {
-            userId: id,
-            username,
-            avatar: avatarUrl
-        });
+        try {
+            await sendLog('login', {
+                userId: id,
+                username,
+                avatar: avatarUrl
+            });
+        } catch (discordError) {
+            console.error('Discord log error:', discordError);
+        }
 
         res.redirect('/');
     } catch (error) {
@@ -277,25 +291,30 @@ app.get('/logout', (req, res) => {
 
 // ==================== HOME PAGE ====================
 app.get('/', (req, res) => {
-    const featured = db.prepare('SELECT * FROM products WHERE featured = 1 LIMIT 6').all();
-    
-    // Get stats with error handling
-    let usersCount = 0, productsCount = 0, ordersCount = 0;
-    try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
-    try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count; } catch (e) {}
-    try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
-    
-    const stats = {
-        users: usersCount,
-        products: productsCount,
-        orders: ordersCount
-    };
-    
-    res.render('index', { 
-        title: 'Home', 
-        featured,
-        stats
-    });
+    try {
+        const featured = db.prepare('SELECT * FROM products WHERE featured = 1 LIMIT 6').all();
+        
+        // Get stats with error handling
+        let usersCount = 0, productsCount = 0, ordersCount = 0;
+        try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+        try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count; } catch (e) {}
+        try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+        
+        const stats = {
+            users: usersCount,
+            products: productsCount,
+            orders: ordersCount
+        };
+        
+        res.render('index', { 
+            title: 'Home', 
+            featured,
+            stats
+        });
+    } catch (error) {
+        console.error('Home error:', error);
+        res.status(500).send('Error loading home page');
+    }
 });
 
 // ==================== SHOP PAGE ====================
@@ -423,7 +442,7 @@ app.get('/checkout', (req, res) => {
     
     try {
         const items = db.prepare(`
-            SELECT c.quantity, p.* FROM cart c
+            SELECT c.id as cartId, c.quantity, p.* FROM cart c
             JOIN products p ON c.productId = p.id
             WHERE c.userId = ?
         `).all(req.session.user.id);
@@ -438,11 +457,22 @@ app.get('/checkout', (req, res) => {
             subtotal,
             discount: 0,
             total: subtotal,
-            couponCode: null
+            couponCode: null,
+            error: null,
+            success: null
         });
     } catch (error) {
         console.error('Checkout error:', error);
-        res.status(500).send('Error loading checkout');
+        res.status(500).render('checkout', { 
+            title: 'Checkout', 
+            items: [], 
+            subtotal: 0,
+            discount: 0,
+            total: 0,
+            couponCode: null,
+            error: 'Error loading checkout. Please try again.',
+            success: null
+        });
     }
 });
 
@@ -477,24 +507,52 @@ app.post('/checkout/apply-coupon', (req, res) => {
 });
 
 app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) => {
-    if (!req.session.user) return res.redirect('/auth/discord');
-    if (!req.file) return res.redirect('/checkout');
+    if (!req.session.user) {
+        return res.status(401).redirect('/auth/discord');
+    }
+    
+    if (!req.file) {
+        // Get cart items to redisplay checkout page
+        const items = db.prepare(`
+            SELECT c.id as cartId, c.quantity, p.* FROM cart c
+            JOIN products p ON c.productId = p.id
+            WHERE c.userId = ?
+        `).all(req.session.user.id);
+        
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        return res.render('checkout', { 
+            title: 'Checkout', 
+            items, 
+            subtotal,
+            discount: 0,
+            total: subtotal,
+            couponCode: null,
+            error: 'Please upload payment proof',
+            success: null
+        });
+    }
     
     const userId = req.session.user.id;
     
     try {
+        // Get cart items
         const items = db.prepare(`
-            SELECT c.quantity, p.* FROM cart c
+            SELECT c.id as cartId, c.quantity, p.* FROM cart c
             JOIN products p ON c.productId = p.id
             WHERE c.userId = ?
         `).all(userId);
         
-        if (items.length === 0) return res.redirect('/shop');
+        if (items.length === 0) {
+            return res.redirect('/shop');
+        }
         
+        // Calculate totals
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         let discount = 0;
         let couponCode = null;
         
+        // Apply coupon if exists
         if (req.session.coupon) {
             const coupon = req.session.coupon;
             if (coupon.discount_type === 'percentage') {
@@ -514,6 +572,7 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
         const total = Math.max(0, subtotal - discount);
         const filename = req.file.filename;
         
+        // Prepare items JSON
         const itemsJson = JSON.stringify(items.map(i => ({
             id: i.id,
             name: i.name,
@@ -521,30 +580,65 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
             quantity: i.quantity
         })));
         
+        // Insert order
         const orderStmt = db.prepare(`
             INSERT INTO orders (userId, items, subtotal, discount, total, coupon, proof, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
         `);
         
-        const orderResult = orderStmt.run(userId, itemsJson, subtotal, discount, total, couponCode, filename);
+        const orderResult = orderStmt.run(
+            userId, 
+            itemsJson, 
+            subtotal, 
+            discount, 
+            total, 
+            couponCode, 
+            filename
+        );
         
         // Clear cart
         db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
         
-        // Send payment log to Discord
-        await sendLog('payment', {
-            userId,
-            username: req.session.user.username,
-            items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
-            total,
-            proofFilename: filename,
-            orderId: orderResult.lastInsertRowid
-        });
+        // Send payment log to Discord (if bot is connected)
+        try {
+            await sendLog('payment', {
+                userId,
+                username: req.session.user.username,
+                items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
+                total,
+                proofFilename: filename,
+                orderId: orderResult.lastInsertRowid
+            });
+        } catch (discordError) {
+            console.error('Discord log error:', discordError);
+            // Don't fail the order if Discord logging fails
+        }
         
-        res.redirect('/history');
+        // Redirect to history with success message
+        res.redirect('/history?success=order_placed');
+        
     } catch (error) {
         console.error('Order placement error:', error);
-        res.status(500).send('Error placing order');
+        
+        // Get cart items to redisplay checkout page with error
+        const items = db.prepare(`
+            SELECT c.id as cartId, c.quantity, p.* FROM cart c
+            JOIN products p ON c.productId = p.id
+            WHERE c.userId = ?
+        `).all(userId);
+        
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        res.render('checkout', { 
+            title: 'Checkout', 
+            items, 
+            subtotal,
+            discount: 0,
+            total: subtotal,
+            couponCode: null,
+            error: 'Error placing order: ' + error.message,
+            success: null
+        });
     }
 });
 
@@ -568,9 +662,12 @@ app.get('/history', (req, res) => {
             }
         });
         
+        const success = req.query.success === 'order_placed' ? 'Order placed successfully!' : null;
+        
         res.render('history', { 
             title: 'Order History', 
-            orders
+            orders,
+            success
         });
     } catch (error) {
         console.error('History error:', error);
@@ -585,7 +682,7 @@ app.get('/terms', (req, res) => {
 
 // ==================== ADMIN ROUTES ====================
 const adminOnly = (req, res, next) => {
-    if (!req.session.user || req.session.user.id !== config.admin.discordId) {
+    if (!req.session.user || req.session.user.id !== process.env.ADMIN_DISCORD_ID) {
         return res.status(403).send('Access denied');
     }
     next();
@@ -907,7 +1004,11 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
         
         if (action === 'approved' && order) {
             // Give Discord role
-            await giveRole(order.userId, config.discord.autoRoleId);
+            try {
+                await giveRole(order.userId, process.env.AUTO_ROLE_ID);
+            } catch (roleError) {
+                console.error('Role error:', roleError);
+            }
             
             // Parse items for log
             let itemsText = '';
@@ -918,12 +1019,16 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
                 itemsText = order.items;
             }
             
-            await sendLog('approved', {
-                userId: order.userId,
-                username: order.username,
-                items: itemsText,
-                orderId
-            });
+            try {
+                await sendLog('approved', {
+                    userId: order.userId,
+                    username: order.username,
+                    items: itemsText,
+                    orderId
+                });
+            } catch (discordError) {
+                console.error('Discord log error:', discordError);
+            }
         }
         
         res.redirect('/admin/orders');
@@ -951,9 +1056,15 @@ app.use((req, res) => {
 });
 
 // ==================== START SERVER & BOT ====================
-initBot().then(() => {
-    app.listen(config.server.port, '0.0.0.0', () => {
-        console.log(`
+const PORT = process.env.PORT || 3000;
+
+// Try to initialize bot but don't crash if it fails
+initBot().catch(err => {
+    console.error('Bot initialization failed (non-critical):', err.message);
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║   ██╗███╗   ███╗██████╗  ██████╗ ███████╗████████╗     ║
 ║   ██║████╗ ████║██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝     ║
@@ -962,34 +1073,12 @@ initBot().then(() => {
 ║   ██║██║ ╚═╝ ██║██║     ╚██████╔╝███████║   ██║        ║
 ║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
 ╠══════════════════════════════════════════════════════════╣
-║   📍 Port: ${config.server.port}
-║   🌐 URL: http://localhost:${config.server.port}
+║   📍 Port: ${PORT}
+║   🌐 URL: http://localhost:${PORT}
 ║   🔥 IMPOSTER Network v2.0 – Fully Fixed
-║   📊 Features: Cart • History • Terms • All Working
+║   📊 Features: Cart • Checkout • History • All Working
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
-        `);
-    });
-}).catch(err => {
-    console.error('Failed to start bot:', err);
-    app.listen(config.server.port, '0.0.0.0', () => {
-        console.log(`
-╔══════════════════════════════════════════════════════════╗
-║   ██╗███╗   ███╗██████╗  ██████╗ ███████╗████████╗     ║
-║   ██║████╗ ████║██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝     ║
-║   ██║██╔████╔██║██████╔╝██║   ██║███████╗   ██║        ║
-║   ██║██║╚██╔╝██║██╔═══╝ ██║   ██║╚════██║   ██║        ║
-║   ██║██║ ╚═╝ ██║██║     ╚██████╔╝███████║   ██║        ║
-║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
-╠══════════════════════════════════════════════════════════╣
-║   📍 Port: ${config.server.port}
-║   🌐 URL: http://localhost:${config.server.port}
-║   🔥 IMPOSTER Network v2.0 – Web Server Only
-║   📊 Features: Cart • History • Terms • All Working
-║   ⚠️ Discord Bot: Disconnected
-║   © IMPOSTER Network – Dev Rick                          
-╚══════════════════════════════════════════════════════════╝
-        `);
-    });
+    `);
 });
