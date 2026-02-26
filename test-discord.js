@@ -1,85 +1,93 @@
-// test-discord.js - Test Discord bot connection and logs
+// test-bot.js - Test your Discord bot configuration locally
 require('dotenv').config();
-const { initBot, sendLog, getBotStatus } = require('./bot');
+const { Client, GatewayIntentBits } = require('discord.js');
 
-async function testDiscord() {
+async function testBot() {
     console.log('\n🔍 TESTING DISCORD BOT CONFIGURATION');
-    console.log('=======================================\n');
+    console.log('=====================================\n');
     
-    // Check environment variables
-    console.log('📋 Environment Variables:');
-    console.log(`DISCORD_BOT_TOKEN: ${process.env.DISCORD_BOT_TOKEN ? '✅ Set' : '❌ Missing'}`);
-    console.log(`LOGIN_LOG_CHANNEL: ${process.env.LOGIN_LOG_CHANNEL ? '✅ Set' : '❌ Missing'}`);
-    console.log(`PAYMENT_LOG_CHANNEL: ${process.env.PAYMENT_LOG_CHANNEL ? '✅ Set' : '❌ Missing'}`);
-    console.log(`APPROVED_LOG_CHANNEL: ${process.env.APPROVED_LOG_CHANNEL ? '✅ Set' : '❌ Missing'}`);
-    console.log(`AUTO_ROLE_ID: ${process.env.AUTO_ROLE_ID ? '✅ Set' : '❌ Missing'}`);
+    const token = process.env.DISCORD_BOT_TOKEN;
     
-    // Initialize bot
-    console.log('\n🤖 Initializing Discord bot...');
-    const client = await initBot();
-    
-    if (!client) {
-        console.error('❌ Failed to initialize bot');
+    if (!token) {
+        console.error('❌ DISCORD_BOT_TOKEN not found in .env file!');
+        console.log('\n📝 Please add your token to .env:');
+        console.log('DISCORD_BOT_TOKEN=your_token_here');
         return;
     }
     
-    // Wait for bot to be ready
-    console.log('⏳ Waiting for bot to connect...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log(`🔑 Token found (length: ${token.length})`);
+    console.log(`🔑 Token preview: ${token.substring(0, 10)}...${token.substring(token.length - 10)}`);
     
-    const status = getBotStatus();
-    console.log('\n📊 Bot Status:');
-    console.log(`   Connected: ${status.connected ? '✅ Yes' : '❌ No'}`);
-    console.log(`   Bot Tag: ${status.botTag || 'N/A'}`);
-    console.log(`   Servers: ${status.servers}`);
-    
-    if (!status.connected) {
-        console.error('\n❌ Bot not connected. Check your token and try again.');
-        return;
+    // Check token format
+    if (token.length < 50) {
+        console.warn('⚠️ Warning: Token seems too short. Discord tokens are usually 70+ characters.');
     }
     
-    // Test sending logs
-    console.log('\n📤 Sending test logs to all channels...');
+    if (!token.includes('.') || token.split('.').length !== 3) {
+        console.warn('⚠️ Warning: Token format looks incorrect. Should be three parts separated by dots.');
+    }
     
-    // Test login log
-    console.log('\n1️⃣ Testing LOGIN log...');
-    const loginResult = await sendLog('login', {
-        userId: '123456789012345678',
-        username: 'Test User',
-        avatar: null
+    console.log('\n🔄 Attempting to connect to Discord...');
+    
+    const client = new Client({
+        intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMembers,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.MessageContent
+        ]
     });
-    console.log(`   ${loginResult ? '✅' : '❌'} Login log ${loginResult ? 'sent' : 'failed'}`);
     
-    // Test payment log
-    console.log('\n2️⃣ Testing PAYMENT log...');
-    const paymentResult = await sendLog('payment', {
-        userId: '123456789012345678',
-        username: 'Test User',
-        avatar: null,
-        items: '1x Test Product, 2x Another Product',
-        total: 29.99,
-        orderId: 9999
-    });
-    console.log(`   ${paymentResult ? '✅' : '❌'} Payment log ${paymentResult ? 'sent' : 'failed'}`);
-    
-    // Test approval log
-    console.log('\n3️⃣ Testing APPROVED log...');
-    const approvedResult = await sendLog('approved', {
-        userId: '123456789012345678',
-        username: 'Test User',
-        avatar: null,
-        items: '1x Test Product, 2x Another Product',
-        orderId: 9999
-    });
-    console.log(`   ${approvedResult ? '✅' : '❌'} Approval log ${approvedResult ? 'sent' : 'failed'}`);
-    
-    console.log('\n✅ Test complete! Check your Discord channels for the test messages.');
-    console.log('\n🛑 Exiting in 10 seconds...');
-    
-    setTimeout(() => {
-        console.log('\n👋 Goodbye!');
+    client.once('ready', () => {
+        console.log('✅ SUCCESS! Bot connected to Discord!');
+        console.log(`🤖 Bot Tag: ${client.user.tag}`);
+        console.log(`🆔 Bot ID: ${client.user.id}`);
+        console.log(`📊 Servers: ${client.guilds.cache.size}`);
+        
+        client.guilds.cache.forEach(guild => {
+            console.log(`   - ${guild.name} (${guild.id})`);
+        });
+        
+        console.log('\n✅ Test complete! Your bot token is valid.');
         process.exit(0);
+    });
+    
+    client.on('error', (error) => {
+        console.error('❌ Connection error:', error.message);
+        
+        if (error.message.includes('An invalid token was provided')) {
+            console.error('\n🔧 FIX: Your token is INVALID. Please reset it in Discord Developer Portal:');
+            console.error('   1. Go to https://discord.com/developers/applications');
+            console.error('   2. Select your bot application');
+            console.error('   3. Go to "Bot" tab');
+            console.error('   4. Click "Reset Token"');
+            console.error('   5. Copy the NEW token');
+            console.error('   6. Update your .env file');
+        } else if (error.message.includes('Privileged intent')) {
+            console.error('\n🔧 FIX: You need to enable Privileged Gateway Intents:');
+            console.error('   1. Go to Discord Developer Portal → Bot tab');
+            console.error('   2. Scroll to "Privileged Gateway Intents"');
+            console.error('   3. Enable ALL THREE:');
+            console.error('      - Presence Intent');
+            console.error('      - Server Members Intent');
+            console.error('      - Message Content Intent');
+        }
+        
+        process.exit(1);
+    });
+    
+    try {
+        await client.login(token);
+    } catch (error) {
+        console.error('❌ Login failed:', error.message);
+        process.exit(1);
+    }
+    
+    // Timeout after 10 seconds
+    setTimeout(() => {
+        console.error('\n❌ Timeout: Bot didn\'t connect within 10 seconds');
+        process.exit(1);
     }, 10000);
 }
 
-testDiscord().catch(console.error);
+testBot();
