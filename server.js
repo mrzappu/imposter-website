@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network with Working Discord Bot
+// server.js – IMPOSTER Network Complete Fixed Version
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -7,7 +7,6 @@ const fs = require('fs');
 const multer = require('multer');
 const Database = require('better-sqlite3');
 const axios = require('axios');
-const crypto = require('crypto');
 const QRCode = require('qrcode');
 const config = require('./config');
 const { initBot, sendLog, giveRole, getBotStatus } = require('./bot');
@@ -122,19 +121,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Session configuration
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'imposter-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: false, // Set to true if using HTTPS in production
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
+app.use(session(config.session));
 
-// Session user helper
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     res.locals.isAdmin = req.session.user?.id === config.admin.discordId;
@@ -142,7 +130,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// View engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -152,13 +139,11 @@ const productImgDir = path.join(__dirname, 'public/product-images');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(productImgDir)) fs.mkdirSync(productImgDir, { recursive: true });
 
-// Multer config
 const proofStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
         const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, `proof-${unique}${ext}`);
+        cb(null, `proof-${unique}${path.extname(file.originalname)}`);
     }
 });
 
@@ -166,8 +151,7 @@ const productStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, productImgDir),
     filename: (req, file, cb) => {
         const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, `product-${unique}${ext}`);
+        cb(null, `product-${unique}${path.extname(file.originalname)}`);
     }
 });
 
@@ -175,11 +159,7 @@ const uploadProof = multer({
     storage: proofStorage,
     limits: { fileSize: config.upload.maxSize },
     fileFilter: (req, file, cb) => {
-        if (config.upload.allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only PNG, JPG, JPEG allowed'));
-        }
+        config.upload.allowedTypes.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
     }
 });
 
@@ -187,186 +167,87 @@ const uploadProductImage = multer({
     storage: productStorage,
     limits: { fileSize: config.upload.maxSize },
     fileFilter: (req, file, cb) => {
-        if (config.upload.allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only PNG, JPG, JPEG allowed'));
-        }
+        config.upload.allowedTypes.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
     }
 });
 
 // ==================== DISCORD OAUTH ROUTES ====================
 app.get('/auth/discord', (req, res) => {
-    console.log('🔐 Discord Login Attempt:');
-    console.log(`   Client ID: ${config.discord.clientId ? '✅ Set' : '❌ Missing'}`);
-    console.log(`   Redirect URI: ${config.discord.redirectUri}`);
-    
     if (!config.discord.clientId || !config.discord.clientSecret) {
-        console.error('❌ Discord credentials missing!');
-        return res.status(500).send(`
-            <html>
-            <head>
-                <title>Configuration Error</title>
-                <style>
-                    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-                    .container { text-align: center; max-width: 500px; padding: 2rem; }
-                    h1 { color: #ff0000; font-size: 2rem; }
-                    p { color: #b0b0b0; margin: 1rem 0; }
-                    a { display: inline-block; padding: 0.8rem 1.5rem; background: #ff0000; color: white; text-decoration: none; border-radius: 5px; margin-top: 1rem; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>❌ Configuration Error</h1>
-                    <p>Discord client ID or secret is missing.</p>
-                    <p>Please check your environment variables.</p>
-                    <a href="/">Go Home</a>
-                </div>
-            </body>
-            </html>
-        `);
+        return res.status(500).send('Discord credentials missing');
     }
     
-    const authorizeUrl = `https://discord.com/api/oauth2/authorize` +
-        `?client_id=${config.discord.clientId}` +
-        `&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}` +
-        `&response_type=code` +
-        `&scope=identify`;
-    
-    console.log('➡️ Redirecting to Discord for authorization...');
-    res.redirect(authorizeUrl);
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
+    res.redirect(url);
 });
 
 app.get('/auth/discord/callback', async (req, res) => {
     const { code, error } = req.query;
-    
-    if (error) {
-        console.error('❌ Discord OAuth error:', error);
-        return res.redirect('/?error=auth_failed');
-    }
-    
-    if (!code) {
-        console.error('❌ Discord callback error: No code provided.');
-        return res.redirect('/?error=auth_failed');
-    }
-
-    console.log('📩 Received Discord callback with code');
+    if (error || !code) return res.redirect('/?error=auth_failed');
 
     try {
-        const tokenResponse = await axios.post('https://discord.com/api/oauth2/token',
+        const tokenRes = await axios.post('https://discord.com/api/oauth2/token',
             new URLSearchParams({
                 client_id: config.discord.clientId,
                 client_secret: config.discord.clientSecret,
                 grant_type: 'authorization_code',
-                code: code,
-                redirect_uri: config.discord.redirectUri,
+                code,
+                redirect_uri: config.discord.redirectUri
             }).toString(),
-            {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-            }
+            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         );
 
-        console.log('✅ Token exchange successful');
-        const accessToken = tokenResponse.data.access_token;
-
-        const userResponse = await axios.get('https://discord.com/api/users/@me', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
+        const userRes = await axios.get('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${tokenRes.data.access_token}` }
         });
 
-        const { id, username, avatar } = userResponse.data;
+        const { id, username, avatar } = userRes.data;
         const avatarUrl = avatar ? `https://cdn.discordapp.com/avatars/${id}/${avatar}.png` : null;
 
-        console.log(`✅ User authenticated: ${username} (${id})`);
-
         db.prepare('INSERT OR REPLACE INTO users (id, username, avatar) VALUES (?, ?, ?)').run(id, username, avatarUrl);
-
-        req.session.user = {
-            id: id,
-            username: username,
-            avatar: avatarUrl,
-        };
-
-        req.session.save((err) => {
-            if (err) {
-                console.error('❌ Session save error:', err);
-                return res.redirect('/?error=session_error');
-            }
-            console.log('✅ Session saved successfully');
-            
-            sendLog('login', {
-                userId: id,
-                username,
-                avatar: avatarUrl
-            }).catch(() => {});
-            
+        req.session.user = { id, username, avatar: avatarUrl };
+        
+        req.session.save(() => {
+            sendLog('login', { userId: id, username, avatar: avatarUrl }).catch(() => {});
             res.redirect('/');
         });
 
     } catch (error) {
-        console.error('❌ Discord OAuth Callback Error:', error.response?.data || error.message);
+        console.error('OAuth error:', error.message);
         res.redirect('/?error=auth_failed');
     }
 });
 
 app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Logout error:', err);
-        }
-        res.redirect('/');
-    });
+    req.session.destroy(() => res.redirect('/'));
 });
 
-// ==================== UPI QR CODE GENERATION ====================
+// ==================== UPI QR CODE ====================
 app.get('/api/generate-upi-qr', async (req, res) => {
     try {
         const amount = req.query.amount || config.payment.defaultAmount;
-        const upiId = config.payment.upiId;
-        const note = config.payment.note;
-        
-        const upiData = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=IMPOSTER%20Network&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
-        
-        const qrDataUrl = await QRCode.toDataURL(upiData, {
-            color: { dark: '#000000', light: '#ffffff' },
-            width: 300,
-            margin: 1
-        });
-        
-        res.json({ success: true, qrDataUrl, upiId, amount, note });
+        const upiData = `upi://pay?pa=${config.payment.upiId}&pn=IMPOSTER&am=${amount}&cu=INR&tn=${config.payment.note}`;
+        const qrDataUrl = await QRCode.toDataURL(upiData, { width: 300 });
+        res.json({ success: true, qrDataUrl });
     } catch (error) {
-        console.error('QR generation error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // ==================== HOME PAGE ====================
 app.get('/', (req, res) => {
-    try {
-        const featured = db.prepare('SELECT * FROM products WHERE featured = 1 AND (deleted = 0 OR deleted IS NULL) LIMIT 6').all();
-        
-        let usersCount = 0, productsCount = 0, ordersCount = 0;
-        try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
-        try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
-        try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
-        
-        const loginSuccess = req.query.login === 'success';
-        const loginError = req.query.error;
-        
-        res.render('index', { 
-            title: 'Home', 
-            featured,
-            stats: { users: usersCount, products: productsCount, orders: ordersCount },
-            loginSuccess,
-            loginError
-        });
-    } catch (error) {
-        console.error('Home error:', error);
-        res.status(500).send('Error loading home page');
-    }
+    const featured = db.prepare('SELECT * FROM products WHERE featured = 1 AND (deleted = 0 OR deleted IS NULL) LIMIT 6').all();
+    
+    let usersCount = 0, productsCount = 0, ordersCount = 0;
+    try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+    try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
+    try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+    
+    res.render('index', { 
+        title: 'Home', 
+        featured,
+        stats: { users: usersCount, products: productsCount, orders: ordersCount }
+    });
 });
 
 // ==================== SHOP PAGE ====================
@@ -398,7 +279,7 @@ app.get('/shop', (req, res) => {
         params.push(limit, offset);
         
         const products = db.prepare(query).all(...params);
-        const categories = db.prepare('SELECT DISTINCT category FROM products WHERE category IS NOT NULL').all();
+        const categories = db.prepare('SELECT DISTINCT category FROM products').all();
         
         res.render('shop', {
             title: 'Shop',
@@ -410,7 +291,6 @@ app.get('/shop', (req, res) => {
             search
         });
     } catch (error) {
-        console.error('Shop error:', error);
         res.status(500).send('Error loading shop');
     }
 });
@@ -423,12 +303,9 @@ app.post('/cart/add/:productId', (req, res) => {
     
     try {
         const existing = db.prepare('SELECT * FROM cart WHERE userId = ? AND productId = ?').get(userId, productId);
-        
-        if (existing) {
-            db.prepare('UPDATE cart SET quantity = quantity + 1 WHERE id = ?').run(existing.id);
-        } else {
-            db.prepare('INSERT INTO cart (userId, productId) VALUES (?, ?)').run(userId, productId);
-        }
+        existing 
+            ? db.prepare('UPDATE cart SET quantity = quantity + 1 WHERE id = ?').run(existing.id)
+            : db.prepare('INSERT INTO cart (userId, productId) VALUES (?, ?)').run(userId, productId);
     } catch (error) {}
     
     res.redirect(req.get('referer') || '/shop');
@@ -445,10 +322,8 @@ app.get('/cart', (req, res) => {
         `).all(req.session.user.id);
         
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        
         res.render('cart', { title: 'Cart', items, subtotal });
     } catch (error) {
-        console.error('Cart error:', error);
         res.status(500).send('Error loading cart');
     }
 });
@@ -506,7 +381,6 @@ app.get('/checkout', (req, res) => {
             defaultAmount: config.payment.defaultAmount
         });
     } catch (error) {
-        console.error('Checkout error:', error);
         res.status(500).send('Error loading checkout');
     }
 });
@@ -514,52 +388,24 @@ app.get('/checkout', (req, res) => {
 app.post('/checkout/apply-coupon', (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: 'Not logged in' });
     
-    const { code } = req.body;
-    
     try {
         const coupon = db.prepare(`
             SELECT * FROM coupons 
             WHERE code = ? AND (expires_at IS NULL OR expires_at > datetime('now'))
             AND (max_uses IS NULL OR used_count < max_uses)
-        `).get(code);
+        `).get(req.body.code);
         
-        if (!coupon) {
-            return res.json({ valid: false, error: 'Invalid or expired coupon' });
-        }
+        if (!coupon) return res.json({ valid: false, error: 'Invalid coupon' });
         
         req.session.coupon = coupon;
-        
         res.json({ valid: true, discount: coupon.discount_value, type: coupon.discount_type });
     } catch (error) {
-        console.error('Coupon error:', error);
         res.json({ valid: false, error: 'Error applying coupon' });
     }
 });
 
 app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) => {
-    if (!req.session.user) return res.redirect('/auth/discord');
-    if (!req.file) {
-        const items = db.prepare(`
-            SELECT c.id as cartId, c.quantity, p.* FROM cart c
-            JOIN products p ON c.productId = p.id
-            WHERE c.userId = ?
-        `).all(req.session.user.id);
-        
-        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        
-        return res.render('checkout', { 
-            title: 'Checkout', 
-            items, 
-            subtotal,
-            discount: 0,
-            total: subtotal,
-            couponCode: null,
-            error: 'Please upload payment proof',
-            success: null,
-            upiId: config.payment.upiId,
-            defaultAmount: config.payment.defaultAmount
-        });
-    }
+    if (!req.session.user || !req.file) return res.redirect('/checkout');
     
     const userId = req.session.user.id;
     
@@ -573,52 +419,31 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
         if (items.length === 0) return res.redirect('/shop');
         
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        let discount = 0;
-        let couponCode = null;
+        let discount = 0, couponCode = null;
         
         if (req.session.coupon) {
             const coupon = req.session.coupon;
-            if (coupon.discount_type === 'percentage') {
-                discount = subtotal * (coupon.discount_value / 100);
-            } else {
-                discount = coupon.discount_value;
-            }
-            
+            discount = coupon.discount_type === 'percentage' ? subtotal * (coupon.discount_value / 100) : coupon.discount_value;
             db.prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?').run(coupon.id);
             couponCode = coupon.code;
             delete req.session.coupon;
         }
         
         const total = Math.max(0, subtotal - discount);
-        const filename = req.file.filename;
+        const itemsJson = JSON.stringify(items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })));
         
-        const itemsJson = JSON.stringify(items.map(i => ({
-            id: i.id,
-            name: i.name,
-            price: i.price,
-            quantity: i.quantity
-        })));
-        
-        const orderStmt = db.prepare(`
+        const orderResult = db.prepare(`
             INSERT INTO orders (userId, items, subtotal, discount, total, coupon, proof, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
-        `);
-        
-        const orderResult = orderStmt.run(userId, itemsJson, subtotal, discount, total, couponCode, filename);
+        `).run(userId, itemsJson, subtotal, discount, total, couponCode, req.file.filename);
         
         db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
         
-        try {
-            await sendLog('payment', {
-                userId,
-                username: req.session.user.username,
-                avatar: req.session.user.avatar,
-                items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
-                total,
-                proofFilename: filename,
-                orderId: orderResult.lastInsertRowid
-            });
-        } catch (discordError) {}
+        sendLog('payment', {
+            userId, username: req.session.user.username, avatar: req.session.user.avatar,
+            items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
+            total, proofFilename: req.file.filename, orderId: orderResult.lastInsertRowid
+        }).catch(() => {});
         
         res.redirect('/history?success=order_placed');
         
@@ -633,25 +458,10 @@ app.get('/history', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     
     try {
-        const orders = db.prepare(`
-            SELECT * FROM orders
-            WHERE userId = ?
-            ORDER BY created_at DESC
-        `).all(req.session.user.id);
-        
-        orders.forEach(order => {
-            try {
-                order.itemsParsed = JSON.parse(order.items);
-            } catch (e) {
-                order.itemsParsed = [];
-            }
-        });
-        
-        const success = req.query.success === 'order_placed' ? 'Order placed successfully!' : null;
-        
-        res.render('history', { title: 'Order History', orders, success });
+        const orders = db.prepare('SELECT * FROM orders WHERE userId = ? ORDER BY created_at DESC').all(req.session.user.id);
+        orders.forEach(o => { try { o.itemsParsed = JSON.parse(o.items); } catch { o.itemsParsed = []; } });
+        res.render('history', { title: 'Order History', orders, success: req.query.success });
     } catch (error) {
-        console.error('History error:', error);
         res.status(500).send('Error loading history');
     }
 });
@@ -663,110 +473,60 @@ app.get('/terms', (req, res) => {
 
 // ==================== ADMIN ROUTES ====================
 const adminOnly = (req, res, next) => {
-    if (!req.session.user || req.session.user.id !== config.admin.discordId) {
-        return res.status(403).send('Access denied');
-    }
+    if (!req.session.user || req.session.user.id !== config.admin.discordId) return res.status(403).send('Access denied');
     next();
 };
 
 // Admin Dashboard
 app.get('/admin', adminOnly, (req, res) => {
     try {
-        let usersCount = 0, productsCount = 0, ordersCount = 0, pendingCount = 0, approvedCount = 0, couponsCount = 0;
-        
-        try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
-        try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
-        try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders').get().count; } catch (e) {}
-        try { pendingCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count; } catch (e) {}
-        try { approvedCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
-        try { couponsCount = db.prepare('SELECT COUNT(*) as count FROM coupons').get().count; } catch (e) {}
-        
         const stats = {
-            users: usersCount,
-            products: productsCount,
-            orders: ordersCount,
-            pendingOrders: pendingCount,
-            approvedOrders: approvedCount,
-            coupons: couponsCount
+            users: db.prepare('SELECT COUNT(*) as count FROM users').get().count,
+            products: db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count,
+            orders: db.prepare('SELECT COUNT(*) as count FROM orders').get().count,
+            pendingOrders: db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count,
+            approvedOrders: db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count,
+            coupons: db.prepare('SELECT COUNT(*) as count FROM coupons').get().count
         };
         
         const recentOrders = db.prepare(`
-            SELECT o.*, u.username, u.avatar FROM orders o
+            SELECT o.*, u.username FROM orders o
             JOIN users u ON o.userId = u.id
-            ORDER BY o.created_at DESC
-            LIMIT 10
+            ORDER BY o.created_at DESC LIMIT 10
         `).all();
         
-        recentOrders.forEach(order => {
-            try {
-                order.itemsParsed = JSON.parse(order.items);
-                order.itemCount = order.itemsParsed.length;
-            } catch (e) {
-                order.itemCount = 0;
-            }
-        });
+        recentOrders.forEach(o => { try { o.itemsParsed = JSON.parse(o.items); o.itemCount = o.itemsParsed.length; } catch { o.itemCount = 0; } });
         
-        res.render('admin', { 
-            title: 'Admin Dashboard', 
-            stats,
-            recentOrders,
-            section: 'dashboard',
-            query: req.query || {}
-        });
+        res.render('admin', { title: 'Admin Dashboard', stats, recentOrders, section: 'dashboard', query: req.query || {} });
     } catch (error) {
-        console.error('Admin error:', error);
         res.status(500).send('Error loading admin dashboard');
     }
 });
 
-// ==================== ADMIN PRODUCT MANAGEMENT ====================
+// Admin Products
 app.get('/admin/products', adminOnly, (req, res) => {
     try {
         const products = db.prepare('SELECT * FROM products WHERE deleted = 0 OR deleted IS NULL ORDER BY created_at DESC').all();
-        res.render('admin', { 
-            title: 'Manage Products', 
-            products,
-            section: 'products',
-            query: req.query || {}
-        });
+        res.render('admin', { title: 'Manage Products', products, section: 'products', query: req.query || {} });
     } catch (error) {
-        console.error('Admin products error:', error);
         res.status(500).send('Error loading products');
     }
 });
 
 app.get('/admin/products/add', adminOnly, (req, res) => {
-    res.render('admin', { 
-        title: 'Add Product', 
-        product: null,
-        section: 'product-form',
-        query: req.query || {}
-    });
+    res.render('admin', { title: 'Add Product', product: null, section: 'product-form', query: req.query || {} });
 });
 
 app.post('/admin/products/add', adminOnly, uploadProductImage.single('image'), (req, res) => {
     try {
         const { name, price, description, category, stock, featured } = req.body;
-        const image = req.file ? `/product-images/${req.file.filename}` : null;
-        
-        const stmt = db.prepare(`
+        db.prepare(`
             INSERT INTO products (name, price, description, category, stock, featured, image)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        `);
-        
-        stmt.run(
-            name, 
-            parseFloat(price), 
-            description, 
-            category || 'general', 
-            parseInt(stock) || 999, 
-            featured ? 1 : 0,
-            image
-        );
+        `).run(name, parseFloat(price), description, category || 'general', parseInt(stock) || 999, featured ? 1 : 0, req.file ? `/product-images/${req.file.filename}` : null);
         
         res.redirect('/admin/products?success=added');
     } catch (error) {
-        console.error('Add product error:', error);
         res.redirect('/admin/products?error=add_failed');
     }
 });
@@ -775,13 +535,7 @@ app.get('/admin/products/edit/:id', adminOnly, (req, res) => {
     try {
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
         if (!product) return res.redirect('/admin/products?error=not_found');
-        
-        res.render('admin', { 
-            title: 'Edit Product', 
-            product,
-            section: 'product-form',
-            query: req.query || {}
-        });
+        res.render('admin', { title: 'Edit Product', product, section: 'product-form', query: req.query || {} });
     } catch (error) {
         res.redirect('/admin/products?error=edit_failed');
     }
@@ -792,32 +546,25 @@ app.post('/admin/products/edit/:id', adminOnly, uploadProductImage.single('image
         const { name, price, description, category, stock, featured } = req.body;
         const id = req.params.id;
         
-        let image = null;
         if (req.file) {
-            image = `/product-images/${req.file.filename}`;
-            
             const old = db.prepare('SELECT image FROM products WHERE id = ?').get(id);
             if (old?.image) {
                 const oldPath = path.join(__dirname, 'public', old.image);
                 if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
             }
-        }
-        
-        if (image) {
             db.prepare(`
-                UPDATE products SET name = ?, price = ?, description = ?, category = ?, stock = ?, featured = ?, image = ?
-                WHERE id = ?
-            `).run(name, parseFloat(price), description, category, parseInt(stock), featured ? 1 : 0, image, id);
+                UPDATE products SET name=?, price=?, description=?, category=?, stock=?, featured=?, image=?
+                WHERE id=?
+            `).run(name, parseFloat(price), description, category, parseInt(stock), featured ? 1 : 0, `/product-images/${req.file.filename}`, id);
         } else {
             db.prepare(`
-                UPDATE products SET name = ?, price = ?, description = ?, category = ?, stock = ?, featured = ?
-                WHERE id = ?
+                UPDATE products SET name=?, price=?, description=?, category=?, stock=?, featured=?
+                WHERE id=?
             `).run(name, parseFloat(price), description, category, parseInt(stock), featured ? 1 : 0, id);
         }
         
         res.redirect('/admin/products?success=updated');
     } catch (error) {
-        console.error('Update error:', error);
         res.redirect('/admin/products?error=update_failed');
     }
 });
@@ -827,26 +574,13 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
     
     try {
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
-        if (!product) {
-            return res.redirect('/admin/products?error=not_found');
-        }
+        if (!product) return res.redirect('/admin/products?error=not_found');
 
-        const inCart = db.prepare('SELECT COUNT(*) as count FROM cart WHERE productId = ?').get(id);
-        if (inCart.count > 0) {
-            db.prepare('DELETE FROM cart WHERE productId = ?').run(id);
-        }
+        db.prepare('DELETE FROM cart WHERE productId = ?').run(id);
 
-        const orders = db.prepare('SELECT id, items FROM orders').all();
-        let inOrders = false;
-        for (const order of orders) {
-            try {
-                const items = JSON.parse(order.items);
-                if (items.some(item => item.id === parseInt(id))) {
-                    inOrders = true;
-                    break;
-                }
-            } catch (e) {}
-        }
+        const inOrders = db.prepare('SELECT items FROM orders').all().some(order => {
+            try { return JSON.parse(order.items).some(item => item.id === parseInt(id)); } catch { return false; }
+        });
 
         if (inOrders) {
             db.prepare('UPDATE products SET deleted = 1 WHERE id = ?').run(id);
@@ -855,88 +589,45 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
 
         if (product.image) {
             const imagePath = path.join(__dirname, 'public', product.image);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
-            }
+            if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
         }
 
-        const result = db.prepare('DELETE FROM products WHERE id = ?').run(id);
-        
-        if (result.changes > 0) {
-            res.redirect('/admin/products?success=deleted');
-        } else {
-            res.redirect('/admin/products?error=delete_failed');
-        }
+        db.prepare('DELETE FROM products WHERE id = ?').run(id);
+        res.redirect('/admin/products?success=deleted');
         
     } catch (error) {
-        console.error('❌ Delete error:', error);
         res.redirect('/admin/products?error=delete_failed');
     }
 });
 
-// ==================== ADMIN COUPON MANAGEMENT ====================
+// Admin Coupons
 app.get('/admin/coupons', adminOnly, (req, res) => {
     try {
         const coupons = db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
-        
-        coupons.forEach(coupon => {
-            if (coupon.expires_at) {
-                coupon.expires_at_formatted = new Date(coupon.expires_at).toLocaleDateString();
-            }
-            coupon.created_at_formatted = new Date(coupon.created_at).toLocaleDateString();
-        });
-        
-        res.render('admin', { 
-            title: 'Manage Coupons', 
-            coupons,
-            section: 'coupons',
-            query: req.query || {}
-        });
-        
+        res.render('admin', { title: 'Manage Coupons', coupons, section: 'coupons', query: req.query || {} });
     } catch (error) {
-        console.error('❌ Admin coupons error:', error);
-        res.status(500).render('admin', { 
-            title: 'Manage Coupons', 
-            coupons: [],
-            section: 'coupons',
-            query: { error: 'database_error' }
-        });
+        res.status(500).send('Error loading coupons');
     }
 });
 
 app.get('/admin/coupons/generate', adminOnly, (req, res) => {
-    res.render('admin', { 
-        title: 'Generate Coupon', 
-        coupon: null,
-        section: 'coupon-form',
-        query: req.query || {}
-    });
+    res.render('admin', { title: 'Generate Coupon', coupon: null, section: 'coupon-form', query: req.query || {} });
 });
 
 function generateCouponCode(prefix = '', length = 8) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = prefix ? prefix + '-' : '';
-    for (let i = 0; i < length; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    for (let i = 0; i < length; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
     return code;
 }
 
 app.post('/admin/coupons/generate', adminOnly, (req, res) => {
     try {
         const { discount_type, discount_value, min_order, max_uses, expires_days, custom_code, code_prefix } = req.body;
+        if (!discount_type || !discount_value) return res.redirect('/admin/coupons/generate?error=missing_fields');
         
-        if (!discount_type || !discount_value) {
-            return res.redirect('/admin/coupons/generate?error=missing_fields');
-        }
-        
-        let code = custom_code;
-        if (!code) {
-            code = generateCouponCode(code_prefix, 8);
-        }
-        
-        const existing = db.prepare('SELECT id FROM coupons WHERE code = ?').get(code);
-        if (existing) {
+        let code = custom_code || generateCouponCode(code_prefix, 8);
+        if (db.prepare('SELECT id FROM coupons WHERE code = ?').get(code)) {
             return res.redirect('/admin/coupons/generate?error=code_exists');
         }
         
@@ -945,18 +636,10 @@ app.post('/admin/coupons/generate', adminOnly, (req, res) => {
         db.prepare(`
             INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        `).run(
-            code,
-            discount_type,
-            parseFloat(discount_value),
-            parseFloat(min_order) || 0,
-            parseInt(max_uses) || 1,
-            expires_at
-        );
+        `).run(code, discount_type, parseFloat(discount_value), parseFloat(min_order) || 0, parseInt(max_uses) || 1, expires_at);
         
         res.redirect('/admin/coupons?success=generated');
     } catch (error) {
-        console.error('Generate coupon error:', error);
         res.redirect('/admin/coupons/generate?error=generate_failed');
     }
 });
@@ -966,51 +649,24 @@ app.post('/admin/coupons/delete/:id', adminOnly, (req, res) => {
         db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
         res.redirect('/admin/coupons?success=deleted');
     } catch (error) {
-        console.error('Delete coupon error:', error);
         res.redirect('/admin/coupons?error=delete_failed');
     }
 });
 
-// ==================== ADMIN ORDER MANAGEMENT ====================
+// Admin Orders
 app.get('/admin/orders', adminOnly, (req, res) => {
     try {
         const status = req.query.status || 'all';
-        
-        let query = `
-            SELECT o.*, u.username, u.avatar FROM orders o
-            JOIN users u ON o.userId = u.id
-        `;
+        let query = `SELECT o.*, u.username FROM orders o JOIN users u ON o.userId = u.id`;
         const params = [];
-        
-        if (status !== 'all') {
-            query += ' WHERE o.status = ?';
-            params.push(status);
-        }
-        
+        if (status !== 'all') { query += ' WHERE o.status = ?'; params.push(status); }
         query += ' ORDER BY o.created_at DESC';
         
-        const orders = params.length > 0 
-            ? db.prepare(query).all(...params)
-            : db.prepare(query).all();
+        const orders = params.length ? db.prepare(query).all(...params) : db.prepare(query).all();
+        orders.forEach(o => { try { o.itemsParsed = JSON.parse(o.items); o.itemCount = o.itemsParsed.length; } catch { o.itemCount = 0; } });
         
-        orders.forEach(order => {
-            try {
-                order.itemsParsed = JSON.parse(order.items);
-                order.itemCount = order.itemsParsed.length;
-            } catch (e) {
-                order.itemCount = 0;
-            }
-        });
-        
-        res.render('admin', { 
-            title: 'Manage Orders', 
-            orders,
-            currentStatus: status,
-            section: 'orders',
-            query: req.query || {}
-        });
+        res.render('admin', { title: 'Manage Orders', orders, currentStatus: status, section: 'orders', query: req.query || {} });
     } catch (error) {
-        console.error('Admin orders error:', error);
         res.status(500).send('Error loading orders');
     }
 });
@@ -1022,37 +678,22 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
         
         db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(action, orderId);
         
-        const order = db.prepare(`
-            SELECT o.*, u.username, u.avatar, u.id as userId FROM orders o
-            JOIN users u ON o.userId = u.id
-            WHERE o.id = ?
-        `).get(orderId);
-        
-        if (action === 'approved' && order) {
-            await giveRole(order.userId, config.discord.autoRoleId);
+        if (action === 'approved') {
+            const order = db.prepare(`
+                SELECT o.*, u.username, u.avatar, u.id as userId FROM orders o
+                JOIN users u ON o.userId = u.id WHERE o.id = ?
+            `).get(orderId);
             
-            let itemsText = '';
-            try {
-                const items = JSON.parse(order.items);
-                itemsText = items.map(i => `${i.quantity}x ${i.name}`).join(', ');
-            } catch (e) {
-                itemsText = order.items;
+            if (order) {
+                await giveRole(order.userId, config.discord.autoRoleId);
+                let itemsText = '';
+                try { itemsText = JSON.parse(order.items).map(i => `${i.quantity}x ${i.name}`).join(', '); } catch { itemsText = order.items; }
+                sendLog('approved', { userId: order.userId, username: order.username, avatar: order.avatar, items: itemsText, orderId }).catch(() => {});
             }
-            
-            try {
-                await sendLog('approved', {
-                    userId: order.userId,
-                    username: order.username,
-                    avatar: order.avatar,
-                    items: itemsText,
-                    orderId
-                });
-            } catch (discordError) {}
         }
         
         res.redirect('/admin/orders');
     } catch (error) {
-        console.error('Order action error:', error);
         res.status(500).send('Error processing order');
     }
 });
@@ -1060,13 +701,10 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
 // ==================== API ENDPOINTS ====================
 app.get('/api/cart/count', (req, res) => {
     if (!req.session.user) return res.json({ count: 0 });
-    
     try {
         const count = db.prepare('SELECT COUNT(*) as count FROM cart WHERE userId = ?').get(req.session.user.id).count;
         res.json({ count });
-    } catch (e) {
-        res.json({ count: 0 });
-    }
+    } catch { res.json({ count: 0 }); }
 });
 
 // ==================== 404 HANDLER ====================
@@ -1074,25 +712,23 @@ app.use((req, res) => {
     res.status(404).render('404', { title: 'Page Not Found' });
 });
 
-// ==================== START SERVER WITH BOT WAITING ====================
+// ==================== START SERVER WITH BOT ====================
 const PORT = process.env.PORT || 3000;
 
-async function startServer() {
-    console.log('🚀 Starting IMPOSTER Network...');
-    
-    // Initialize bot first and wait for it
-    const botClient = await initBot();
-    
-    if (botClient) {
-        console.log('✅ Discord bot initialized and ready');
-    } else {
-        console.warn('⚠️ Discord bot failed to initialize - continuing without bot features');
-    }
-    
-    // Start Express server
-    app.listen(PORT, '0.0.0.0', () => {
-        const botStatus = getBotStatus();
-        console.log(`
+// Store bot status
+let botStatus = { connected: false, botTag: null, servers: 0 };
+
+// Initialize bot
+initBot().then((client) => {
+    botStatus = getBotStatus();
+    console.log('\n✅ BOT FULLY OPERATIONAL - LOGS WILL NOW APPEAR IN DISCORD');
+}).catch(err => {
+    console.error('Bot init error:', err.message);
+});
+
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║   ██╗███╗   ███╗██████╗  ██████╗ ███████╗████████╗     ║
 ║   ██║████╗ ████║██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝     ║
@@ -1103,22 +739,37 @@ async function startServer() {
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${PORT}
 ║   🌐 URL: https://imposter-website.onrender.com
-║   🔥 Website: ${botStatus.connected ? '✅ ONLINE' : '✅ ONLINE (Bot Offline)'}
-║   🤖 Discord Bot: ${botStatus.connected ? '✅ CONNECTED' : '❌ OFFLINE'}
+║   🔥 Website: ✅ ONLINE
+║   🤖 Discord Bot: ${botStatus.connected ? '✅ CONNECTED' : '⏳ CONNECTING...'}
+║   📊 Bot Tag: ${botStatus.botTag || 'Starting up...'}
+║   🗄️ Database: SQLite (Imposter.db)
+║   © IMPOSTER Network – Dev Rick                          
+╚══════════════════════════════════════════════════════════╝
+    `);
+    
+    // Update banner after bot connects
+    setTimeout(() => {
+        if (botStatus.connected) {
+            console.clear();
+            console.log(`
+╔══════════════════════════════════════════════════════════╗
+║   ██╗███╗   ███╗██████╗  ██████╗ ███████╗████████╗     ║
+║   ██║████╗ ████║██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝     ║
+║   ██║██╔████╔██║██████╔╝██║   ██║███████╗   ██║        ║
+║   ██║██║╚██╔╝██║██╔═══╝ ██║   ██║╚════██║   ██║        ║
+║   ██║██║ ╚═╝ ██║██║     ╚██████╔╝███████║   ██║        ║
+║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
+╠══════════════════════════════════════════════════════════╣
+║   📍 Port: ${PORT}
+║   🌐 URL: https://imposter-website.onrender.com
+║   🔥 Website: ✅ ONLINE
+║   🤖 Discord Bot: ✅ CONNECTED
+║   📊 Bot Tag: ${botStatus.botTag}
 ║   📊 Servers: ${botStatus.servers}
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
-        `);
-    });
-}
-
-// Handle uncaught errors
-process.on('unhandledRejection', (error) => {
-    console.error('Unhandled rejection:', error);
-});
-
-startServer().catch(error => {
-    console.error('Fatal error starting server:', error);
-    process.exit(1);
+            `);
+        }
+    }, 5000);
 });
