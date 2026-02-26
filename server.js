@@ -9,7 +9,7 @@ const Database = require('better-sqlite3');
 const axios = require('axios');
 const crypto = require('crypto');
 const config = require('./config');
-const { initBot, sendLog, giveRole } = require('./bot');
+const { initBot, sendLog, giveRole, getBotStatus } = require('./bot');
 
 const app = express();
 const db = new Database('Imposter.db');
@@ -161,20 +161,12 @@ if (couponCount === 0) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'imposter-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: false,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
+app.use(session(config.session));
 
 // Session user helper
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
-    res.locals.isAdmin = req.session.user?.id === process.env.ADMIN_DISCORD_ID;
+    res.locals.isAdmin = req.session.user?.id === config.admin.discordId;
     next();
 });
 
@@ -210,10 +202,9 @@ const productStorage = multer.diskStorage({
 
 const uploadProof = multer({
     storage: proofStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: config.upload.maxSize },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-        if (allowedTypes.includes(file.mimetype)) {
+        if (config.upload.allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
             cb(new Error('Only PNG, JPG, JPEG allowed'));
@@ -223,10 +214,9 @@ const uploadProof = multer({
 
 const uploadProductImage = multer({
     storage: productStorage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: config.upload.maxSize },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-        if (allowedTypes.includes(file.mimetype)) {
+        if (config.upload.allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
             cb(new Error('Only PNG, JPG, JPEG allowed'));
@@ -236,7 +226,7 @@ const uploadProductImage = multer({
 
 // ==================== DISCORD OAUTH ====================
 app.get('/auth/discord', (req, res) => {
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
     res.redirect(url);
 });
 
@@ -246,11 +236,11 @@ app.get('/auth/discord/callback', async (req, res) => {
 
     try {
         const tokenRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
-            client_id: process.env.DISCORD_CLIENT_ID,
-            client_secret: process.env.DISCORD_CLIENT_SECRET,
+            client_id: config.discord.clientId,
+            client_secret: config.discord.clientSecret,
             grant_type: 'authorization_code',
             code,
-            redirect_uri: process.env.DISCORD_REDIRECT_URI
+            redirect_uri: config.discord.redirectUri
         }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
 
         const { access_token } = tokenRes.data;
@@ -267,6 +257,7 @@ app.get('/auth/discord/callback', async (req, res) => {
 
         req.session.user = { id, username, avatar: avatarUrl };
 
+        // Send login log to Discord
         try {
             await sendLog('login', {
                 userId: id,
@@ -274,7 +265,7 @@ app.get('/auth/discord/callback', async (req, res) => {
                 avatar: avatarUrl
             });
         } catch (discordError) {
-            console.error('Discord log error:', discordError);
+            console.error('Discord log error (non-critical):', discordError.message);
         }
 
         res.redirect('/');
@@ -599,18 +590,20 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
         // Clear cart
         db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
         
-        // Send payment log to Discord (if bot is connected)
+        // Send payment log to Discord
         try {
             await sendLog('payment', {
                 userId,
                 username: req.session.user.username,
+                avatar: req.session.user.avatar,
                 items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
                 total,
                 proofFilename: filename,
                 orderId: orderResult.lastInsertRowid
             });
+            console.log(`✅ Payment log sent for order #${orderResult.lastInsertRowid}`);
         } catch (discordError) {
-            console.error('Discord log error:', discordError);
+            console.error('Discord log error (non-critical):', discordError.message);
             // Don't fail the order if Discord logging fails
         }
         
@@ -682,7 +675,7 @@ app.get('/terms', (req, res) => {
 
 // ==================== ADMIN ROUTES ====================
 const adminOnly = (req, res, next) => {
-    if (!req.session.user || req.session.user.id !== process.env.ADMIN_DISCORD_ID) {
+    if (!req.session.user || req.session.user.id !== config.admin.discordId) {
         return res.status(403).send('Access denied');
     }
     next();
@@ -711,7 +704,7 @@ app.get('/admin', adminOnly, (req, res) => {
         };
         
         const recentOrders = db.prepare(`
-            SELECT o.*, u.username FROM orders o
+            SELECT o.*, u.username, u.avatar FROM orders o
             JOIN users u ON o.userId = u.id
             ORDER BY o.created_at DESC
             LIMIT 10
@@ -949,7 +942,7 @@ app.get('/admin/orders', adminOnly, (req, res) => {
         const status = req.query.status || 'all';
         
         let query = `
-            SELECT o.*, u.username FROM orders o
+            SELECT o.*, u.username, u.avatar FROM orders o
             JOIN users u ON o.userId = u.id
         `;
         const params = [];
@@ -997,18 +990,14 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
         
         // Get order details
         const order = db.prepare(`
-            SELECT o.*, u.username, u.id as userId FROM orders o
+            SELECT o.*, u.username, u.avatar, u.id as userId FROM orders o
             JOIN users u ON o.userId = u.id
             WHERE o.id = ?
         `).get(orderId);
         
         if (action === 'approved' && order) {
             // Give Discord role
-            try {
-                await giveRole(order.userId, process.env.AUTO_ROLE_ID);
-            } catch (roleError) {
-                console.error('Role error:', roleError);
-            }
+            const roleGiven = await giveRole(order.userId, config.discord.autoRoleId);
             
             // Parse items for log
             let itemsText = '';
@@ -1019,15 +1008,22 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
                 itemsText = order.items;
             }
             
+            // Send approval log
             try {
                 await sendLog('approved', {
                     userId: order.userId,
                     username: order.username,
+                    avatar: order.avatar,
                     items: itemsText,
                     orderId
                 });
+                console.log(`✅ Approval log sent for order #${orderId}`);
             } catch (discordError) {
-                console.error('Discord log error:', discordError);
+                console.error('Approval log error:', discordError.message);
+            }
+            
+            if (roleGiven) {
+                console.log(`✅ Order #${orderId} approved and role given to ${order.username}`);
             }
         }
         
@@ -1050,6 +1046,11 @@ app.get('/api/cart/count', (req, res) => {
     }
 });
 
+app.get('/api/bot/status', (req, res) => {
+    const status = getBotStatus();
+    res.json(status);
+});
+
 // ==================== 404 HANDLER ====================
 app.use((req, res) => {
     res.status(404).render('404', { title: 'Page Not Found' });
@@ -1058,7 +1059,7 @@ app.use((req, res) => {
 // ==================== START SERVER & BOT ====================
 const PORT = process.env.PORT || 3000;
 
-// Try to initialize bot but don't crash if it fails
+// Initialize bot (don't crash if it fails)
 initBot().catch(err => {
     console.error('Bot initialization failed (non-critical):', err.message);
 });
@@ -1076,7 +1077,8 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   📍 Port: ${PORT}
 ║   🌐 URL: http://localhost:${PORT}
 ║   🔥 IMPOSTER Network v2.0 – Fully Fixed
-║   📊 Features: Cart • Checkout • History • All Working
+║   📊 Features: Discord Logs • Cart • Checkout • History
+║   🤖 Discord Bot: ${getBotStatus().connected ? '✅ Connected' : '❌ Disconnected'}
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
