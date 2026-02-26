@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network COMPLETE FIXED VERSION
+// server.js – IMPOSTER Network Complete Working Version
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -191,7 +191,7 @@ app.get('/auth/discord/callback', async (req, res) => {
         
         req.session.save(() => {
             sendLog('login', { userId: id, username, avatar: avatarUrl }).catch(() => {});
-            res.redirect('/?login=success');
+            res.redirect('/');
         });
 
     } catch (error) {
@@ -224,7 +224,7 @@ app.get('/api/cart/count', (req, res) => {
     } catch { res.json({ count: 0 }); }
 });
 
-// ==================== PUBLIC ROUTES ====================
+// ==================== HOME PAGE ====================
 app.get('/', (req, res) => {
     try {
         const featured = db.prepare('SELECT * FROM products WHERE featured = 1 AND (deleted = 0 OR deleted IS NULL) LIMIT 6').all();
@@ -234,7 +234,6 @@ app.get('/', (req, res) => {
         try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
         try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
         
-        // Get login status from query parameters
         const loginSuccess = req.query.login === 'success';
         const loginError = req.query.error;
         
@@ -251,6 +250,7 @@ app.get('/', (req, res) => {
     }
 });
 
+// ==================== SHOP PAGE ====================
 app.get('/shop', (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -272,14 +272,20 @@ app.get('/shop', (req, res) => {
         const products = db.prepare(query).all(...params);
         const categories = db.prepare('SELECT DISTINCT category FROM products').all();
         
-        res.render('shop', { title: 'Shop', products, categories, currentPage: page, totalPages: Math.ceil(total / limit), category, search });
+        res.render('shop', { 
+            title: 'Shop', 
+            products, 
+            categories, 
+            currentPage: page, 
+            totalPages: Math.ceil(total / limit), 
+            category, 
+            search 
+        });
     } catch (error) {
         console.error('Shop error:', error);
         res.status(500).send('Error loading shop');
     }
 });
-
-app.get('/terms', (req, res) => res.render('terms', { title: 'Terms & Conditions' }));
 
 // ==================== CART ROUTES ====================
 app.post('/cart/add/:productId', (req, res) => {
@@ -348,9 +354,16 @@ app.get('/checkout', (req, res) => {
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         
         res.render('checkout', { 
-            title: 'Checkout', items, subtotal, discount: 0, total: subtotal,
-            couponCode: null, error: null, success: null,
-            upiId: config.payment.upiId, defaultAmount: config.payment.defaultAmount
+            title: 'Checkout', 
+            items, 
+            subtotal, 
+            discount: 0, 
+            total: subtotal,
+            couponCode: null, 
+            error: null, 
+            success: null,
+            upiId: config.payment.upiId, 
+            defaultAmount: config.payment.defaultAmount
         });
     } catch (error) {
         console.error('Checkout error:', error);
@@ -410,9 +423,13 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
         db.prepare('DELETE FROM cart WHERE userId = ?').run(userId);
         
         sendLog('payment', {
-            userId, username: req.session.user.username, avatar: req.session.user.avatar,
+            userId, 
+            username: req.session.user.username, 
+            avatar: req.session.user.avatar,
             items: items.map(i => `${i.quantity}x ${i.name}`).join(', '),
-            total, proofFilename: req.file.filename, orderId: orderResult.lastInsertRowid
+            total, 
+            proofFilename: req.file.filename, 
+            orderId: orderResult.lastInsertRowid
         }).catch(() => {});
         
         res.redirect('/history?success=order_placed');
@@ -428,7 +445,9 @@ app.get('/history', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     try {
         const orders = db.prepare('SELECT * FROM orders WHERE userId = ? ORDER BY created_at DESC').all(req.session.user.id);
-        orders.forEach(o => { try { o.itemsParsed = JSON.parse(o.items); } catch { o.itemsParsed = []; } });
+        orders.forEach(o => { 
+            try { o.itemsParsed = JSON.parse(o.items); } catch { o.itemsParsed = []; } 
+        });
         res.render('history', { title: 'Order History', orders, success: req.query.success });
     } catch (error) {
         console.error('History error:', error);
@@ -436,39 +455,74 @@ app.get('/history', (req, res) => {
     }
 });
 
+// ==================== TERMS PAGE ====================
+app.get('/terms', (req, res) => {
+    res.render('terms', { title: 'Terms & Conditions' });
+});
+
 // ==================== ADMIN ROUTES ====================
 const adminOnly = (req, res, next) => {
-    if (!req.session.user || req.session.user.id !== config.admin.discordId) return res.status(403).send('Access denied');
+    if (!req.session.user || req.session.user.id !== config.admin.discordId) {
+        return res.status(403).send('Access denied');
+    }
     next();
 };
 
-// Admin Dashboard
+// Admin Dashboard - FIXED VERSION
 app.get('/admin', adminOnly, (req, res) => {
     try {
+        // Get counts with error handling
+        let usersCount = 0, productsCount = 0, ordersCount = 0, pendingCount = 0, approvedCount = 0, couponsCount = 0;
+        
+        try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+        try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
+        try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders').get().count; } catch (e) {}
+        try { pendingCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count; } catch (e) {}
+        try { approvedCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+        try { couponsCount = db.prepare('SELECT COUNT(*) as count FROM coupons').get().count; } catch (e) {}
+        
         const stats = {
-            users: db.prepare('SELECT COUNT(*) as count FROM users').get().count,
-            products: db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count,
-            orders: db.prepare('SELECT COUNT(*) as count FROM orders').get().count,
-            pendingOrders: db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count,
-            approvedOrders: db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count,
-            coupons: db.prepare('SELECT COUNT(*) as count FROM coupons').get().count
+            users: usersCount,
+            products: productsCount,
+            orders: ordersCount,
+            pendingOrders: pendingCount,
+            approvedOrders: approvedCount,
+            coupons: couponsCount
         };
         
         const recentOrders = db.prepare(`
             SELECT o.*, u.username FROM orders o
             JOIN users u ON o.userId = u.id
-            ORDER BY o.created_at DESC LIMIT 10
+            ORDER BY o.created_at DESC
+            LIMIT 10
         `).all();
         
-        recentOrders.forEach(o => { 
-            try { o.itemsParsed = JSON.parse(o.items); o.itemCount = o.itemsParsed.length; } 
-            catch { o.itemCount = 0; } 
+        recentOrders.forEach(order => {
+            try {
+                order.itemsParsed = JSON.parse(order.items);
+                order.itemCount = order.itemsParsed.length;
+            } catch (e) {
+                order.itemCount = 0;
+            }
         });
         
-        res.render('admin', { title: 'Admin Dashboard', stats, recentOrders, section: 'dashboard', query: req.query || {} });
+        res.render('admin', { 
+            title: 'Admin Dashboard', 
+            stats,
+            recentOrders,
+            section: 'dashboard',
+            query: req.query || {}
+        });
     } catch (error) {
         console.error('Admin error:', error);
-        res.status(500).send('Error loading admin dashboard');
+        res.status(500).render('admin', { 
+            title: 'Admin Dashboard', 
+            stats: { users: 0, products: 0, orders: 0, pendingOrders: 0, approvedOrders: 0, coupons: 0 },
+            recentOrders: [],
+            section: 'dashboard',
+            query: {},
+            error: 'Failed to load admin dashboard: ' + error.message
+        });
     }
 });
 
@@ -476,7 +530,12 @@ app.get('/admin', adminOnly, (req, res) => {
 app.get('/admin/products', adminOnly, (req, res) => {
     try {
         const products = db.prepare('SELECT * FROM products WHERE deleted = 0 OR deleted IS NULL ORDER BY created_at DESC').all();
-        res.render('admin', { title: 'Manage Products', products, section: 'products', query: req.query || {} });
+        res.render('admin', { 
+            title: 'Manage Products', 
+            products,
+            section: 'products',
+            query: req.query || {}
+        });
     } catch (error) {
         console.error('Admin products error:', error);
         res.status(500).send('Error loading products');
@@ -484,7 +543,12 @@ app.get('/admin/products', adminOnly, (req, res) => {
 });
 
 app.get('/admin/products/add', adminOnly, (req, res) => {
-    res.render('admin', { title: 'Add Product', product: null, section: 'product-form', query: req.query || {} });
+    res.render('admin', { 
+        title: 'Add Product', 
+        product: null,
+        section: 'product-form',
+        query: req.query || {}
+    });
 });
 
 app.post('/admin/products/add', adminOnly, uploadProductImage.single('image'), (req, res) => {
@@ -493,7 +557,15 @@ app.post('/admin/products/add', adminOnly, uploadProductImage.single('image'), (
         db.prepare(`
             INSERT INTO products (name, price, description, category, stock, featured, image)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).run(name, parseFloat(price), description, category || 'general', parseInt(stock) || 999, featured ? 1 : 0, req.file ? `/product-images/${req.file.filename}` : null);
+        `).run(
+            name, 
+            parseFloat(price), 
+            description, 
+            category || 'general', 
+            parseInt(stock) || 999, 
+            featured ? 1 : 0, 
+            req.file ? `/product-images/${req.file.filename}` : null
+        );
         
         res.redirect('/admin/products?success=added');
     } catch (error) {
@@ -506,7 +578,12 @@ app.get('/admin/products/edit/:id', adminOnly, (req, res) => {
     try {
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
         if (!product) return res.redirect('/admin/products?error=not_found');
-        res.render('admin', { title: 'Edit Product', product, section: 'product-form', query: req.query || {} });
+        res.render('admin', { 
+            title: 'Edit Product', 
+            product,
+            section: 'product-form',
+            query: req.query || {}
+        });
     } catch (error) {
         res.redirect('/admin/products?error=edit_failed');
     }
@@ -581,7 +658,12 @@ app.get('/admin/coupons', adminOnly, (req, res) => {
             if (c.expires_at) c.expires_at_formatted = new Date(c.expires_at).toLocaleDateString();
             c.created_at_formatted = new Date(c.created_at).toLocaleDateString();
         });
-        res.render('admin', { title: 'Manage Coupons', coupons, section: 'coupons', query: req.query || {} });
+        res.render('admin', { 
+            title: 'Manage Coupons', 
+            coupons,
+            section: 'coupons',
+            query: req.query || {}
+        });
     } catch (error) {
         console.error('Admin coupons error:', error);
         res.status(500).send('Error loading coupons');
@@ -589,7 +671,12 @@ app.get('/admin/coupons', adminOnly, (req, res) => {
 });
 
 app.get('/admin/coupons/generate', adminOnly, (req, res) => {
-    res.render('admin', { title: 'Generate Coupon', coupon: null, section: 'coupon-form', query: req.query || {} });
+    res.render('admin', { 
+        title: 'Generate Coupon', 
+        coupon: null,
+        section: 'coupon-form',
+        query: req.query || {}
+    });
 });
 
 function generateCouponCode(prefix = '', length = 8) {
@@ -648,7 +735,13 @@ app.get('/admin/orders', adminOnly, (req, res) => {
             catch { o.itemCount = 0; } 
         });
         
-        res.render('admin', { title: 'Manage Orders', orders, currentStatus: status, section: 'orders', query: req.query || {} });
+        res.render('admin', { 
+            title: 'Manage Orders', 
+            orders,
+            currentStatus: status,
+            section: 'orders',
+            query: req.query || {}
+        });
     } catch (error) {
         console.error('Admin orders error:', error);
         res.status(500).send('Error loading orders');
@@ -671,9 +764,18 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
             if (order) {
                 await giveRole(order.userId, config.discord.autoRoleId);
                 let itemsText = '';
-                try { itemsText = JSON.parse(order.items).map(i => `${i.quantity}x ${i.name}`).join(', '); } 
-                catch { itemsText = order.items; }
-                sendLog('approved', { userId: order.userId, username: order.username, avatar: order.avatar, items: itemsText, orderId }).catch(() => {});
+                try { 
+                    itemsText = JSON.parse(order.items).map(i => `${i.quantity}x ${i.name}`).join(', '); 
+                } catch { 
+                    itemsText = order.items; 
+                }
+                sendLog('approved', { 
+                    userId: order.userId, 
+                    username: order.username, 
+                    avatar: order.avatar, 
+                    items: itemsText, 
+                    orderId 
+                }).catch(() => {});
             }
         }
         
