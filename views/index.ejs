@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTER Network – Home</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">IMPOSTER</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/cart">Cart</a>
+                <a href="/history">History</a>
+                <a href="/terms">Terms</a>
+                <% if (user) { %>
+                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
+                    <span class="user-greeting">Hi, <%= user.username %></span>
+                    <a href="/logout">Logout</a>
+                <% } else { %>
+                    <a href="/auth/discord" class="discord-btn">Login with Discord</a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="hero">
+            <h1>IMPOSTER <span>Network</span></h1>
+            <p>The ultimate digital marketplace. Fast, secure, and trusted.</p>
+            <% if (!user) { %>
+                <a href="/auth/discord" class="cta-btn">Get Started</a>
+            <% } else { %>
+                <a href="/shop" class="cta-btn">Browse Shop</a>
+            <% } %>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <h3>⚡ Instant Delivery</h3>
+                <p>Get your products immediately after payment approval.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔒 Secure Payments</h3>
+                <p>QR code payments with proof upload.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎮 Discord Integration</h3>
+                <p>Auto roles, order tracking, and support.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+    </footer>
+</body>
+</html>
