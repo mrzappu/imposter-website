@@ -8,8 +8,10 @@ let client = null;
 let isReady = false;
 
 async function initBot() {
+    console.log('🤖 Initializing Discord bot...');
+    
     if (!config.discord.botToken) {
-        console.error('❌ DISCORD_BOT_TOKEN not set in environment variables');
+        console.error('❌ DISCORD_BOT_TOKEN missing');
         return null;
     }
 
@@ -27,27 +29,26 @@ async function initBot() {
         console.log(`🤖 Bot Tag: ${client.user.tag}`);
         console.log(`📊 Servers: ${client.guilds.cache.size}`);
         
-        // Log which channels are configured
         console.log('📋 Configured Channels:');
         console.log(`   - Login Log: ${config.discord.loginLogChannel || 'Not set'}`);
         console.log(`   - Payment Log: ${config.discord.paymentLogChannel || 'Not set'}`);
         console.log(`   - Approved Log: ${config.discord.approvedLogChannel || 'Not set'}`);
         console.log(`   - Auto Role ID: ${config.discord.autoRoleId || 'Not set'}`);
         
-        // Verify channels exist
         verifyChannels();
         isReady = true;
     });
 
     client.on('error', (error) => {
-        console.error('Discord client error:', error);
+        console.error('❌ Discord client error:', error.message);
         isReady = false;
     });
 
     try {
         await client.login(config.discord.botToken);
+        console.log('✅ Bot login successful');
     } catch (error) {
-        console.error('❌ Failed to login to Discord:', error.message);
+        console.error('❌ Failed to login:', error.message);
         return null;
     }
 
@@ -71,7 +72,7 @@ async function verifyChannels() {
 
         try {
             const ch = await client.channels.fetch(channel.id);
-            console.log(`✅ ${channel.name} channel found: #${ch.name} (${ch.id})`);
+            console.log(`✅ ${channel.name} channel found: #${ch.name}`);
         } catch (error) {
             console.error(`❌ ${channel.name} channel not found (ID: ${channel.id})`);
         }
@@ -80,7 +81,6 @@ async function verifyChannels() {
 
 async function sendLog(type, data) {
     if (!client || !isReady) {
-        console.error(`❌ Cannot send ${type} log - Discord bot not ready`);
         return false;
     }
 
@@ -91,10 +91,7 @@ async function sendLog(type, data) {
     switch (type) {
         case 'login':
             channelId = config.discord.loginLogChannel;
-            if (!channelId) {
-                console.error('❌ LOGIN_LOG_CHANNEL not set');
-                return false;
-            }
+            if (!channelId) return false;
 
             embed = new EmbedBuilder()
                 .setTitle('🔐 New Login')
@@ -112,10 +109,7 @@ async function sendLog(type, data) {
 
         case 'payment':
             channelId = config.discord.paymentLogChannel;
-            if (!channelId) {
-                console.error('❌ PAYMENT_LOG_CHANNEL not set');
-                return false;
-            }
+            if (!channelId) return false;
 
             embed = new EmbedBuilder()
                 .setTitle('💰 Payment Proof Uploaded')
@@ -135,20 +129,14 @@ async function sendLog(type, data) {
             if (data.proofFilename) {
                 const proofPath = path.join(__dirname, 'public/uploads', data.proofFilename);
                 if (fs.existsSync(proofPath)) {
-                    files.push({
-                        attachment: proofPath,
-                        name: data.proofFilename
-                    });
+                    files.push({ attachment: proofPath, name: data.proofFilename });
                 }
             }
             break;
 
         case 'approved':
             channelId = config.discord.approvedLogChannel;
-            if (!channelId) {
-                console.error('❌ APPROVED_LOG_CHANNEL not set');
-                return false;
-            }
+            if (!channelId) return false;
 
             embed = new EmbedBuilder()
                 .setTitle('✅ Payment Approved')
@@ -176,7 +164,6 @@ async function sendLog(type, data) {
         }
         return true;
     } catch (error) {
-        console.error(`❌ Failed to send ${type} log:`, error.message);
         return false;
     }
 }
@@ -193,6 +180,7 @@ async function giveRole(userId, roleId) {
                     const role = await guild.roles.fetch(roleId).catch(() => null);
                     if (role) {
                         await member.roles.add(role);
+                        console.log(`✅ Role given to ${member.user.tag}`);
                         return true;
                     }
                 }
