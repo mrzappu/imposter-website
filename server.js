@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network Complete Fixed Version
+// server.js – IMPOSTER Network Complete Website (Optimized)
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -8,6 +8,7 @@ const multer = require('multer');
 const Database = require('better-sqlite3');
 const axios = require('axios');
 const QRCode = require('qrcode');
+const crypto = require('crypto');
 const config = require('./config');
 const { initBot, sendLog, giveRole, getBotStatus } = require('./bot');
 
@@ -16,7 +17,6 @@ const db = new Database('Imposter.db');
 
 // ==================== DATABASE SETUP ====================
 console.log('🔧 Setting up database...');
-
 db.pragma('foreign_keys = ON');
 
 db.exec(`
@@ -82,18 +82,13 @@ db.exec(`
 const productCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0').get().count;
 if (productCount === 0) {
     console.log('📦 Adding sample products...');
-    const insert = db.prepare(`
-        INSERT INTO products (name, price, description, category, featured) 
-        VALUES (?, ?, ?, ?, ?)
-    `);
-    
+    const insert = db.prepare(`INSERT INTO products (name, price, description, category, featured) VALUES (?, ?, ?, ?, ?)`);
     insert.run('VIP Membership', 199.00, 'Exclusive VIP access to IMPOSTER Network', 'membership', 1);
     insert.run('Premium Pack', 299.00, 'Premium digital pack with bonus content', 'digital', 1);
     insert.run('Lifetime Access', 999.00, 'One-time payment for lifetime access', 'membership', 0);
     insert.run('Custom Role', 99.00, 'Custom colored role in Discord server', 'service', 1);
     insert.run('Booster Pack', 149.00, 'Special booster perks for 30 days', 'digital', 0);
     insert.run('Secret Vault', 499.00, 'Access to hidden content', 'membership', 0);
-    
     console.log('✅ Sample products added');
 }
 
@@ -101,18 +96,11 @@ if (productCount === 0) {
 const couponCount = db.prepare('SELECT COUNT(*) as count FROM coupons').get().count;
 if (couponCount === 0) {
     console.log('🏷️ Adding sample coupons...');
-    const insert = db.prepare(`
-        INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    
-    const expires = new Date();
-    expires.setMonth(expires.getMonth() + 1);
-    
+    const insert = db.prepare(`INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at) VALUES (?, ?, ?, ?, ?, ?)`);
+    const expires = new Date(); expires.setMonth(expires.getMonth() + 1);
     insert.run('WELCOME10', 'percentage', 10, 0, 100, expires.toISOString());
     insert.run('VIP20', 'percentage', 20, 500, 50, expires.toISOString());
     insert.run('FLAT50', 'fixed', 50, 100, 30, expires.toISOString());
-    
     console.log('✅ Sample coupons added');
 }
 
@@ -121,7 +109,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-app.use(session(config.session));
+app.use(session({
+    secret: config.session.secret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }
+}));
 
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
@@ -133,50 +126,40 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Ensure uploads folder
+// ==================== FILE UPLOAD SETUP ====================
 const uploadDir = path.join(__dirname, 'public/uploads');
 const productImgDir = path.join(__dirname, 'public/product-images');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-if (!fs.existsSync(productImgDir)) fs.mkdirSync(productImgDir, { recursive: true });
+[uploadDir, productImgDir].forEach(dir => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
 
 const proofStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `proof-${unique}${path.extname(file.originalname)}`);
-    }
+    filename: (req, file, cb) => cb(null, `proof-${Date.now()}-${Math.random().toString(36).substring(7)}${path.extname(file.originalname)}`)
 });
 
 const productStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, productImgDir),
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `product-${unique}${path.extname(file.originalname)}`);
-    }
+    filename: (req, file, cb) => cb(null, `product-${Date.now()}-${Math.random().toString(36).substring(7)}${path.extname(file.originalname)}`)
 });
 
 const uploadProof = multer({
     storage: proofStorage,
     limits: { fileSize: config.upload.maxSize },
-    fileFilter: (req, file, cb) => {
-        config.upload.allowedTypes.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
-    }
+    fileFilter: (req, file, cb) => config.upload.allowedTypes.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'))
 });
 
 const uploadProductImage = multer({
     storage: productStorage,
     limits: { fileSize: config.upload.maxSize },
-    fileFilter: (req, file, cb) => {
-        config.upload.allowedTypes.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'));
-    }
+    fileFilter: (req, file, cb) => config.upload.allowedTypes.includes(file.mimetype) ? cb(null, true) : cb(new Error('Invalid file type'))
 });
 
-// ==================== DISCORD OAUTH ROUTES ====================
+// ==================== DISCORD OAUTH ====================
 app.get('/auth/discord', (req, res) => {
     if (!config.discord.clientId || !config.discord.clientSecret) {
         return res.status(500).send('Discord credentials missing');
     }
-    
     const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
     res.redirect(url);
 });
@@ -222,7 +205,7 @@ app.get('/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/'));
 });
 
-// ==================== UPI QR CODE ====================
+// ==================== API ENDPOINTS ====================
 app.get('/api/generate-upi-qr', async (req, res) => {
     try {
         const amount = req.query.amount || config.payment.defaultAmount;
@@ -234,23 +217,24 @@ app.get('/api/generate-upi-qr', async (req, res) => {
     }
 });
 
-// ==================== HOME PAGE ====================
-app.get('/', (req, res) => {
-    const featured = db.prepare('SELECT * FROM products WHERE featured = 1 AND (deleted = 0 OR deleted IS NULL) LIMIT 6').all();
-    
-    let usersCount = 0, productsCount = 0, ordersCount = 0;
-    try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
-    try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
-    try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
-    
-    res.render('index', { 
-        title: 'Home', 
-        featured,
-        stats: { users: usersCount, products: productsCount, orders: ordersCount }
-    });
+app.get('/api/cart/count', (req, res) => {
+    if (!req.session.user) return res.json({ count: 0 });
+    try {
+        const count = db.prepare('SELECT COUNT(*) as count FROM cart WHERE userId = ?').get(req.session.user.id).count;
+        res.json({ count });
+    } catch { res.json({ count: 0 }); }
 });
 
-// ==================== SHOP PAGE ====================
+// ==================== PUBLIC ROUTES ====================
+app.get('/', (req, res) => {
+    const featured = db.prepare('SELECT * FROM products WHERE featured = 1 AND (deleted = 0 OR deleted IS NULL) LIMIT 6').all();
+    let users = 0, products = 0, orders = 0;
+    try { users = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+    try { products = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
+    try { orders = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+    res.render('index', { title: 'Home', featured, stats: { users, products, orders } });
+});
+
 app.get('/shop', (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -262,40 +246,25 @@ app.get('/shop', (req, res) => {
         let query = 'SELECT * FROM products WHERE (deleted = 0 OR deleted IS NULL)';
         const params = [];
         
-        if (category !== 'all') {
-            query += ' AND category = ?';
-            params.push(category);
-        }
+        if (category !== 'all') { query += ' AND category = ?'; params.push(category); }
+        if (search) { query += ' AND (name LIKE ? OR description LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
         
-        if (search) {
-            query += ' AND (name LIKE ? OR description LIKE ?)';
-            params.push(`%${search}%`, `%${search}%`);
-        }
-        
-        const totalQuery = query.replace('SELECT *', 'SELECT COUNT(*) as count');
-        const total = db.prepare(totalQuery).get(...params).count;
-        
+        const total = db.prepare(query.replace('SELECT *', 'SELECT COUNT(*) as count')).get(...params).count;
         query += ' ORDER BY featured DESC, created_at DESC LIMIT ? OFFSET ?';
         params.push(limit, offset);
         
         const products = db.prepare(query).all(...params);
         const categories = db.prepare('SELECT DISTINCT category FROM products').all();
         
-        res.render('shop', {
-            title: 'Shop',
-            products,
-            categories,
-            currentPage: page,
-            totalPages: Math.ceil(total / limit),
-            category,
-            search
-        });
+        res.render('shop', { title: 'Shop', products, categories, currentPage: page, totalPages: Math.ceil(total / limit), category, search });
     } catch (error) {
         res.status(500).send('Error loading shop');
     }
 });
 
-// ==================== CART SYSTEM ====================
+app.get('/terms', (req, res) => res.render('terms', { title: 'Terms & Conditions' }));
+
+// ==================== CART ROUTES ====================
 app.post('/cart/add/:productId', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     const { productId } = req.params;
@@ -307,13 +276,11 @@ app.post('/cart/add/:productId', (req, res) => {
             ? db.prepare('UPDATE cart SET quantity = quantity + 1 WHERE id = ?').run(existing.id)
             : db.prepare('INSERT INTO cart (userId, productId) VALUES (?, ?)').run(userId, productId);
     } catch (error) {}
-    
     res.redirect(req.get('referer') || '/shop');
 });
 
 app.get('/cart', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
-    
     try {
         const items = db.prepare(`
             SELECT c.id as cartId, c.quantity, p.* FROM cart c
@@ -331,7 +298,6 @@ app.get('/cart', (req, res) => {
 app.post('/cart/update/:cartId', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     const { quantity } = req.body;
-    
     try {
         if (quantity < 1) {
             db.prepare('DELETE FROM cart WHERE id = ? AND userId = ?').run(req.params.cartId, req.session.user.id);
@@ -339,24 +305,20 @@ app.post('/cart/update/:cartId', (req, res) => {
             db.prepare('UPDATE cart SET quantity = ? WHERE id = ? AND userId = ?').run(quantity, req.params.cartId, req.session.user.id);
         }
     } catch (error) {}
-    
     res.redirect('/cart');
 });
 
 app.post('/cart/remove/:cartId', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
-    
     try {
         db.prepare('DELETE FROM cart WHERE id = ? AND userId = ?').run(req.params.cartId, req.session.user.id);
     } catch (error) {}
-    
     res.redirect('/cart');
 });
 
-// ==================== CHECKOUT ====================
+// ==================== CHECKOUT ROUTES ====================
 app.get('/checkout', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
-    
     try {
         const items = db.prepare(`
             SELECT c.id as cartId, c.quantity, p.* FROM cart c
@@ -365,20 +327,12 @@ app.get('/checkout', (req, res) => {
         `).all(req.session.user.id);
         
         if (items.length === 0) return res.redirect('/shop');
-        
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         
         res.render('checkout', { 
-            title: 'Checkout', 
-            items, 
-            subtotal,
-            discount: 0,
-            total: subtotal,
-            couponCode: null,
-            error: null,
-            success: null,
-            upiId: config.payment.upiId,
-            defaultAmount: config.payment.defaultAmount
+            title: 'Checkout', items, subtotal, discount: 0, total: subtotal,
+            couponCode: null, error: null, success: null,
+            upiId: config.payment.upiId, defaultAmount: config.payment.defaultAmount
         });
     } catch (error) {
         res.status(500).send('Error loading checkout');
@@ -387,7 +341,6 @@ app.get('/checkout', (req, res) => {
 
 app.post('/checkout/apply-coupon', (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: 'Not logged in' });
-    
     try {
         const coupon = db.prepare(`
             SELECT * FROM coupons 
@@ -396,7 +349,6 @@ app.post('/checkout/apply-coupon', (req, res) => {
         `).get(req.body.code);
         
         if (!coupon) return res.json({ valid: false, error: 'Invalid coupon' });
-        
         req.session.coupon = coupon;
         res.json({ valid: true, discount: coupon.discount_value, type: coupon.discount_type });
     } catch (error) {
@@ -408,7 +360,6 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
     if (!req.session.user || !req.file) return res.redirect('/checkout');
     
     const userId = req.session.user.id;
-    
     try {
         const items = db.prepare(`
             SELECT c.quantity, p.* FROM cart c
@@ -456,7 +407,6 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
 // ==================== ORDER HISTORY ====================
 app.get('/history', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
-    
     try {
         const orders = db.prepare('SELECT * FROM orders WHERE userId = ? ORDER BY created_at DESC').all(req.session.user.id);
         orders.forEach(o => { try { o.itemsParsed = JSON.parse(o.items); } catch { o.itemsParsed = []; } });
@@ -464,11 +414,6 @@ app.get('/history', (req, res) => {
     } catch (error) {
         res.status(500).send('Error loading history');
     }
-});
-
-// ==================== TERMS PAGE ====================
-app.get('/terms', (req, res) => {
-    res.render('terms', { title: 'Terms & Conditions' });
 });
 
 // ==================== ADMIN ROUTES ====================
@@ -495,7 +440,10 @@ app.get('/admin', adminOnly, (req, res) => {
             ORDER BY o.created_at DESC LIMIT 10
         `).all();
         
-        recentOrders.forEach(o => { try { o.itemsParsed = JSON.parse(o.items); o.itemCount = o.itemsParsed.length; } catch { o.itemCount = 0; } });
+        recentOrders.forEach(o => { 
+            try { o.itemsParsed = JSON.parse(o.items); o.itemCount = o.itemsParsed.length; } 
+            catch { o.itemCount = 0; } 
+        });
         
         res.render('admin', { title: 'Admin Dashboard', stats, recentOrders, section: 'dashboard', query: req.query || {} });
     } catch (error) {
@@ -571,7 +519,6 @@ app.post('/admin/products/edit/:id', adminOnly, uploadProductImage.single('image
 
 app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
     const id = req.params.id;
-    
     try {
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
         if (!product) return res.redirect('/admin/products?error=not_found');
@@ -579,7 +526,8 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
         db.prepare('DELETE FROM cart WHERE productId = ?').run(id);
 
         const inOrders = db.prepare('SELECT items FROM orders').all().some(order => {
-            try { return JSON.parse(order.items).some(item => item.id === parseInt(id)); } catch { return false; }
+            try { return JSON.parse(order.items).some(item => item.id === parseInt(id)); } 
+            catch { return false; }
         });
 
         if (inOrders) {
@@ -604,6 +552,10 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
 app.get('/admin/coupons', adminOnly, (req, res) => {
     try {
         const coupons = db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
+        coupons.forEach(c => { 
+            if (c.expires_at) c.expires_at_formatted = new Date(c.expires_at).toLocaleDateString();
+            c.created_at_formatted = new Date(c.created_at).toLocaleDateString();
+        });
         res.render('admin', { title: 'Manage Coupons', coupons, section: 'coupons', query: req.query || {} });
     } catch (error) {
         res.status(500).send('Error loading coupons');
@@ -663,7 +615,10 @@ app.get('/admin/orders', adminOnly, (req, res) => {
         query += ' ORDER BY o.created_at DESC';
         
         const orders = params.length ? db.prepare(query).all(...params) : db.prepare(query).all();
-        orders.forEach(o => { try { o.itemsParsed = JSON.parse(o.items); o.itemCount = o.itemsParsed.length; } catch { o.itemCount = 0; } });
+        orders.forEach(o => { 
+            try { o.itemsParsed = JSON.parse(o.items); o.itemCount = o.itemsParsed.length; } 
+            catch { o.itemCount = 0; } 
+        });
         
         res.render('admin', { title: 'Manage Orders', orders, currentStatus: status, section: 'orders', query: req.query || {} });
     } catch (error) {
@@ -687,7 +642,8 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
             if (order) {
                 await giveRole(order.userId, config.discord.autoRoleId);
                 let itemsText = '';
-                try { itemsText = JSON.parse(order.items).map(i => `${i.quantity}x ${i.name}`).join(', '); } catch { itemsText = order.items; }
+                try { itemsText = JSON.parse(order.items).map(i => `${i.quantity}x ${i.name}`).join(', '); } 
+                catch { itemsText = order.items; }
                 sendLog('approved', { userId: order.userId, username: order.username, avatar: order.avatar, items: itemsText, orderId }).catch(() => {});
             }
         }
@@ -698,35 +654,22 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
     }
 });
 
-// ==================== API ENDPOINTS ====================
-app.get('/api/cart/count', (req, res) => {
-    if (!req.session.user) return res.json({ count: 0 });
-    try {
-        const count = db.prepare('SELECT COUNT(*) as count FROM cart WHERE userId = ?').get(req.session.user.id).count;
-        res.json({ count });
-    } catch { res.json({ count: 0 }); }
-});
-
 // ==================== 404 HANDLER ====================
 app.use((req, res) => {
     res.status(404).render('404', { title: 'Page Not Found' });
 });
 
-// ==================== START SERVER WITH BOT ====================
+// ==================== START SERVER ====================
 const PORT = process.env.PORT || 3000;
-
-// Store bot status
 let botStatus = { connected: false, botTag: null, servers: 0 };
 
-// Initialize bot
-initBot().then((client) => {
+initBot().then(() => {
     botStatus = getBotStatus();
-    console.log('\n✅ BOT FULLY OPERATIONAL - LOGS WILL NOW APPEAR IN DISCORD');
+    console.log('\n✅ BOT FULLY OPERATIONAL');
 }).catch(err => {
     console.error('Bot init error:', err.message);
 });
 
-// Start server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════╗
@@ -746,30 +689,4 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
     `);
-    
-    // Update banner after bot connects
-    setTimeout(() => {
-        if (botStatus.connected) {
-            console.clear();
-            console.log(`
-╔══════════════════════════════════════════════════════════╗
-║   ██╗███╗   ███╗██████╗  ██████╗ ███████╗████████╗     ║
-║   ██║████╗ ████║██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝     ║
-║   ██║██╔████╔██║██████╔╝██║   ██║███████╗   ██║        ║
-║   ██║██║╚██╔╝██║██╔═══╝ ██║   ██║╚════██║   ██║        ║
-║   ██║██║ ╚═╝ ██║██║     ╚██████╔╝███████║   ██║        ║
-║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
-╠══════════════════════════════════════════════════════════╣
-║   📍 Port: ${PORT}
-║   🌐 URL: https://imposter-website.onrender.com
-║   🔥 Website: ✅ ONLINE
-║   🤖 Discord Bot: ✅ CONNECTED
-║   📊 Bot Tag: ${botStatus.botTag}
-║   📊 Servers: ${botStatus.servers}
-║   🗄️ Database: SQLite (Imposter.db)
-║   © IMPOSTER Network – Dev Rick                          
-╚══════════════════════════════════════════════════════════╝
-            `);
-        }
-    }, 5000);
 });
