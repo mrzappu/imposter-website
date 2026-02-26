@@ -1,4 +1,4 @@
-/* public/style.css – IMPOSTER Network COMPLETE FIXED */
+/* public/style.css – IMPOSTER Network Complete Styling */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -909,6 +909,176 @@ footer {
 .footer-copyright p {
     color: var(--primary);
     font-weight: 500;
+}
+
+/* ==================== ADMIN PANEL ==================== */
+.admin-nav {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.admin-nav-link {
+    padding: 0.5rem 1.5rem;
+    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.active {
+    background: var(--primary);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-add {
+    padding: 0.6rem 1.2rem;
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+.admin-table {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+}
+
+.admin-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 1rem;
+    background: #1a1a1a;
+    color: var(--primary);
+    border-bottom: 2px solid #333;
+}
+
+.admin-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+/* ==================== PAGINATION ==================== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.page-link:hover,
+.page-link.active {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.page-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    color: #999;
+}
+
+/* ==================== LOGIN MESSAGES ==================== */
+.login-success-message {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: rgba(0, 255, 0, 0.9);
+    color: black;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+}
+
+.login-error-message {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: rgba(255, 0, 0, 0.9);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* ==================== RESPONSIVE ==================== */
