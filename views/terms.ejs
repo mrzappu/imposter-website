@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTER Network – Terms</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">IMPOSTER</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/cart">Cart</a>
+                <a href="/history">History</a>
+                <a href="/terms">Terms</a>
+                <% if (user) { %>
+                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
+                    <span class="user-greeting">Hi, <%= user.username %></span>
+                    <a href="/logout">Logout</a>
+                <% } else { %>
+                    <a href="/auth/discord" class="discord-btn">Login with Discord</a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>📜 Terms & Conditions</h1>
+        <div class="terms-box">
+            <h2>IMPOSTER Network – Terms & Conditions</h2>
+            <ul>
+                <li><strong>No fake proofs</strong> – All payment proofs must be genuine.</li>
+                <li><strong>No chargebacks</strong> – Chargebacks will result in immediate ban.</li>
+                <li><strong>Refund only if not delivered</strong> – If we fail to deliver your product within 24 hours, you get a full refund.</li>
+                <li><strong>Respect staff</strong> – Disrespect towards staff will not be tolerated.</li>
+                <li><strong>Digital products non-refundable</strong> – Once delivered, no refunds.</li>
+                <li><strong>Fast support 1–24 hours</strong> – We aim to respond within 24 hours.</li>
+            </ul>
+            <p>By using this site, you agree to these terms.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+    </footer>
+</body>
+</html>
