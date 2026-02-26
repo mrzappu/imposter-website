@@ -1,7 +1,7 @@
 {
   "name": "imposter-network",
   "version": "2.0.0",
-  "description": "IMPOSTER Network – Advanced Shop, UPI/FamPay QR Payments",
+  "description": "IMPOSTER Network – Complete E-commerce with Discord Integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
