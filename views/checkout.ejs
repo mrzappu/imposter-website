@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTER Network – Checkout</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-imposter">IMPOSTER</span>
+                <span class="logo-network">NETWORK</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/cart">Cart</a>
+                <a href="/history">History</a>
+                <a href="/terms">Terms</a>
+                <% if (user) { %>
+                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>" class="admin-link">Admin</a>
+                    <div class="user-menu">
+                        <img src="<%= user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png' %>" alt="avatar" class="user-avatar">
+                        <span class="username"><%= user.username %></span>
+                        <a href="/logout" class="logout-btn">Logout</a>
+                    </div>
+                <% } else { %>
+                    <a href="/auth/discord" class="discord-btn">Login with Discord</a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <h1 class="page-title">Checkout</h1>
+            
+            <div class="checkout-layout">
+                <!-- Order Summary -->
+                <div class="order-summary glass-card">
+                    <h2>Order Summary</h2>
+                    <div class="order-items">
+                        <% items.forEach(item => { %>
+                            <div class="order-item">
+                                <span class="item-name"><%= item.quantity %>x <%= item.name %></span>
+                                <span class="item-price">$<%= (item.price * item.quantity).toFixed(2) %></span>
+                            </div>
+                        <% }) %>
+                    </div>
+                    
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>$<%= subtotal.toFixed(2) %></span>
+                        </div>
+                        <div class="total-row discount-row" id="discountRow" style="display: none;">
+                            <span>Discount:</span>
+                            <span>-$<span id="discountAmount">0.00</span></span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span>Total:</span>
+                            <span>$<span id="totalAmount"><%= subtotal.toFixed(2) %></span></span>
+                        </div>
+                    </div>
+
+                    <!-- Coupon Section -->
+                    <div class="coupon-section">
+                        <h3>Have a coupon?</h3>
+                        <div class="coupon-input-group">
+                            <input type="text" id="couponCode" placeholder="Enter coupon code" value="<%= couponCode || '' %>">
+                            <button onclick="applyCoupon()" class="btn-apply">Apply</button>
+                        </div>
+                        <div id="couponMessage" class="coupon-message"></div>
+                    </div>
+                </div>
+
+                <!-- Payment Section -->
+                <div class="payment-section glass-card">
+                    <h2>Payment Instructions</h2>
+                    <div class="qr-container">
+                        <img src="/qr.png" alt="Payment QR Code" class="qr-img">
+                        <p class="qr-instruction">Scan the QR code to make payment</p>
+                    </div>
+                    
+                    <form action="/checkout/place-order" method="POST" enctype="multipart/form-data" id="paymentForm">
+                        <div class="form-group">
+                            <label for="proof">Upload Payment Proof</label>
+                            <input type="file" name="proof" id="proof" accept="image/png,image/jpeg,image/jpg" required>
+                            <small>Accepted formats: PNG, JPG, JPEG (Max 5MB)</small>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit-payment">Complete Order</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="glass-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-imposter">IMPOSTER</span>
+                    <span class="logo-network">NETWORK</span>
+                    <p>Premium digital marketplace</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/">Home</a>
+                    <a href="/shop">Shop</a>
+                    <a href="/terms">Terms</a>
+                    <a href="/history">History</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentSubtotal = <%= subtotal %>;
+        
+        async function applyCoupon() {
+            const code = document.getElementById('couponCode').value;
+            const messageDiv = document.getElementById('couponMessage');
+            
+            if (!code) {
+                messageDiv.textContent = 'Please enter a coupon code';
+                messageDiv.className = 'coupon-message error';
+                return;
+            }
+            
+            try {
+                const res = await fetch('/checkout/apply-coupon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await res.json();
+                
+                if (data.valid) {
+                    let discount = 0;
+                    if (data.type === 'percentage') {
+                        discount = currentSubtotal * (data.discount / 100);
+                    } else {
+                        discount = data.discount;
+                    }
+                    
+                    const total = Math.max(0, currentSubtotal - discount);
+                    
+                    document.getElementById('discountRow').style.display = 'flex';
+                    document.getElementById('discountAmount').textContent = discount.toFixed(2);
+                    document.getElementById('totalAmount').textContent = total.toFixed(2);
+                    
+                    messageDiv.textContent = `Coupon applied! You saved $${discount.toFixed(2)}`;
+                    messageDiv.className = 'coupon-message success';
+                } else {
+                    messageDiv.textContent = data.error || 'Invalid coupon code';
+                    messageDiv.className = 'coupon-message error';
+                }
+            } catch (err) {
+                messageDiv.textContent = 'Error applying coupon';
+                messageDiv.className = 'coupon-message error';
+            }
+        }
+    </script>
+</body>
+</html>
