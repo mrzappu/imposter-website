@@ -8,39 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <div class="logo">
-                <span class="logo-imposter">IMPOSTER</span>
-                <span class="logo-network">NETWORK</span>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/shop" class="active">Shop</a>
-                <a href="/cart" class="cart-link">
-                    Cart
-                    <span class="cart-badge" id="cartCount">0</span>
-                </a>
-                <a href="/history">History</a>
-                <a href="/terms">Terms</a>
-                <% if (user) { %>
-                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
-                    <div class="user-menu">
-                        <img src="<%= user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png' %>" alt="avatar" class="user-avatar">
-                        <span class="username"><%= user.username %></span>
-                        <a href="/logout" class="logout-btn">Logout</a>
-                    </div>
-                <% } else { %>
-                    <a href="/auth/discord" class="discord-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515c-.209.377-.456.885-.624 1.3a18.277 18.277 0 0 0-5.487 0 12.64 12.64 0 0 0-.633-1.3 19.736 19.736 0 0 0-4.885 1.515c-2.86 4.27-3.636 8.432-3.208 12.502a20.11 20.11 0 0 0 6.066 2.98c.49-.664.926-1.383 1.302-2.14a13.193 13.193 0 0 1-2.052-.991c.173-.126.342-.258.506-.39a14.545 14.545 0 0 0 12.436 0c.165.132.334.264.507.39-.65.38-1.336.714-2.053.991.376.757.812 1.476 1.302 2.14a20.05 20.05 0 0 0 6.065-2.98c.506-4.587-.79-8.7-3.208-12.502zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419z"/>
-                        </svg>
-                        Login
-                    </a>
-                <% } %>
-            </div>
-        </div>
-    </nav>
+    <% include partials/navbar %>
 
     <div class="shop-header">
         <div class="container">
@@ -165,26 +133,46 @@
                 <a href="/history">History</a>
             </div>
             <div class="footer-copyright">
-                <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+                <p>IMPOSTER Network © 2026-2027</p>
             </div>
         </div>
     </footer>
 
-    <script>
-        async function updateCartCount() {
-            try {
-                const res = await fetch('/api/cart/count');
-                const data = await res.json();
-                document.getElementById('cartCount').textContent = data.count;
-            } catch (e) {
-                console.error('Failed to update cart count');
-            }
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
         }
         
-        <% if (user) { %>
-            updateCartCount();
-            setInterval(updateCartCount, 30000);
-        <% } %>
-    </script>
+        .page-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .page-link:hover,
+        .page-link.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .page-dots {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            color: #999;
+        }
+    </style>
 </body>
 </html>
