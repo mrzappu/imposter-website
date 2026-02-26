@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network v2.0 with Working Product Delete
+// server.js – IMPOSTER Network v2.0 with Working Coupons
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -216,7 +216,11 @@ app.get('/auth/discord/callback', async (req, res) => {
         req.session.user = { id, username, avatar: avatarUrl };
 
         try {
-            await sendLog('login', { userId: id, username, avatar: avatarUrl });
+            await sendLog('login', {
+                userId: id,
+                username,
+                avatar: avatarUrl
+            });
         } catch (discordError) {}
 
         res.redirect('/');
@@ -608,7 +612,8 @@ app.get('/admin', adminOnly, (req, res) => {
             title: 'Admin Dashboard', 
             stats,
             recentOrders,
-            section: 'dashboard'
+            section: 'dashboard',
+            query: req.query || {}
         });
     } catch (error) {
         res.status(500).send('Error loading admin dashboard');
@@ -623,7 +628,7 @@ app.get('/admin/products', adminOnly, (req, res) => {
             title: 'Manage Products', 
             products,
             section: 'products',
-            query: req.query
+            query: req.query || {}
         });
     } catch (error) {
         res.status(500).send('Error loading products');
@@ -634,7 +639,8 @@ app.get('/admin/products/add', adminOnly, (req, res) => {
     res.render('admin', { 
         title: 'Add Product', 
         product: null,
-        section: 'product-form'
+        section: 'product-form',
+        query: req.query || {}
     });
 });
 
@@ -673,7 +679,8 @@ app.get('/admin/products/edit/:id', adminOnly, (req, res) => {
         res.render('admin', { 
             title: 'Edit Product', 
             product,
-            section: 'product-form'
+            section: 'product-form',
+            query: req.query || {}
         });
     } catch (error) {
         res.redirect('/admin/products?error=edit_failed');
@@ -715,26 +722,20 @@ app.post('/admin/products/edit/:id', adminOnly, uploadProductImage.single('image
     }
 });
 
-// ==================== FIXED PRODUCT DELETE ROUTE ====================
 app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
     const id = req.params.id;
     
     try {
-        // Check if product exists
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
         if (!product) {
             return res.redirect('/admin/products?error=not_found');
         }
 
-        // Check if product is in any cart
         const inCart = db.prepare('SELECT COUNT(*) as count FROM cart WHERE productId = ?').get(id);
         if (inCart.count > 0) {
-            // Remove from cart first
             db.prepare('DELETE FROM cart WHERE productId = ?').run(id);
-            console.log(`🛒 Removed ${inCart.count} items from cart for product #${id}`);
         }
 
-        // Check if product is in any orders
         const orders = db.prepare('SELECT id, items FROM orders').all();
         let inOrders = false;
         for (const order of orders) {
@@ -748,13 +749,10 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
         }
 
         if (inOrders) {
-            // Soft delete - just mark as deleted
             db.prepare('UPDATE products SET deleted = 1 WHERE id = ?').run(id);
-            console.log(`✅ Product #${id} soft deleted (exists in orders)`);
             return res.redirect('/admin/products?success=deleted_soft');
         }
 
-        // Delete product image if exists
         if (product.image) {
             const imagePath = path.join(__dirname, 'public', product.image);
             if (fs.existsSync(imagePath)) {
@@ -762,11 +760,9 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
             }
         }
 
-        // Hard delete
         const result = db.prepare('DELETE FROM products WHERE id = ?').run(id);
         
         if (result.changes > 0) {
-            console.log(`✅ Product #${id} permanently deleted`);
             res.redirect('/admin/products?success=deleted');
         } else {
             res.redirect('/admin/products?error=delete_failed');
@@ -778,28 +774,92 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
     }
 });
 
-// ==================== ADMIN COUPON MANAGEMENT ====================
+// ==================== FIXED ADMIN COUPON MANAGEMENT ====================
 app.get('/admin/coupons', adminOnly, (req, res) => {
     try {
+        // Check if coupons table exists
+        const tableExists = db.prepare(`
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='coupons'
+        `).get();
+        
+        if (!tableExists) {
+            console.log('📝 Creating coupons table...');
+            db.exec(`
+                CREATE TABLE coupons (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    code TEXT UNIQUE NOT NULL,
+                    discount_type TEXT NOT NULL,
+                    discount_value REAL NOT NULL,
+                    min_order REAL DEFAULT 0,
+                    max_uses INTEGER DEFAULT 1,
+                    used_count INTEGER DEFAULT 0,
+                    expires_at DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+            
+            // Add sample coupons
+            const insert = db.prepare(`
+                INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `);
+            
+            const expires = new Date();
+            expires.setMonth(expires.getMonth() + 1);
+            
+            insert.run('WELCOME10', 'percentage', 10, 0, 100, expires.toISOString());
+            insert.run('VIP20', 'percentage', 20, 500, 50, expires.toISOString());
+            insert.run('FLAT50', 'fixed', 50, 100, 30, expires.toISOString());
+            
+            console.log('✅ Sample coupons added');
+        }
+        
+        // Get all coupons
         const coupons = db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
+        
+        // Format dates for display
+        coupons.forEach(coupon => {
+            if (coupon.expires_at) {
+                coupon.expires_at_formatted = new Date(coupon.expires_at).toLocaleDateString();
+            }
+            coupon.created_at_formatted = new Date(coupon.created_at).toLocaleDateString();
+        });
+        
         res.render('admin', { 
             title: 'Manage Coupons', 
             coupons,
-            section: 'coupons'
+            section: 'coupons',
+            query: req.query || {}
         });
+        
     } catch (error) {
-        res.status(500).send('Error loading coupons');
+        console.error('❌ Admin coupons error:', error);
+        res.status(500).render('admin', { 
+            title: 'Manage Coupons', 
+            coupons: [],
+            section: 'coupons',
+            query: { error: 'database_error' },
+            error_message: 'Failed to load coupons: ' + error.message
+        });
     }
 });
 
 app.get('/admin/coupons/generate', adminOnly, (req, res) => {
-    res.render('admin', { 
-        title: 'Generate Coupon', 
-        coupon: null,
-        section: 'coupon-form'
-    });
+    try {
+        res.render('admin', { 
+            title: 'Generate Coupon', 
+            coupon: null,
+            section: 'coupon-form',
+            query: req.query || {}
+        });
+    } catch (error) {
+        console.error('❌ Generate coupon page error:', error);
+        res.redirect('/admin/coupons?error=page_error');
+    }
 });
 
+// Generate random coupon code
 function generateCouponCode(prefix = '', length = 8) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = prefix ? prefix + '-' : '';
@@ -811,19 +871,40 @@ function generateCouponCode(prefix = '', length = 8) {
 
 app.post('/admin/coupons/generate', adminOnly, (req, res) => {
     try {
-        const { discount_type, discount_value, min_order, max_uses, expires_days, custom_code, code_prefix } = req.body;
+        const { 
+            discount_type, 
+            discount_value, 
+            min_order, 
+            max_uses, 
+            expires_days,
+            custom_code,
+            code_prefix
+        } = req.body;
+        
+        // Validate inputs
+        if (!discount_type || !discount_value) {
+            return res.redirect('/admin/coupons/generate?error=missing_fields');
+        }
         
         let code = custom_code;
         if (!code) {
             code = generateCouponCode(code_prefix, 8);
         }
         
+        // Check if code already exists
+        const existing = db.prepare('SELECT id FROM coupons WHERE code = ?').get(code);
+        if (existing) {
+            return res.redirect('/admin/coupons/generate?error=code_exists');
+        }
+        
         const expires_at = expires_days ? new Date(Date.now() + expires_days * 24 * 60 * 60 * 1000).toISOString() : null;
         
-        db.prepare(`
+        const stmt = db.prepare(`
             INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        `).run(
+        `);
+        
+        stmt.run(
             code,
             discount_type,
             parseFloat(discount_value),
@@ -834,15 +915,22 @@ app.post('/admin/coupons/generate', adminOnly, (req, res) => {
         
         res.redirect('/admin/coupons?success=generated');
     } catch (error) {
-        res.redirect('/admin/coupons?error=generate_failed');
+        console.error('Generate coupon error:', error);
+        res.redirect('/admin/coupons/generate?error=generate_failed');
     }
 });
 
 app.post('/admin/coupons/delete/:id', adminOnly, (req, res) => {
     try {
-        db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
-        res.redirect('/admin/coupons?success=deleted');
+        const result = db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
+        
+        if (result.changes > 0) {
+            res.redirect('/admin/coupons?success=deleted');
+        } else {
+            res.redirect('/admin/coupons?error=delete_failed');
+        }
     } catch (error) {
+        console.error('Delete coupon error:', error);
         res.redirect('/admin/coupons?error=delete_failed');
     }
 });
@@ -882,7 +970,8 @@ app.get('/admin/orders', adminOnly, (req, res) => {
             title: 'Manage Orders', 
             orders,
             currentStatus: status,
-            section: 'orders'
+            section: 'orders',
+            query: req.query || {}
         });
     } catch (error) {
         res.status(500).send('Error loading orders');
@@ -966,7 +1055,7 @@ app.listen(PORT, '0.0.0.0', () => {
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${PORT}
 ║   🌐 URL: http://localhost:${PORT}
-║   🔥 IMPOSTER Network – Working Product Delete
+║   🔥 IMPOSTER Network – Working Coupons
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
