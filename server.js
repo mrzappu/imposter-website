@@ -14,7 +14,13 @@ const { initBot, sendLog, giveRole } = require('./bot');
 const app = express();
 const db = new Database('Imposter.db');
 
-// ==================== DATABASE SETUP ====================
+// ==================== DATABASE SETUP WITH MIGRATION ====================
+console.log('🔧 Setting up database...');
+
+// Enable foreign keys
+db.pragma('foreign_keys = ON');
+
+// Create tables with correct schema
 db.exec(`
     CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -63,7 +69,7 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS coupons (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         code TEXT UNIQUE NOT NULL,
-        discount_type TEXT NOT NULL, -- 'percentage' or 'fixed'
+        discount_type TEXT NOT NULL,
         discount_value REAL NOT NULL,
         min_order REAL DEFAULT 0,
         max_uses INTEGER DEFAULT 1,
@@ -73,9 +79,51 @@ db.exec(`
     );
 `);
 
+// ==================== DATABASE MIGRATION - FIX ORDERS TABLE ====================
+try {
+    // Check if orders table has the correct columns
+    const tableInfo = db.prepare("PRAGMA table_info(orders)").all();
+    const hasStatus = tableInfo.some(col => col.name === 'status');
+    const hasApproved = tableInfo.some(col => col.name === 'approved');
+    
+    if (hasApproved) {
+        console.log('🔄 Migrating orders table - removing deprecated columns...');
+        // This is a complex migration - we'll recreate the table
+        db.exec(`
+            CREATE TABLE orders_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                userId TEXT NOT NULL,
+                items TEXT NOT NULL,
+                subtotal REAL NOT NULL,
+                discount REAL DEFAULT 0,
+                total REAL NOT NULL,
+                coupon TEXT,
+                proof TEXT,
+                status TEXT DEFAULT 'pending',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (userId) REFERENCES users(id)
+            );
+            
+            INSERT INTO orders_new (id, userId, items, subtotal, discount, total, coupon, proof, created_at)
+            SELECT id, userId, items, subtotal, discount, total, coupon, proof, created_at FROM orders;
+            
+            DROP TABLE orders;
+            ALTER TABLE orders_new RENAME TO orders;
+        `);
+        console.log('✅ Orders table migration complete');
+    } else if (!hasStatus) {
+        console.log('🔄 Adding status column to orders table...');
+        db.exec(`ALTER TABLE orders ADD COLUMN status TEXT DEFAULT 'pending';`);
+        console.log('✅ Status column added');
+    }
+} catch (err) {
+    console.error('Schema migration error:', err.message);
+}
+
 // Add sample products if empty
 const productCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count;
 if (productCount === 0) {
+    console.log('📦 Adding sample products...');
     const insert = db.prepare(`
         INSERT INTO products (name, price, description, category, image, featured) 
         VALUES (?, ?, ?, ?, ?, ?)
@@ -94,6 +142,7 @@ if (productCount === 0) {
 // Add sample coupon if empty
 const couponCount = db.prepare('SELECT COUNT(*) as count FROM coupons').get().count;
 if (couponCount === 0) {
+    console.log('🏷️ Adding sample coupons...');
     const insert = db.prepare(`
         INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
         VALUES (?, ?, ?, ?, ?, ?)
@@ -230,10 +279,17 @@ app.get('/logout', (req, res) => {
 // ==================== HOME PAGE ====================
 app.get('/', (req, res) => {
     const featured = db.prepare('SELECT * FROM products WHERE featured = 1 LIMIT 6').all();
+    
+    // Get stats with error handling
+    let usersCount = 0, productsCount = 0, ordersCount = 0;
+    try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+    try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count; } catch (e) {}
+    try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+    
     const stats = {
-        users: db.prepare('SELECT COUNT(*) as count FROM users').get().count,
-        products: db.prepare('SELECT COUNT(*) as count FROM products').get().count,
-        orders: db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count
+        users: usersCount,
+        products: productsCount,
+        orders: ordersCount
     };
     
     res.render('index', { 
@@ -271,7 +327,7 @@ app.get('/shop', (req, res) => {
     params.push(limit, offset);
     
     const products = db.prepare(query).all(...params);
-    const categories = db.prepare('SELECT DISTINCT category FROM products').all();
+    const categories = db.prepare('SELECT DISTINCT category FROM products WHERE category IS NOT NULL').all();
     
     res.render('shop', {
         title: 'Shop',
@@ -463,6 +519,15 @@ app.get('/history', (req, res) => {
         ORDER BY created_at DESC
     `).all(req.session.user.id);
     
+    // Parse items JSON for display
+    orders.forEach(order => {
+        try {
+            order.itemsParsed = JSON.parse(order.items);
+        } catch (e) {
+            order.itemsParsed = [];
+        }
+    });
+    
     res.render('history', { 
         title: 'Order History', 
         orders
@@ -484,12 +549,23 @@ const adminOnly = (req, res, next) => {
 
 // Admin Dashboard
 app.get('/admin', adminOnly, (req, res) => {
+    // Get counts with error handling
+    let usersCount = 0, productsCount = 0, ordersCount = 0, pendingCount = 0, approvedCount = 0, couponsCount = 0;
+    
+    try { usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count; } catch (e) {}
+    try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count; } catch (e) {}
+    try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders').get().count; } catch (e) {}
+    try { pendingCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count; } catch (e) {}
+    try { approvedCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
+    try { couponsCount = db.prepare('SELECT COUNT(*) as count FROM coupons').get().count; } catch (e) {}
+    
     const stats = {
-        users: db.prepare('SELECT COUNT(*) as count FROM users').get().count,
-        products: db.prepare('SELECT COUNT(*) as count FROM products').get().count,
-        orders: db.prepare('SELECT COUNT(*) as count FROM orders').get().count,
-        pendingOrders: db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "pending"').get().count,
-        coupons: db.prepare('SELECT COUNT(*) as count FROM coupons').get().count
+        users: usersCount,
+        products: productsCount,
+        orders: ordersCount,
+        pendingOrders: pendingCount,
+        approvedOrders: approvedCount,
+        coupons: couponsCount
     };
     
     const recentOrders = db.prepare(`
@@ -498,6 +574,16 @@ app.get('/admin', adminOnly, (req, res) => {
         ORDER BY o.created_at DESC
         LIMIT 10
     `).all();
+    
+    // Parse items JSON for display
+    recentOrders.forEach(order => {
+        try {
+            order.itemsParsed = JSON.parse(order.items);
+            order.itemCount = order.itemsParsed.length;
+        } catch (e) {
+            order.itemCount = 0;
+        }
+    });
     
     res.render('admin', { 
         title: 'Admin Dashboard', 
@@ -538,7 +624,7 @@ app.post('/admin/products/add', adminOnly, uploadProductImage.single('image'), (
         name, 
         parseFloat(price), 
         description, 
-        category, 
+        category || 'general', 
         parseInt(stock) || 999, 
         featured ? 1 : 0,
         image
@@ -679,16 +765,28 @@ app.get('/admin/orders', adminOnly, (req, res) => {
         SELECT o.*, u.username FROM orders o
         JOIN users u ON o.userId = u.id
     `;
+    const params = [];
     
     if (status !== 'all') {
         query += ' WHERE o.status = ?';
+        params.push(status);
     }
     
     query += ' ORDER BY o.created_at DESC';
     
-    const orders = status !== 'all' 
-        ? db.prepare(query).all(status)
+    const orders = params.length > 0 
+        ? db.prepare(query).all(...params)
         : db.prepare(query).all();
+    
+    // Parse items JSON for display
+    orders.forEach(order => {
+        try {
+            order.itemsParsed = JSON.parse(order.items);
+            order.itemCount = order.itemsParsed.length;
+        } catch (e) {
+            order.itemCount = 0;
+        }
+    });
     
     res.render('admin', { 
         title: 'Manage Orders', 
@@ -702,20 +800,33 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
     const { orderId, action } = req.params;
     if (!['approved', 'rejected'].includes(action)) return res.redirect('/admin/orders');
     
+    // Update status
     db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(action, orderId);
     
+    // Get order details
     const order = db.prepare(`
         SELECT o.*, u.username, u.id as userId FROM orders o
         JOIN users u ON o.userId = u.id
         WHERE o.id = ?
     `).get(orderId);
     
-    if (action === 'approved') {
+    if (action === 'approved' && order) {
+        // Give Discord role
         await giveRole(order.userId, config.discord.autoRoleId);
+        
+        // Parse items for log
+        let itemsText = '';
+        try {
+            const items = JSON.parse(order.items);
+            itemsText = items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+        } catch (e) {
+            itemsText = order.items;
+        }
+        
         await sendLog('approved', {
             userId: order.userId,
             username: order.username,
-            items: order.items,
+            items: itemsText,
             orderId
         });
     }
@@ -727,8 +838,76 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
 app.get('/api/cart/count', (req, res) => {
     if (!req.session.user) return res.json({ count: 0 });
     
-    const count = db.prepare('SELECT COUNT(*) as count FROM cart WHERE userId = ?').get(req.session.user.id).count;
-    res.json({ count });
+    try {
+        const count = db.prepare('SELECT COUNT(*) as count FROM cart WHERE userId = ?').get(req.session.user.id).count;
+        res.json({ count });
+    } catch (e) {
+        res.json({ count: 0 });
+    }
+});
+
+// ==================== 404 HANDLER ====================
+app.use((req, res) => {
+    res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>404 - Page Not Found</title>
+            <style>
+                body {
+                    font-family: 'Inter', sans-serif;
+                    background: #0a0a0a;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    text-align: center;
+                }
+                .container {
+                    max-width: 600px;
+                    padding: 2rem;
+                }
+                h1 {
+                    font-size: 6rem;
+                    color: #ff0000;
+                    margin: 0;
+                    text-shadow: 0 0 20px rgba(255,0,0,0.5);
+                }
+                h2 {
+                    font-size: 2rem;
+                    margin: 1rem 0;
+                }
+                p {
+                    color: #b0b0b0;
+                    margin-bottom: 2rem;
+                }
+                a {
+                    display: inline-block;
+                    padding: 1rem 2rem;
+                    background: #ff0000;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 30px;
+                    font-weight: 600;
+                    transition: background 0.3s;
+                }
+                a:hover {
+                    background: #cc0000;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>404</h1>
+                <h2>Page Not Found</h2>
+                <p>The page you're looking for doesn't exist or has been moved.</p>
+                <a href="/">Return Home</a>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 // ==================== START SERVER & BOT ====================
@@ -747,6 +926,28 @@ initBot().then(() => {
 ║   🌐 URL: http://localhost:${config.server.port}
 ║   🔥 IMPOSTER Network v2.0 – Advanced Shop
 ║   📊 Features: Coupons • Product Management • Admin Panel
+║   🗄️ Database: SQLite (Imposter.db)
+║   © IMPOSTER Network – Dev Rick                          
+╚══════════════════════════════════════════════════════════╝
+        `);
+    });
+}).catch(err => {
+    console.error('Failed to start bot:', err);
+    app.listen(config.server.port, '0.0.0.0', () => {
+        console.log(`
+╔══════════════════════════════════════════════════════════╗
+║   ██╗███╗   ███╗██████╗  ██████╗ ███████╗████████╗     ║
+║   ██║████╗ ████║██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝     ║
+║   ██║██╔████╔██║██████╔╝██║   ██║███████╗   ██║        ║
+║   ██║██║╚██╔╝██║██╔═══╝ ██║   ██║╚════██║   ██║        ║
+║   ██║██║ ╚═╝ ██║██║     ╚██████╔╝███████║   ██║        ║
+║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
+╠══════════════════════════════════════════════════════════╣
+║   📍 Port: ${config.server.port}
+║   🌐 URL: http://localhost:${config.server.port}
+║   🔥 IMPOSTER Network v2.0 – Web Server Only
+║   ⚠️ Discord Bot Failed to Connect
+║   📊 Features: Shop • Cart • Admin • Coupons
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
         `);
