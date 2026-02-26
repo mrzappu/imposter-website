@@ -342,21 +342,58 @@
         .qr-container {
             text-align: center;
             margin: 2rem 0;
-            min-height: 200px;
+            min-height: 250px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 1rem;
         }
 
         .qr-loading {
             color: #999;
             font-style: italic;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .qr-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #ff0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .qr-code-img {
-            max-width: 200px;
+            max-width: 250px;
             border: 2px solid #ff0000;
             border-radius: 10px;
+            padding: 10px;
+            background: white;
+        }
+
+        .qr-error {
+            color: #ff0000;
+            text-align: center;
+        }
+
+        .qr-error button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
 
         .upi-details {
@@ -447,7 +484,9 @@
                 const data = await res.json();
                 const badge = document.getElementById('cartCount');
                 if (badge) badge.textContent = data.count;
-            } catch (e) {}
+            } catch (e) {
+                console.error('Cart count error:', e);
+            }
         }
         
         <% if (user) { %>
@@ -529,33 +568,60 @@
                     messageDiv.className = 'coupon-message error';
                 }
             } catch (err) {
+                console.error('Coupon error:', err);
                 messageDiv.textContent = 'Error applying coupon';
                 messageDiv.className = 'coupon-message error';
             }
         }
 
-        // QR Code generation
+        // QR Code generation - FIXED VERSION
         async function loadQRCode(amount) {
             const qrContainer = document.getElementById('qrContainer');
-            qrContainer.innerHTML = '<div class="qr-loading">Generating QR code...</div>';
+            
+            // Show loading spinner
+            qrContainer.innerHTML = `
+                <div class="qr-loading">
+                    <div class="spinner"></div>
+                    <div>Generating QR code...</div>
+                </div>
+            `;
             
             try {
                 const amountToUse = amount || currentTotal;
+                console.log('Fetching QR for amount:', amountToUse);
+                
                 const res = await fetch(`/api/generate-upi-qr?amount=${amountToUse}`);
                 const data = await res.json();
                 
-                if (data.success) {
+                console.log('QR API response:', data);
+                
+                if (data.success && data.qrDataUrl) {
                     qrContainer.innerHTML = `<img src="${data.qrDataUrl}" alt="UPI QR Code" class="qr-code-img">`;
                 } else {
-                    qrContainer.innerHTML = '<div class="qr-loading error">Failed to generate QR code</div>';
+                    qrContainer.innerHTML = `
+                        <div class="qr-error">
+                            <p>❌ Failed to generate QR code</p>
+                            <p style="font-size: 0.8rem; color: #999;">${data.error || 'Unknown error'}</p>
+                            <button onclick="loadQRCode(${amountToUse})">Try Again</button>
+                        </div>
+                    `;
                 }
             } catch (error) {
-                qrContainer.innerHTML = '<div class="qr-loading error">Error generating QR code</div>';
+                console.error('QR generation error:', error);
+                qrContainer.innerHTML = `
+                    <div class="qr-error">
+                        <p>❌ Error connecting to server</p>
+                        <p style="font-size: 0.8rem; color: #999;">${error.message}</p>
+                        <button onclick="loadQRCode(${amount || currentTotal})">Try Again</button>
+                    </div>
+                `;
             }
         }
 
         // Load QR on page load
-        loadQRCode();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadQRCode();
+        });
     </script>
 
     <div class="shop-header">
@@ -615,9 +681,12 @@
             <div class="payment-section">
                 <h2>Payment Details</h2>
                 
-                <!-- QR Code -->
+                <!-- QR Code Container -->
                 <div class="qr-container" id="qrContainer">
-                    <div class="qr-loading">Loading QR code...</div>
+                    <div class="qr-loading">
+                        <div class="spinner"></div>
+                        <div>Loading QR code...</div>
+                    </div>
                 </div>
                 
                 <!-- UPI Details -->
@@ -630,16 +699,15 @@
                 <div style="background: #1a1a1a; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
                     <p style="color: #ff0000; margin-bottom: 0.5rem;"><strong>📱 How to Pay:</strong></p>
                     <ol style="color: #999; margin-left: 1.2rem;">
-                        <li>Open any UPI app (Google Pay, PhonePe, Paytm)</li>
-                        <li>Scan the QR code above</li>
-                        <li>Verify amount and UPI ID</li>
+                        <li>Scan the QR code above with any UPI app</li>
+                        <li>Verify the amount and UPI ID: <strong><%= upiId %></strong></li>
                         <li>Complete the payment</li>
                         <li>Take a screenshot of the payment confirmation</li>
                         <li>Upload the screenshot below</li>
                     </ol>
                 </div>
 
-                <!-- Payment Form - FIXED ACTION URL -->
+                <!-- Payment Form -->
                 <form action="/checkout/place-order" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="proof">Upload Payment Proof</label>
