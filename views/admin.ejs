@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTER Network – Admin</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">IMPOSTER</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/cart">Cart</a>
+                <a href="/history">History</a>
+                <a href="/terms">Terms</a>
+                <a href="/admin">Admin</a>
+                <span class="user-greeting">Hi, <%= user.username %></span>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>🔧 Admin Panel</h1>
+        
+        <h2>Users</h2>
+        <div class="admin-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(user => { %>
+                        <tr>
+                            <td><%= user.id %></td>
+                            <td><%= user.username %></td>
+                            <td><%= new Date(user.created_at).toLocaleString() %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Orders</h2>
+        <div class="admin-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>User</th>
+                        <th>Product</th>
+                        <th>Amount</th>
+                        <th>Proof</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td>#<%= order.id %></td>
+                            <td><%= order.username %></td>
+                            <td><%= order.productName %></td>
+                            <td>$<%= order.price.toFixed(2) %></td>
+                            <td>
+                                <% if (order.proof) { %>
+                                    <a href="/uploads/<%= order.proof %>" target="_blank">View</a>
+                                <% } %>
+                            </td>
+                            <td><%= new Date(order.created_at).toLocaleString() %></td>
+                            <td>
+                                <span class="status <%= order.status %>">
+                                    <%= order.status.toUpperCase() %>
+                                </span>
+                            </td>
+                            <td>
+                                <% if (order.status === 'pending') { %>
+                                    <form action="/admin/order/<%= order.id %>/approved" method="POST" style="display:inline;">
+                                        <button type="submit" class="approve-btn">Approve</button>
+                                    </form>
+                                    <form action="/admin/order/<%= order.id %>/rejected" method="POST" style="display:inline;">
+                                        <button type="submit" class="reject-btn">Reject</button>
+                                    </form>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+    </footer>
+</body>
+</html>
