@@ -31,5 +31,10 @@ module.exports = {
     upload: {
         maxSize: 5 * 1024 * 1024, // 5MB
         allowedTypes: ['image/png', 'image/jpeg', 'image/jpg']
+    },
+    payment: {
+        upiId: process.env.UPI_ID || '8078794395@fam',
+        note: process.env.PAYMENT_NOTE || 'IMPOSTER Network Payment',
+        defaultAmount: parseFloat(process.env.DEFAULT_AMOUNT) || 19.99
     }
 };
