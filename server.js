@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network v2.0 with Working Coupons
+// server.js – IMPOSTER Network v2.0 with Working Login
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -184,49 +184,111 @@ const uploadProductImage = multer({
     }
 });
 
-// ==================== DISCORD OAUTH ====================
+// ==================== FIXED DISCORD OAUTH ROUTES ====================
 app.get('/auth/discord', (req, res) => {
+    // Log the configuration for debugging
+    console.log('🔐 Discord Login Attempt:');
+    console.log(`   Client ID: ${config.discord.clientId ? '✅ Set' : '❌ Missing'}`);
+    console.log(`   Client Secret: ${config.discord.clientSecret ? '✅ Set' : '❌ Missing'}`);
+    console.log(`   Redirect URI: ${config.discord.redirectUri}`);
+    
+    if (!config.discord.clientId || !config.discord.clientSecret) {
+        console.error('❌ Discord credentials missing!');
+        return res.status(500).send(`
+            <html>
+            <head>
+                <title>Configuration Error</title>
+                <style>
+                    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                    .container { text-align: center; max-width: 500px; padding: 2rem; }
+                    h1 { color: #ff0000; font-size: 2rem; }
+                    p { color: #b0b0b0; margin: 1rem 0; }
+                    a { display: inline-block; padding: 0.8rem 1.5rem; background: #ff0000; color: white; text-decoration: none; border-radius: 5px; margin-top: 1rem; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>❌ Configuration Error</h1>
+                    <p>Discord client ID or secret is missing.</p>
+                    <p>Please check your environment variables.</p>
+                    <a href="/">Go Home</a>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+    
     const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
+    console.log(`➡️ Redirecting to Discord...`);
     res.redirect(url);
 });
 
 app.get('/auth/discord/callback', async (req, res) => {
-    const { code } = req.query;
-    if (!code) return res.redirect('/');
+    const { code, error } = req.query;
+    
+    if (error) {
+        console.error('❌ Discord OAuth error:', error);
+        return res.redirect('/?login_error=' + error);
+    }
+    
+    if (!code) {
+        console.error('❌ No code received from Discord');
+        return res.redirect('/?login_error=no_code');
+    }
+
+    console.log('📩 Received Discord callback with code');
 
     try {
+        // Exchange code for token
         const tokenRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
             client_id: config.discord.clientId,
             client_secret: config.discord.clientSecret,
             grant_type: 'authorization_code',
             code,
             redirect_uri: config.discord.redirectUri
-        }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+        }), { 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' } 
+        });
+
+        console.log('✅ Token exchange successful');
 
         const { access_token } = tokenRes.data;
 
+        // Get user info
         const userRes = await axios.get('https://discord.com/api/users/@me', {
             headers: { Authorization: `Bearer ${access_token}` }
         });
 
+        console.log('✅ User info retrieved');
+
         const { id, username, avatar } = userRes.data;
         const avatarUrl = avatar ? `https://cdn.discordapp.com/avatars/${id}/${avatar}.png` : null;
 
+        // Store in database
         db.prepare('INSERT OR REPLACE INTO users (id, username, avatar) VALUES (?, ?, ?)').run(id, username, avatarUrl);
+
+        // Set session
         req.session.user = { id, username, avatar: avatarUrl };
 
+        console.log(`✅ User ${username} (${id}) logged in successfully`);
+
+        // Send login log to Discord (don't fail if it doesn't work)
         try {
             await sendLog('login', {
                 userId: id,
                 username,
                 avatar: avatarUrl
             });
-        } catch (discordError) {}
+        } catch (discordError) {
+            console.error('Discord log error (non-critical):', discordError.message);
+        }
 
-        res.redirect('/');
+        // Redirect to home with success message
+        res.redirect('/?login=success');
+
     } catch (error) {
-        console.error('OAuth error:', error);
-        res.redirect('/');
+        console.error('❌ OAuth error:', error.response?.data || error.message);
+        res.redirect('/?login_error=oauth_failed');
     }
 });
 
@@ -252,6 +314,7 @@ app.get('/api/generate-upi-qr', async (req, res) => {
         
         res.json({ success: true, qrDataUrl, upiId, amount, note });
     } catch (error) {
+        console.error('QR generation error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -266,12 +329,18 @@ app.get('/', (req, res) => {
         try { productsCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE deleted = 0 OR deleted IS NULL').get().count; } catch (e) {}
         try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
         
+        const loginSuccess = req.query.login === 'success';
+        const loginError = req.query.login_error;
+        
         res.render('index', { 
             title: 'Home', 
             featured,
-            stats: { users: usersCount, products: productsCount, orders: ordersCount }
+            stats: { users: usersCount, products: productsCount, orders: ordersCount },
+            loginSuccess,
+            loginError
         });
     } catch (error) {
+        console.error('Home error:', error);
         res.status(500).send('Error loading home page');
     }
 });
@@ -317,6 +386,7 @@ app.get('/shop', (req, res) => {
             search
         });
     } catch (error) {
+        console.error('Shop error:', error);
         res.status(500).send('Error loading shop');
     }
 });
@@ -354,6 +424,7 @@ app.get('/cart', (req, res) => {
         
         res.render('cart', { title: 'Cart', items, subtotal });
     } catch (error) {
+        console.error('Cart error:', error);
         res.status(500).send('Error loading cart');
     }
 });
@@ -411,6 +482,7 @@ app.get('/checkout', (req, res) => {
             defaultAmount: config.payment.defaultAmount
         });
     } catch (error) {
+        console.error('Checkout error:', error);
         res.status(500).send('Error loading checkout');
     }
 });
@@ -435,6 +507,7 @@ app.post('/checkout/apply-coupon', (req, res) => {
         
         res.json({ valid: true, discount: coupon.discount_value, type: coupon.discount_type });
     } catch (error) {
+        console.error('Coupon error:', error);
         res.json({ valid: false, error: 'Error applying coupon' });
     }
 });
@@ -554,6 +627,7 @@ app.get('/history', (req, res) => {
         
         res.render('history', { title: 'Order History', orders, success });
     } catch (error) {
+        console.error('History error:', error);
         res.status(500).send('Error loading history');
     }
 });
@@ -616,6 +690,7 @@ app.get('/admin', adminOnly, (req, res) => {
             query: req.query || {}
         });
     } catch (error) {
+        console.error('Admin error:', error);
         res.status(500).send('Error loading admin dashboard');
     }
 });
@@ -631,6 +706,7 @@ app.get('/admin/products', adminOnly, (req, res) => {
             query: req.query || {}
         });
     } catch (error) {
+        console.error('Admin products error:', error);
         res.status(500).send('Error loading products');
     }
 });
@@ -774,7 +850,7 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
     }
 });
 
-// ==================== FIXED ADMIN COUPON MANAGEMENT ====================
+// ==================== ADMIN COUPON MANAGEMENT ====================
 app.get('/admin/coupons', adminOnly, (req, res) => {
     try {
         // Check if coupons table exists
@@ -974,6 +1050,7 @@ app.get('/admin/orders', adminOnly, (req, res) => {
             query: req.query || {}
         });
     } catch (error) {
+        console.error('Admin orders error:', error);
         res.status(500).send('Error loading orders');
     }
 });
@@ -1015,6 +1092,7 @@ app.post('/admin/orders/:orderId/:action', adminOnly, async (req, res) => {
         
         res.redirect('/admin/orders');
     } catch (error) {
+        console.error('Order action error:', error);
         res.status(500).send('Error processing order');
     }
 });
@@ -1055,7 +1133,7 @@ app.listen(PORT, '0.0.0.0', () => {
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${PORT}
 ║   🌐 URL: http://localhost:${PORT}
-║   🔥 IMPOSTER Network – Working Coupons
+║   🔥 IMPOSTER Network – Fixed Login
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
