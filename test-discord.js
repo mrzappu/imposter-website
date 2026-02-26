@@ -31,7 +31,6 @@ async function testDiscord() {
     console.log('\n📊 Bot Status:');
     console.log(`   Connected: ${status.connected ? '✅ Yes' : '❌ No'}`);
     console.log(`   Bot Tag: ${status.botTag || 'N/A'}`);
-    console.log(`   Bot ID: ${status.botId || 'N/A'}`);
     console.log(`   Servers: ${status.servers}`);
     
     if (!status.connected) {
