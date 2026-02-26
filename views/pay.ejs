@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTER Network – Checkout</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">IMPOSTER</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/cart">Cart</a>
+                <a href="/history">History</a>
+                <a href="/terms">Terms</a>
+                <% if (user) { %>
+                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
+                    <span class="user-greeting">Hi, <%= user.username %></span>
+                    <a href="/logout">Logout</a>
+                <% } else { %>
+                    <a href="/auth/discord" class="discord-btn">Login with Discord</a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>💳 Checkout</h1>
+        <div class="checkout-grid">
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <% items.forEach(item => { %>
+                    <p><%= item.name %> – $<%= item.price.toFixed(2) %></p>
+                <% }) %>
+                <hr>
+                <h3>Total: $<%= total.toFixed(2) %></h3>
+            </div>
+            <div class="payment-section">
+                <h2>Payment Instructions</h2>
+                <p>Scan the QR code below to make payment via your preferred app.</p>
+                <img src="/qr.png" alt="Payment QR Code" class="qr-img">
+                <p>After payment, upload your screenshot proof:</p>
+                <form action="/pay/upload" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="proof" accept="image/png,image/jpeg,image/jpg" required>
+                    <button type="submit" class="upload-btn">Upload Proof</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+    </footer>
+</body>
+</html>
