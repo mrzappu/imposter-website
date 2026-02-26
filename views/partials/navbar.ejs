@@ -1,4 +1,3 @@
-<!-- views/partials/navbar.ejs -->
 <nav>
     <div class="nav-container">
         <div class="logo">
@@ -16,7 +15,7 @@
             <a href="/terms" class="<%= currentPage === 'terms' ? 'active' : '' %>">Terms</a>
             
             <% if (user) { %>
-                <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
+                <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>" class="<%= currentPage === 'admin' ? 'active' : '' %>">Admin</a>
                 
                 <!-- Profile Menu with Dropdown -->
                 <div class="profile-container">
@@ -42,7 +41,7 @@
                             <span>👤</span> My Profile
                         </a>
                         <a href="/history" class="profile-menu-item">
-                            <span>📜</span> Orders
+                            <span>📜</span> My Orders
                         </a>
                         <a href="/settings" class="profile-menu-item">
                             <span>⚙️</span> Settings
