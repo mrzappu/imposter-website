@@ -10,7 +10,6 @@ const paymentNote = process.env.PAYMENT_NOTE || 'IMPOSTER Network Payment';
 const defaultAmount = process.env.DEFAULT_AMOUNT || '19.99';
 
 // Create UPI QR code data (standard UPI format)
-// Format: upi://pay?pa=UPI_ID&pn=RecipientName&am=Amount&cu=INR&tn=Note
 const upiData = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=IMPOSTER%20Network&am=${defaultAmount}&cu=INR&tn=${encodeURIComponent(paymentNote)}`;
 
 // Output path
@@ -41,16 +40,5 @@ QRCode.toFile(outputPath, upiData, {
         console.log(`   - UPI ID: ${upiId}`);
         console.log(`   - Amount: ₹${defaultAmount}`);
         console.log(`   - Note: ${paymentNote}`);
-        console.log('\n📊 QR Data encoded:', upiData);
-        
-        // Also save payment details as JSON for reference
-        const detailsPath = path.join(__dirname, '../public/upi-details.json');
-        fs.writeFileSync(detailsPath, JSON.stringify({
-            upiId,
-            amount: defaultAmount,
-            note: paymentNote,
-            qrData: upiData
-        }, null, 2));
-        console.log(`📄 UPI details saved to: ${detailsPath}`);
     }
 });
