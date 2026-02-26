@@ -5,238 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IMPOSTER Network – Terms & Conditions</title>
     <link rel="stylesheet" href="/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="glass-nav">
-        <div class="nav-container">
-            <div class="logo">
+    <% include partials/navbar %>
+
+    <div class="shop-header">
+        <div class="container">
+            <h1 class="page-title">Terms & Conditions</h1>
+            <p class="page-subtitle">Please read these terms carefully before using our services</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div style="background: #111; border: 1px solid #333; border-radius: 8px; padding: 2rem; max-width: 800px; margin: 0 auto;">
+            <h2 style="color: var(--primary); margin-bottom: 1rem;">IMPOSTER Network – Terms & Conditions</h2>
+            <p style="color: #999; margin-bottom: 2rem;">Last Updated: February 2026</p>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--primary); margin-bottom: 0.5rem;">1. Acceptance of Terms</h3>
+                <p style="color: #999;">By accessing or using IMPOSTER Network, you agree to be bound by these Terms & Conditions.</p>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--primary); margin-bottom: 0.5rem;">2. Payment & Proof Policy</h3>
+                <ul style="color: #999; list-style: none; padding-left: 1rem;">
+                    <li style="margin-bottom: 0.5rem;">• No fake proofs – All payment proofs must be genuine</li>
+                    <li style="margin-bottom: 0.5rem;">• No chargebacks – Chargebacks result in immediate ban</li>
+                    <li style="margin-bottom: 0.5rem;">• Proof uploads must clearly show amount, date, and transaction ID</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--primary); margin-bottom: 0.5rem;">3. Refund Policy</h3>
+                <ul style="color: #999; list-style: none; padding-left: 1rem;">
+                    <li style="margin-bottom: 0.5rem;">• Refund only if not delivered within 24 hours</li>
+                    <li style="margin-bottom: 0.5rem;">• Digital products are non-refundable once delivered</li>
+                    <li style="margin-bottom: 0.5rem;">• Services are non-refundable once work has begun</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--primary); margin-bottom: 0.5rem;">4. User Conduct</h3>
+                <ul style="color: #999; list-style: none; padding-left: 1rem;">
+                    <li style="margin-bottom: 0.5rem;">• Respect staff and other users</li>
+                    <li style="margin-bottom: 0.5rem;">• No harassment or abuse</li>
+                    <li style="margin-bottom: 0.5rem;">• No unauthorized access to other accounts</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--primary); margin-bottom: 0.5rem;">5. Changes to Terms</h3>
+                <p style="color: #999;">We reserve the right to modify these Terms at any time. It is your responsibility to check periodically for changes.</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #333;">
+                <p style="color: #999;">By using IMPOSTER Network, you acknowledge that you have read and understood these Terms & Conditions.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
                 <span class="logo-imposter">IMPOSTER</span>
                 <span class="logo-network">NETWORK</span>
+                <p>Premium digital marketplace</p>
             </div>
-            <div class="nav-links">
+            <div class="footer-links">
                 <a href="/">Home</a>
                 <a href="/shop">Shop</a>
-                <a href="/cart" class="cart-link">
-                    Cart
-                    <span class="cart-badge" id="cartCount">0</span>
-                </a>
+                <a href="/terms">Terms</a>
                 <a href="/history">History</a>
-                <a href="/terms" class="active">Terms</a>
-                <% if (user) { %>
-                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>" class="admin-link">Admin</a>
-                    <div class="user-menu">
-                        <img src="<%= user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png' %>" alt="avatar" class="user-avatar">
-                        <span class="username"><%= user.username %></span>
-                        <a href="/logout" class="logout-btn">Logout</a>
-                    </div>
-                <% } else { %>
-                    <a href="/auth/discord" class="discord-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515c-.209.377-.456.885-.624 1.3a18.277 18.277 0 0 0-5.487 0 12.64 12.64 0 0 0-.633-1.3 19.736 19.736 0 0 0-4.885 1.515c-2.86 4.27-3.636 8.432-3.208 12.502a20.11 20.11 0 0 0 6.066 2.98c.49-.664.926-1.383 1.302-2.14a13.193 13.193 0 0 1-2.052-.991c.173-.126.342-.258.506-.39a14.545 14.545 0 0 0 12.436 0c.165.132.334.264.507.39-.65.38-1.336.714-2.053.991.376.757.812 1.476 1.302 2.14a20.05 20.05 0 0 0 6.065-2.98c.506-4.587-.79-8.7-3.208-12.502zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419z"/>
-                        </svg>
-                        Login with Discord
-                    </a>
-                <% } %>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <div class="shop-header">
-            <div class="container">
-                <h1 class="page-title">Terms & Conditions</h1>
-                <p class="page-subtitle">Please read these terms carefully before using our services</p>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="terms-container glass-card">
-                <div class="terms-section">
-                    <h2>IMPOSTER Network – Terms & Conditions</h2>
-                    <p class="last-updated">Last Updated: February 26, 2026</p>
-                </div>
-
-                <div class="terms-section">
-                    <h3>1. Acceptance of Terms</h3>
-                    <p>By accessing or using IMPOSTER Network, you agree to be bound by these Terms & Conditions. If you do not agree to all the terms and conditions, you may not access the website or use our services.</p>
-                </div>
-
-                <div class="terms-section">
-                    <h3>2. Payment & Proof Policy</h3>
-                    <ul class="terms-list">
-                        <li><strong>No fake proofs</strong> – All payment proofs must be genuine and unaltered. Submitting fake proofs will result in immediate account termination without refund.</li>
-                        <li><strong>No chargebacks</strong> – Chargebacks are strictly prohibited and will result in immediate ban from all IMPOSTER Network services.</li>
-                        <li><strong>Proof uploads</strong> – Screenshots must clearly show the payment amount, date, and transaction ID.</li>
-                    </ul>
-                </div>
-
-                <div class="terms-section">
-                    <h3>3. Refund Policy</h3>
-                    <ul class="terms-list">
-                        <li><strong>Refund only if not delivered</strong> – If we fail to deliver your product within 24 hours of payment approval, you are entitled to a full refund.</li>
-                        <li><strong>Digital products non-refundable</strong> – Due to the nature of digital goods, once delivered, no refunds will be issued.</li>
-                        <li><strong>Service products</strong> – Services are non-refundable once work has begun.</li>
-                    </ul>
-                </div>
-
-                <div class="terms-section">
-                    <h3>4. User Conduct</h3>
-                    <ul class="terms-list">
-                        <li><strong>Respect staff</strong> – Disrespect towards staff members will not be tolerated and may result in a ban.</li>
-                        <li><strong>No harassment</strong> – Harassment of other users or staff is strictly prohibited.</li>
-                        <li><strong>No unauthorized access</strong> – Attempting to access other users' accounts or data is forbidden.</li>
-                    </ul>
-                </div>
-
-                <div class="terms-section">
-                    <h3>5. Product Delivery</h3>
-                    <ul class="terms-list">
-                        <li><strong>Fast support 1–24 hours</strong> – We aim to respond to all support requests within 24 hours.</li>
-                        <li><strong>Delivery method</strong> – Products are delivered via Discord role assignment or direct message, depending on the product type.</li>
-                        <li><strong>Delivery time</strong> – Most orders are processed within minutes of approval, but may take up to 24 hours in some cases.</li>
-                    </ul>
-                </div>
-
-                <div class="terms-section">
-                    <h3>6. Account Termination</h3>
-                    <p>We reserve the right to terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
-                </div>
-
-                <div class="terms-section">
-                    <h3>7. Changes to Terms</h3>
-                    <p>We reserve the right to modify or replace these Terms at any time. It is your responsibility to check the Terms periodically for changes.</p>
-                </div>
-
-                <div class="terms-footer">
-                    <p>By using IMPOSTER Network, you acknowledge that you have read and understood these Terms & Conditions.</p>
-                    <p class="terms-signature">— IMPOSTER Network Team</p>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="glass-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <span class="logo-imposter">IMPOSTER</span>
-                    <span class="logo-network">NETWORK</span>
-                    <p>Premium digital marketplace</p>
-                </div>
-                <div class="footer-links">
-                    <a href="/">Home</a>
-                    <a href="/shop">Shop</a>
-                    <a href="/terms">Terms</a>
-                    <a href="/history">History</a>
-                </div>
-                <div class="footer-copyright">
-                    <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
-                </div>
+            <div class="footer-copyright">
+                <p>IMPOSTER Network © 2026-2027</p>
             </div>
         </div>
     </footer>
-
-    <style>
-        .terms-container {
-            padding: 3rem;
-            margin: 2rem 0;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .terms-section {
-            margin-bottom: 2.5rem;
-        }
-        
-        .terms-section h2 {
-            color: var(--primary);
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .terms-section h3 {
-            color: var(--primary);
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            border-left: 3px solid var(--primary);
-            padding-left: 1rem;
-        }
-        
-        .last-updated {
-            color: var(--text-secondary);
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-        
-        .terms-list {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .terms-list li {
-            padding: 0.8rem;
-            margin-bottom: 0.5rem;
-            background: rgba(255,0,0,0.05);
-            border-radius: 6px;
-            border-left: 3px solid var(--primary);
-        }
-        
-        .terms-list li strong {
-            color: var(--primary);
-        }
-        
-        .terms-footer {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 2px solid var(--border-color);
-            text-align: center;
-        }
-        
-        .terms-footer p {
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-        }
-        
-        .terms-signature {
-            color: var(--primary) !important;
-            font-style: italic;
-            font-size: 1.1rem;
-        }
-        
-        @media (max-width: 768px) {
-            .terms-container {
-                padding: 1.5rem;
-            }
-            
-            .terms-section h2 {
-                font-size: 1.5rem;
-            }
-            
-            .terms-section h3 {
-                font-size: 1.1rem;
-            }
-        }
-    </style>
-
-    <script>
-        async function updateCartCount() {
-            try {
-                const res = await fetch('/api/cart/count');
-                const data = await res.json();
-                document.getElementById('cartCount').textContent = data.count;
-            } catch (e) {
-                console.error('Failed to update cart count');
-            }
-        }
-        
-        <% if (user) { %>
-            updateCartCount();
-            setInterval(updateCartCount, 30000);
-        <% } %>
-    </script>
 </body>
 </html>
