@@ -8,34 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <div class="logo">
-                <span class="logo-imposter">IMPOSTER</span>
-                <span class="logo-network">NETWORK</span>
-            </div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/shop">Shop</a>
-                <a href="/cart" class="cart-link">
-                    Cart
-                    <span class="cart-badge" id="cartCount">0</span>
-                </a>
-                <a href="/history" class="active">History</a>
-                <a href="/terms">Terms</a>
-                <% if (user) { %>
-                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
-                    <div class="user-menu">
-                        <img src="<%= user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png' %>" alt="avatar" class="user-avatar">
-                        <span class="username"><%= user.username %></span>
-                        <a href="/logout" class="logout-btn">Logout</a>
-                    </div>
-                <% } else { %>
-                    <a href="/auth/discord" class="discord-btn">Login</a>
-                <% } %>
-            </div>
-        </div>
-    </nav>
+    <% include partials/navbar %>
 
     <div class="shop-header">
         <div class="container">
@@ -119,26 +92,80 @@
                 <a href="/history">History</a>
             </div>
             <div class="footer-copyright">
-                <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+                <p>IMPOSTER Network © 2026-2027</p>
             </div>
         </div>
     </footer>
 
-    <script>
-        async function updateCartCount() {
-            try {
-                const res = await fetch('/api/cart/count');
-                const data = await res.json();
-                document.getElementById('cartCount').textContent = data.count;
-            } catch (e) {
-                console.error('Failed to update cart count');
-            }
+    <style>
+        .empty-history {
+            text-align: center;
+            padding: 4rem;
         }
         
-        <% if (user) { %>
-            updateCartCount();
-            setInterval(updateCartCount, 30000);
-        <% } %>
-    </script>
+        .empty-history-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        
+        .empty-history h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .empty-history p {
+            color: #999;
+            margin-bottom: 2rem;
+        }
+        
+        .order-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        
+        .order-item-row {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .item-quantity {
+            color: var(--primary);
+            font-weight: 600;
+            min-width: 30px;
+        }
+        
+        .item-name {
+            color: white;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: rgba(255, 170, 0, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .status-approved {
+            background: rgba(0, 255, 0, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .status-rejected {
+            background: rgba(255, 0, 0, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+    </style>
 </body>
 </html>
