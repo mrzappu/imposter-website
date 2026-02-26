@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network v2.0 with Advanced Shop & Coupons
+// server.js – IMPOSTER Network v2.0 with UPI/FamPay QR Code
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -8,6 +8,7 @@ const multer = require('multer');
 const Database = require('better-sqlite3');
 const axios = require('axios');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
 const config = require('./config');
 const { initBot, sendLog, giveRole, getBotStatus } = require('./bot');
 
@@ -128,12 +129,12 @@ if (productCount === 0) {
         VALUES (?, ?, ?, ?, ?, ?)
     `);
     
-    insert.run('VIP Membership', 19.99, 'Exclusive VIP access to IMPOSTER Network', 'membership', null, 1);
-    insert.run('Premium Pack', 29.99, 'Premium digital pack with bonus content', 'digital', null, 1);
-    insert.run('Lifetime Access', 99.99, 'One-time payment for lifetime access', 'membership', null, 0);
-    insert.run('Custom Role', 9.99, 'Custom colored role in Discord server', 'service', null, 1);
-    insert.run('Booster Pack', 14.99, 'Special booster perks for 30 days', 'digital', null, 0);
-    insert.run('Secret Vault', 49.99, 'Access to hidden content', 'membership', null, 0);
+    insert.run('VIP Membership', 199.00, 'Exclusive VIP access to IMPOSTER Network', 'membership', null, 1);
+    insert.run('Premium Pack', 299.00, 'Premium digital pack with bonus content', 'digital', null, 1);
+    insert.run('Lifetime Access', 999.00, 'One-time payment for lifetime access', 'membership', null, 0);
+    insert.run('Custom Role', 99.00, 'Custom colored role in Discord server', 'service', null, 1);
+    insert.run('Booster Pack', 149.00, 'Special booster perks for 30 days', 'digital', null, 0);
+    insert.run('Secret Vault', 499.00, 'Access to hidden content', 'membership', null, 0);
     
     console.log('✅ Sample products added');
 }
@@ -151,8 +152,8 @@ if (couponCount === 0) {
     expires.setMonth(expires.getMonth() + 1);
     
     insert.run('WELCOME10', 'percentage', 10, 0, 100, expires.toISOString());
-    insert.run('VIP20', 'percentage', 20, 50, 50, expires.toISOString());
-    insert.run('FLAT5', 'fixed', 5, 10, 30, expires.toISOString());
+    insert.run('VIP20', 'percentage', 20, 500, 50, expires.toISOString());
+    insert.run('FLAT50', 'fixed', 50, 100, 30, expires.toISOString());
     
     console.log('✅ Sample coupons added');
 }
@@ -278,6 +279,39 @@ app.get('/auth/discord/callback', async (req, res) => {
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/');
+});
+
+// ==================== UPI QR CODE GENERATION ====================
+app.get('/api/generate-upi-qr', async (req, res) => {
+    try {
+        const amount = req.query.amount || config.payment.defaultAmount;
+        const upiId = config.payment.upiId;
+        const note = config.payment.note;
+        
+        // Create UPI QR code data
+        const upiData = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=IMPOSTER%20Network&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+        
+        // Generate QR code as data URL
+        const qrDataUrl = await QRCode.toDataURL(upiData, {
+            color: {
+                dark: '#000000',
+                light: '#ffffff'
+            },
+            width: 300,
+            margin: 1
+        });
+        
+        res.json({
+            success: true,
+            qrDataUrl,
+            upiId,
+            amount,
+            note
+        });
+    } catch (error) {
+        console.error('QR generation error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // ==================== HOME PAGE ====================
@@ -427,7 +461,7 @@ app.post('/cart/remove/:cartId', (req, res) => {
     res.redirect('/cart');
 });
 
-// ==================== CHECKOUT & COUPON SYSTEM ====================
+// ==================== CHECKOUT & UPI PAYMENT ====================
 app.get('/checkout', (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord');
     
@@ -450,7 +484,9 @@ app.get('/checkout', (req, res) => {
             total: subtotal,
             couponCode: null,
             error: null,
-            success: null
+            success: null,
+            upiId: config.payment.upiId,
+            defaultAmount: config.payment.defaultAmount
         });
     } catch (error) {
         console.error('Checkout error:', error);
@@ -462,7 +498,9 @@ app.get('/checkout', (req, res) => {
             total: 0,
             couponCode: null,
             error: 'Error loading checkout. Please try again.',
-            success: null
+            success: null,
+            upiId: config.payment.upiId,
+            defaultAmount: config.payment.defaultAmount
         });
     }
 });
@@ -520,7 +558,9 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
             total: subtotal,
             couponCode: null,
             error: 'Please upload payment proof',
-            success: null
+            success: null,
+            upiId: config.payment.upiId,
+            defaultAmount: config.payment.defaultAmount
         });
     }
     
@@ -630,7 +670,9 @@ app.post('/checkout/place-order', uploadProof.single('proof'), async (req, res) 
             total: subtotal,
             couponCode: null,
             error: 'Error placing order: ' + error.message,
-            success: null
+            success: null,
+            upiId: config.payment.upiId,
+            defaultAmount: config.payment.defaultAmount
         });
     }
 });
@@ -1076,8 +1118,8 @@ app.listen(PORT, '0.0.0.0', () => {
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${PORT}
 ║   🌐 URL: http://localhost:${PORT}
-║   🔥 IMPOSTER Network v2.0 – Fully Fixed
-║   📊 Features: Discord Logs • Cart • Checkout • History
+║   🔥 IMPOSTER Network v2.0 – UPI/FamPay QR Payments
+║   📱 UPI ID: ${config.payment.upiId}
 ║   🤖 Discord Bot: ${getBotStatus().connected ? '✅ Connected' : '❌ Disconnected'}
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
