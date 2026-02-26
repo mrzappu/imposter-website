@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPOSTER Network – Shop</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">IMPOSTER</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/cart">Cart</a>
+                <a href="/history">History</a>
+                <a href="/terms">Terms</a>
+                <% if (user) { %>
+                    <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>">Admin</a>
+                    <span class="user-greeting">Hi, <%= user.username %></span>
+                    <a href="/logout">Logout</a>
+                <% } else { %>
+                    <a href="/auth/discord" class="discord-btn">Login with Discord</a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>🛒 Shop</h1>
+        <div class="products-grid">
+            <% products.forEach(product => { %>
+                <div class="product-card">
+                    <h3><%= product.name %></h3>
+                    <p class="price">$<%= product.price.toFixed(2) %></p>
+                    <p class="description"><%= product.description %></p>
+                    <% if (user) { %>
+                        <form action="/cart/add/<%= product.id %>" method="POST">
+                            <button type="submit" class="add-to-cart">Add to Cart</button>
+                        </form>
+                    <% } else { %>
+                        <a href="/auth/discord" class="add-to-cart">Login to Buy</a>
+                    <% } %>
+                </div>
+            <% }) %>
+        </div>
+    </main>
+
+    <footer>
+        <p>Dev Rick • IMPOSTER Network © 2026-2027</p>
+    </footer>
+</body>
+</html>
