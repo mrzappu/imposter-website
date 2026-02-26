@@ -1,0 +1,111 @@
+# Create the navbar file directly in views folder (not in partials)
+cat > views/navbar.ejs << 'EOF'
+<nav>
+    <div class="nav-container">
+        <div class="logo">
+            <span class="logo-imposter">IMPOSTER</span>
+            <span class="logo-network">NETWORK</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="<%= currentPage === 'home' ? 'active' : '' %>">Home</a>
+            <a href="/shop" class="<%= currentPage === 'shop' ? 'active' : '' %>">Shop</a>
+            <a href="/cart" class="cart-link <%= currentPage === 'cart' ? 'active' : '' %>">
+                Cart
+                <span class="cart-badge" id="cartCount">0</span>
+            </a>
+            <a href="/history" class="<%= currentPage === 'history' ? 'active' : '' %>">History</a>
+            <a href="/terms" class="<%= currentPage === 'terms' ? 'active' : '' %>">Terms</a>
+            
+            <% if (user) { %>
+                <a href="/admin" style="<%= isAdmin ? '' : 'display:none;' %>" class="<%= currentPage === 'admin' ? 'active' : '' %>">Admin</a>
+                
+                <div class="profile-container">
+                    <div class="profile-trigger">
+                        <img src="<%= user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png' %>" alt="avatar" class="profile-avatar">
+                        <span class="profile-name"><%= user.username %></span>
+                    </div>
+                    <div class="profile-dropdown">
+                        <div class="profile-header">
+                            <img src="<%= user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png' %>" alt="avatar" class="profile-header-avatar">
+                            <div class="profile-header-info">
+                                <h4><%= user.username %></h4>
+                                <p>ID: <%= user.id.substring(0, 8) %>...</p>
+                            </div>
+                        </div>
+                        <a href="/profile" class="profile-menu-item">👤 My Profile</a>
+                        <a href="/history" class="profile-menu-item">📜 My Orders</a>
+                        <a href="/settings" class="profile-menu-item">⚙️ Settings</a>
+                        <a href="/logout" class="profile-menu-item logout">🚪 Logout</a>
+                    </div>
+                </div>
+            <% } else { %>
+                <a href="/auth/discord" class="discord-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515c-.209.377-.456.885-.624 1.3a18.277 18.277 0 0 0-5.487 0 12.64 12.64 0 0 0-.633-1.3 19.736 19.736 0 0 0-4.885 1.515c-2.86 4.27-3.636 8.432-3.208 12.502a20.11 20.11 0 0 0 6.066 2.98c.49-.664.926-1.383 1.302-2.14a13.193 13.193 0 0 1-2.052-.991c.173-.126.342-.258.506-.39a14.545 14.545 0 0 0 12.436 0c.165.132.334.264.507.39-.65.38-1.336.714-2.053.991.376.757.812 1.476 1.302 2.14a20.05 20.05 0 0 0 6.065-2.98c.506-4.587-.79-8.7-3.208-12.502zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.947-2.419 2.157-2.419 1.21 0 2.184 1.086 2.157 2.419 0 1.334-.947 2.419-2.157 2.419z"/>
+                    </svg>
+                    Login with Discord
+                </a>
+            <% } %>
+        </div>
+    </div>
+</nav>
+
+<style>
+.profile-container { position: relative; display: inline-block; }
+.profile-trigger { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.3rem; border-radius: 40px; transition: background 0.3s; }
+.profile-trigger:hover { background: rgba(255, 0, 0, 0.1); }
+.profile-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ff0000; object-fit: cover; }
+.profile-name { font-weight: 600; color: white; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-dropdown { position: absolute; top: 50px; right: 0; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; width: 250px; padding: 1rem; display: none; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+.profile-container:hover .profile-dropdown { display: block; }
+.profile-header { display: flex; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #333; margin-bottom: 0.5rem; }
+.profile-header-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #ff0000; }
+.profile-header-info h4 { color: white; margin-bottom: 0.2rem; }
+.profile-header-info p { color: #999; font-size: 0.8rem; }
+.profile-menu-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s; }
+.profile-menu-item:hover { background: rgba(255, 0, 0, 0.1); color: #ff0000; }
+.profile-menu-item.logout { border-top: 1px solid #333; margin-top: 0.5rem; padding-top: 1rem; color: #ff0000; }
+.discord-btn { background: #5865F2; color: white !important; padding: 0.6rem 1.5rem !important; border-radius: 30px !important; display: flex !important; align-items: center; gap: 0.5rem; transition: background 0.3s; font-weight: 600 !important; border: none !important; }
+.discord-btn:hover { background: #4752c4 !important; color: white !important; }
+.discord-btn svg { fill: white; width: 18px; height: 18px; }
+.cart-link { position: relative; }
+.cart-badge { position: absolute; top: -8px; right: -12px; background: #ff0000; color: white; font-size: 0.7rem; font-weight: bold; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 10px rgba(255,0,0,0.5); }
+.nav-links a.active { color: #ff0000; }
+@media (max-width: 768px) { .profile-trigger .profile-name { display: none; } }
+</style>
+
+<script>
+async function updateCartCount() {
+    try {
+        const res = await fetch('/api/cart/count');
+        const data = await res.json();
+        const badge = document.getElementById('cartCount');
+        if (badge) badge.textContent = data.count;
+    } catch (e) {}
+}
+<% if (user) { %>
+    updateCartCount();
+    setInterval(updateCartCount, 30000);
+<% } %>
+document.addEventListener('click', function(e) {
+    document.querySelectorAll('.profile-dropdown').forEach(d => d.style.display = 'none');
+});
+document.querySelectorAll('.profile-container').forEach(c => {
+    c.addEventListener('mouseenter', function() { this.querySelector('.profile-dropdown').style.display = 'block'; });
+    c.addEventListener('mouseleave', function() { this.querySelector('.profile-dropdown').style.display = 'none'; });
+});
+</script>
+EOF
+
+# Now update index.ejs to use the navbar from the correct path
+sed -i 's|<% include partials/navbar %>|<% include navbar %>|g' views/index.ejs
+sed -i 's|<% include partials/navbar %>|<% include navbar %>|g' views/shop.ejs
+sed -i 's|<% include partials/navbar %>|<% include navbar %>|g' views/cart.ejs
+sed -i 's|<% include partials/navbar %>|<% include navbar %>|g' views/history.ejs
+sed -i 's|<% include partials/navbar %>|<% include navbar %>|g' views/checkout.ejs
+sed -i 's|<% include partials/navbar %>|<% include navbar %>|g' views/terms.ejs
+sed -i 's|<% include partials/navbar %>|<% include navbar %>|g' views/admin.ejs
+
+# Verify the changes
+ls -la views/
+head -5 views/index.ejs
