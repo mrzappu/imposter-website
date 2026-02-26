@@ -18,7 +18,8 @@ module.exports = {
         saveUninitialized: false,
         cookie: { 
             secure: false,
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000
         }
     },
     admin: {
@@ -29,7 +30,7 @@ module.exports = {
         port: process.env.PORT || 3000
     },
     upload: {
-        maxSize: 5 * 1024 * 1024, // 5MB
+        maxSize: 5 * 1024 * 1024,
         allowedTypes: ['image/png', 'image/jpeg', 'image/jpg']
     },
     payment: {
