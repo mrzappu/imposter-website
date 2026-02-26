@@ -1,4 +1,4 @@
-// server.js – IMPOSTER Network v2.0 with Working Login
+// server.js – IMPOSTER Network with Working Discord Bot
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -121,13 +121,24 @@ if (couponCount === 0) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-app.use(session(config.session));
+
+// Session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'imposter-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false, // Set to true if using HTTPS in production
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 
 // Session user helper
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     res.locals.isAdmin = req.session.user?.id === config.admin.discordId;
-    res.locals.req = req; // For accessing query params in views
+    res.locals.req = req;
     next();
 });
 
@@ -184,12 +195,10 @@ const uploadProductImage = multer({
     }
 });
 
-// ==================== FIXED DISCORD OAUTH ROUTES ====================
+// ==================== DISCORD OAUTH ROUTES ====================
 app.get('/auth/discord', (req, res) => {
-    // Log the configuration for debugging
     console.log('🔐 Discord Login Attempt:');
     console.log(`   Client ID: ${config.discord.clientId ? '✅ Set' : '❌ Missing'}`);
-    console.log(`   Client Secret: ${config.discord.clientSecret ? '✅ Set' : '❌ Missing'}`);
     console.log(`   Redirect URI: ${config.discord.redirectUri}`);
     
     if (!config.discord.clientId || !config.discord.clientSecret) {
@@ -218,9 +227,14 @@ app.get('/auth/discord', (req, res) => {
         `);
     }
     
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${config.discord.clientId}&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}&response_type=code&scope=identify`;
-    console.log(`➡️ Redirecting to Discord...`);
-    res.redirect(url);
+    const authorizeUrl = `https://discord.com/api/oauth2/authorize` +
+        `?client_id=${config.discord.clientId}` +
+        `&redirect_uri=${encodeURIComponent(config.discord.redirectUri)}` +
+        `&response_type=code` +
+        `&scope=identify`;
+    
+    console.log('➡️ Redirecting to Discord for authorization...');
+    res.redirect(authorizeUrl);
 });
 
 app.get('/auth/discord/callback', async (req, res) => {
@@ -228,73 +242,83 @@ app.get('/auth/discord/callback', async (req, res) => {
     
     if (error) {
         console.error('❌ Discord OAuth error:', error);
-        return res.redirect('/?login_error=' + error);
+        return res.redirect('/?error=auth_failed');
     }
     
     if (!code) {
-        console.error('❌ No code received from Discord');
-        return res.redirect('/?login_error=no_code');
+        console.error('❌ Discord callback error: No code provided.');
+        return res.redirect('/?error=auth_failed');
     }
 
     console.log('📩 Received Discord callback with code');
 
     try {
-        // Exchange code for token
-        const tokenRes = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
-            client_id: config.discord.clientId,
-            client_secret: config.discord.clientSecret,
-            grant_type: 'authorization_code',
-            code,
-            redirect_uri: config.discord.redirectUri
-        }), { 
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' } 
-        });
+        const tokenResponse = await axios.post('https://discord.com/api/oauth2/token',
+            new URLSearchParams({
+                client_id: config.discord.clientId,
+                client_secret: config.discord.clientSecret,
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: config.discord.redirectUri,
+            }).toString(),
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            }
+        );
 
         console.log('✅ Token exchange successful');
+        const accessToken = tokenResponse.data.access_token;
 
-        const { access_token } = tokenRes.data;
-
-        // Get user info
-        const userRes = await axios.get('https://discord.com/api/users/@me', {
-            headers: { Authorization: `Bearer ${access_token}` }
+        const userResponse = await axios.get('https://discord.com/api/users/@me', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
         });
 
-        console.log('✅ User info retrieved');
-
-        const { id, username, avatar } = userRes.data;
+        const { id, username, avatar } = userResponse.data;
         const avatarUrl = avatar ? `https://cdn.discordapp.com/avatars/${id}/${avatar}.png` : null;
 
-        // Store in database
+        console.log(`✅ User authenticated: ${username} (${id})`);
+
         db.prepare('INSERT OR REPLACE INTO users (id, username, avatar) VALUES (?, ?, ?)').run(id, username, avatarUrl);
 
-        // Set session
-        req.session.user = { id, username, avatar: avatarUrl };
+        req.session.user = {
+            id: id,
+            username: username,
+            avatar: avatarUrl,
+        };
 
-        console.log(`✅ User ${username} (${id}) logged in successfully`);
-
-        // Send login log to Discord (don't fail if it doesn't work)
-        try {
-            await sendLog('login', {
+        req.session.save((err) => {
+            if (err) {
+                console.error('❌ Session save error:', err);
+                return res.redirect('/?error=session_error');
+            }
+            console.log('✅ Session saved successfully');
+            
+            sendLog('login', {
                 userId: id,
                 username,
                 avatar: avatarUrl
-            });
-        } catch (discordError) {
-            console.error('Discord log error (non-critical):', discordError.message);
-        }
-
-        // Redirect to home with success message
-        res.redirect('/?login=success');
+            }).catch(() => {});
+            
+            res.redirect('/');
+        });
 
     } catch (error) {
-        console.error('❌ OAuth error:', error.response?.data || error.message);
-        res.redirect('/?login_error=oauth_failed');
+        console.error('❌ Discord OAuth Callback Error:', error.response?.data || error.message);
+        res.redirect('/?error=auth_failed');
     }
 });
 
 app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Logout error:', err);
+        }
+        res.redirect('/');
+    });
 });
 
 // ==================== UPI QR CODE GENERATION ====================
@@ -330,7 +354,7 @@ app.get('/', (req, res) => {
         try { ordersCount = db.prepare('SELECT COUNT(*) as count FROM orders WHERE status = "approved"').get().count; } catch (e) {}
         
         const loginSuccess = req.query.login === 'success';
-        const loginError = req.query.login_error;
+        const loginError = req.query.error;
         
         res.render('index', { 
             title: 'Home', 
@@ -853,48 +877,8 @@ app.post('/admin/products/delete/:id', adminOnly, (req, res) => {
 // ==================== ADMIN COUPON MANAGEMENT ====================
 app.get('/admin/coupons', adminOnly, (req, res) => {
     try {
-        // Check if coupons table exists
-        const tableExists = db.prepare(`
-            SELECT name FROM sqlite_master 
-            WHERE type='table' AND name='coupons'
-        `).get();
-        
-        if (!tableExists) {
-            console.log('📝 Creating coupons table...');
-            db.exec(`
-                CREATE TABLE coupons (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    code TEXT UNIQUE NOT NULL,
-                    discount_type TEXT NOT NULL,
-                    discount_value REAL NOT NULL,
-                    min_order REAL DEFAULT 0,
-                    max_uses INTEGER DEFAULT 1,
-                    used_count INTEGER DEFAULT 0,
-                    expires_at DATETIME,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                );
-            `);
-            
-            // Add sample coupons
-            const insert = db.prepare(`
-                INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `);
-            
-            const expires = new Date();
-            expires.setMonth(expires.getMonth() + 1);
-            
-            insert.run('WELCOME10', 'percentage', 10, 0, 100, expires.toISOString());
-            insert.run('VIP20', 'percentage', 20, 500, 50, expires.toISOString());
-            insert.run('FLAT50', 'fixed', 50, 100, 30, expires.toISOString());
-            
-            console.log('✅ Sample coupons added');
-        }
-        
-        // Get all coupons
         const coupons = db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
         
-        // Format dates for display
         coupons.forEach(coupon => {
             if (coupon.expires_at) {
                 coupon.expires_at_formatted = new Date(coupon.expires_at).toLocaleDateString();
@@ -915,27 +899,20 @@ app.get('/admin/coupons', adminOnly, (req, res) => {
             title: 'Manage Coupons', 
             coupons: [],
             section: 'coupons',
-            query: { error: 'database_error' },
-            error_message: 'Failed to load coupons: ' + error.message
+            query: { error: 'database_error' }
         });
     }
 });
 
 app.get('/admin/coupons/generate', adminOnly, (req, res) => {
-    try {
-        res.render('admin', { 
-            title: 'Generate Coupon', 
-            coupon: null,
-            section: 'coupon-form',
-            query: req.query || {}
-        });
-    } catch (error) {
-        console.error('❌ Generate coupon page error:', error);
-        res.redirect('/admin/coupons?error=page_error');
-    }
+    res.render('admin', { 
+        title: 'Generate Coupon', 
+        coupon: null,
+        section: 'coupon-form',
+        query: req.query || {}
+    });
 });
 
-// Generate random coupon code
 function generateCouponCode(prefix = '', length = 8) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = prefix ? prefix + '-' : '';
@@ -947,17 +924,8 @@ function generateCouponCode(prefix = '', length = 8) {
 
 app.post('/admin/coupons/generate', adminOnly, (req, res) => {
     try {
-        const { 
-            discount_type, 
-            discount_value, 
-            min_order, 
-            max_uses, 
-            expires_days,
-            custom_code,
-            code_prefix
-        } = req.body;
+        const { discount_type, discount_value, min_order, max_uses, expires_days, custom_code, code_prefix } = req.body;
         
-        // Validate inputs
         if (!discount_type || !discount_value) {
             return res.redirect('/admin/coupons/generate?error=missing_fields');
         }
@@ -967,7 +935,6 @@ app.post('/admin/coupons/generate', adminOnly, (req, res) => {
             code = generateCouponCode(code_prefix, 8);
         }
         
-        // Check if code already exists
         const existing = db.prepare('SELECT id FROM coupons WHERE code = ?').get(code);
         if (existing) {
             return res.redirect('/admin/coupons/generate?error=code_exists');
@@ -975,12 +942,10 @@ app.post('/admin/coupons/generate', adminOnly, (req, res) => {
         
         const expires_at = expires_days ? new Date(Date.now() + expires_days * 24 * 60 * 60 * 1000).toISOString() : null;
         
-        const stmt = db.prepare(`
+        db.prepare(`
             INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        `);
-        
-        stmt.run(
+        `).run(
             code,
             discount_type,
             parseFloat(discount_value),
@@ -998,13 +963,8 @@ app.post('/admin/coupons/generate', adminOnly, (req, res) => {
 
 app.post('/admin/coupons/delete/:id', adminOnly, (req, res) => {
     try {
-        const result = db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
-        
-        if (result.changes > 0) {
-            res.redirect('/admin/coupons?success=deleted');
-        } else {
-            res.redirect('/admin/coupons?error=delete_failed');
-        }
+        db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
+        res.redirect('/admin/coupons?success=deleted');
     } catch (error) {
         console.error('Delete coupon error:', error);
         res.redirect('/admin/coupons?error=delete_failed');
@@ -1114,15 +1074,25 @@ app.use((req, res) => {
     res.status(404).render('404', { title: 'Page Not Found' });
 });
 
-// ==================== START SERVER ====================
+// ==================== START SERVER WITH BOT WAITING ====================
 const PORT = process.env.PORT || 3000;
 
-initBot().catch(err => {
-    console.error('Bot initialization failed (non-critical):', err.message);
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`
+async function startServer() {
+    console.log('🚀 Starting IMPOSTER Network...');
+    
+    // Initialize bot first and wait for it
+    const botClient = await initBot();
+    
+    if (botClient) {
+        console.log('✅ Discord bot initialized and ready');
+    } else {
+        console.warn('⚠️ Discord bot failed to initialize - continuing without bot features');
+    }
+    
+    // Start Express server
+    app.listen(PORT, '0.0.0.0', () => {
+        const botStatus = getBotStatus();
+        console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║   ██╗███╗   ███╗██████╗  ██████╗ ███████╗████████╗     ║
 ║   ██║████╗ ████║██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝     ║
@@ -1132,10 +1102,23 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚══════╝   ╚═╝        ║
 ╠══════════════════════════════════════════════════════════╣
 ║   📍 Port: ${PORT}
-║   🌐 URL: http://localhost:${PORT}
-║   🔥 IMPOSTER Network – Fixed Login
+║   🌐 URL: https://imposter-website.onrender.com
+║   🔥 Website: ${botStatus.connected ? '✅ ONLINE' : '✅ ONLINE (Bot Offline)'}
+║   🤖 Discord Bot: ${botStatus.connected ? '✅ CONNECTED' : '❌ OFFLINE'}
+║   📊 Servers: ${botStatus.servers}
 ║   🗄️ Database: SQLite (Imposter.db)
 ║   © IMPOSTER Network – Dev Rick                          
 ╚══════════════════════════════════════════════════════════╝
-    `);
+        `);
+    });
+}
+
+// Handle uncaught errors
+process.on('unhandledRejection', (error) => {
+    console.error('Unhandled rejection:', error);
+});
+
+startServer().catch(error => {
+    console.error('Fatal error starting server:', error);
+    process.exit(1);
 });
