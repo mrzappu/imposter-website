@@ -1,0 +1,6 @@
+node_modules/
+.env
+.DS_Store
+Imposter.db
+public/uploads/
+*.log
