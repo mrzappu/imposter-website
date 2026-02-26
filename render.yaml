@@ -1,23 +1,23 @@
 services:
   - type: web
-    name: imposter-network
+    name: imposter-website
     runtime: node
-    repo: https://github.com/YOUR_USERNAME/imposter-network
+    repo: https://github.com/yourusername/your-repo
     plan: free
     region: oregon
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm install && npm run generate-qr
+    startCommand: node server.js
     envVars:
       - key: NODE_VERSION
-        value: 18.18.0
+        value: 20.18.0
+      - key: DISCORD_BOT_TOKEN
+        sync: false  # Set this manually in Render dashboard
       - key: DISCORD_CLIENT_ID
         sync: false
       - key: DISCORD_CLIENT_SECRET
         sync: false
       - key: DISCORD_REDIRECT_URI
-        sync: false
-      - key: DISCORD_BOT_TOKEN
-        sync: false
+        value: https://your-domain.onrender.com/auth/discord/callback
       - key: LOGIN_LOG_CHANNEL
         sync: false
       - key: PAYMENT_LOG_CHANNEL
@@ -29,6 +29,12 @@ services:
       - key: SESSION_SECRET
         sync: false
       - key: BASE_URL
-        sync: false
+        value: https://your-domain.onrender.com
       - key: ADMIN_DISCORD_ID
         sync: false
+      - key: UPI_ID
+        sync: false
+      - key: PAYMENT_NOTE
+        value: IMPOSTER Network Payment
+      - key: DEFAULT_AMOUNT
+        value: 19.99
