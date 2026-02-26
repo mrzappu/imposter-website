@@ -13,10 +13,13 @@ module.exports = {
         autoRoleId: process.env.AUTO_ROLE_ID
     },
     session: {
-        secret: process.env.SESSION_SECRET,
+        secret: process.env.SESSION_SECRET || 'imposter-secret-key',
         resave: false,
         saveUninitialized: false,
-        cookie: { secure: false } // set true if using HTTPS
+        cookie: { 
+            secure: false,
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        }
     },
     admin: {
         discordId: process.env.ADMIN_DISCORD_ID
